@@ -54,7 +54,16 @@ class AuthController
 
         // 3. Email duplicate check
         if ($this->userModel->findAnyUserByEmail($data->email)) {
-            ResponseHelper::send(false, "Email already exists", [], 409);
+             ResponseHelper::send(false, "Email already exists", [], 409);
+             return;
+        }
+        
+        // 3.5 One Admin Per Tenant Rule
+        // Check if ANY user with Role 'Admin' (assuming role_id 1 or similar) exists for this tenant
+        // We need a method in User model for this or query here.
+        // Assuming we add a method default admin role search.
+        if ($this->userModel->checkAdminExistsForTenant($data->tenant_id)) {
+            ResponseHelper::send(false, "Registration Validation Error: This tenant already has an Admin. Only one Admin per tenant is allowed.", [], 409);
             return;
         }
 
@@ -205,7 +214,7 @@ class AuthController
         // 4. SECURITY: ROTATION (Delete old token, Issue new set)
         $this->userModel->deleteRefreshTokenById($tokenRow['id']);
 
-        // FIX: Re-fetch user from the CORRECT table (system_admins or users)
+        // FIX: Re-fetch user from the CORRECT table (system_admins, users, or staffs)
 
         $user = $this->userModel->getUserByType($expiredUserId, $expiredUserType);
 

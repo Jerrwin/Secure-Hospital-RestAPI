@@ -18,44 +18,53 @@ class User
 
     public function findAnyUserByEmail($email)
     {
-        // 1. Check System Admins (God Mode)
+        // 1. Check System Admins
         $stmt = $this->conn->prepare("SELECT id, 'system_admin' as type, NAME as name, email, PASSWORD as password, 'SuperAdmin' as role_name, NULL as tenant_id FROM system_admins WHERE email = :e LIMIT 1");
         $stmt->execute([':e' => $email]);
         if ($res = $stmt->fetch(PDO::FETCH_ASSOC))
             return $res;
 
-        // 2. Check Users Table (All Tenant Admins, Doctors, Nurses, etc.)
-        // Join with roles table directly via the new role_id column
-        $stmt = $this->conn->prepare("SELECT u.id, 'user' as type, u.tenant_id, u.NAME as name, u.email, u.PASSWORD as password, r.NAME as role_name 
-                                      FROM users u 
-                                      LEFT JOIN roles r ON u.role_id = r.id 
-                                      WHERE u.email = :e LIMIT 1");
+        // 2. Check Tenant Admins (Users table)
+        $stmt = $this->conn->prepare("SELECT u.id, 'users' as type, u.tenant_id, u.NAME as name, u.email, u.PASSWORD as password, r.NAME as role_name 
+                                  FROM users u 
+                                  LEFT JOIN user_roles ur ON u.id = ur.user_id 
+                                  LEFT JOIN roles r ON ur.role_id = r.id 
+                                  WHERE u.email = :e LIMIT 1");
         $stmt->execute([':e' => $email]);
         if ($res = $stmt->fetch(PDO::FETCH_ASSOC))
             return $res;
+
 
         return false;
     }
 
     /**
-     * Unified User Lookup
-     * Used during Token Refresh to get fresh data.
+     * Polymorphic User Lookup
+
+     * Used during Token Refresh to get fresh data from the correct table.
+
      */
     public function getUserByType($id, $type)
     {
         if ($type === 'system_admin') {
             $query = "SELECT id, NAME as name, email, NULL as tenant_id, 'SuperAdmin' as role_name FROM system_admins WHERE id = :id LIMIT 1";
+        } elseif ($type === 'staff') {
+            // FIXED: Table name 'staff' instead of 'staffs'
+            // Added deleted_at check
+            $query = "SELECT id, name, email, tenant_id, 'Staff' as role_name FROM staff WHERE id = :id AND deleted_at IS NULL LIMIT 1";
         } else {
-            // Fetching from centralized users table
+            // Default to users table (tenant_admin)
             $query = "SELECT u.id, u.NAME as name, u.email, u.tenant_id, r.NAME as role_name 
                       FROM users u 
-                      LEFT JOIN roles r ON u.role_id = r.id 
-                      WHERE u.id = :id LIMIT 1";
+                      LEFT JOIN user_roles ur ON u.id = ur.user_id 
+                      LEFT JOIN roles r ON ur.role_id = r.id 
+                      WHERE u.id = :id AND u.deleted_at IS NULL LIMIT 1";
         }
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(':id', $id);
         $stmt->execute();
         return $stmt->fetch(PDO::FETCH_ASSOC);
+
     }
 
     /**
@@ -144,33 +153,84 @@ class User
 
     // --- TENANT & ADMIN CREATION ---
 
-    public function create($data)
+    public function create($data, $useTransaction = true)
     {
-        // Simple insert now that role_id is in the table
-        $query = "INSERT INTO " . $this->table . " 
-                  (tenant_id, NAME, email, PASSWORD, role_id, STATUS) 
-                  VALUES (:tenant_id, :name, :email, :password, :role_id, 'active')";
+        try {
+            if ($useTransaction) {
+                $this->conn->beginTransaction();
+            }
 
-        $stmt = $this->conn->prepare($query);
-        $success = $stmt->execute([
-            ':tenant_id' => $data['tenant_id'],
-            ':name'      => $data['name'],
-            ':email'     => $data['email'],
-            ':password'  => $data['password'],
-            ':role_id'   => $data['role_id']
-        ]);
+            $query = "INSERT INTO " . $this->table . " 
+                      (tenant_id, NAME, email, PASSWORD, STATUS) 
+                      VALUES (:tenant_id, :name, :email, :password, 'active')";
 
-        return $success ? $this->conn->lastInsertId() : false;
+            $stmt = $this->conn->prepare($query);
+            $stmt->execute([
+                ':tenant_id' => $data['tenant_id'],
+                ':name' => $data['name'],
+                ':email' => $data['email'],
+                ':password' => $data['password']
+            ]);
+
+            $userId = $this->conn->lastInsertId();
+
+            $roleQuery = "INSERT INTO user_roles (user_id, role_id) VALUES (:user_id, :role_id)";
+            $roleStmt = $this->conn->prepare($roleQuery);
+            $roleStmt->execute([
+                ':user_id' => $userId,
+                ':role_id' => $data['role_id']
+            ]);
+
+            if ($useTransaction) {
+                $this->conn->commit();
+            }
+            return $userId;
+
+        } catch (\Exception $e) {
+            if ($useTransaction) {
+                $this->conn->rollBack();
+            }
+            throw $e; // Re-throw to let caller handle rollback
+        }
     }
 
     public function tenantExists($tenantId)
     {
-        $query = "SELECT id FROM tenants WHERE id = :id LIMIT 1";
+        $query = "SELECT id FROM tenants WHERE id = :id AND deleted_at IS NULL LIMIT 1";
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(':id', $tenantId);
         $stmt->execute();
 
         return $stmt->rowCount() > 0;
+    }
+
+    public function checkAdminExistsForTenant($tenantId)
+    {
+        // Assuming Role ID 2 is 'Admin' or using Join if Role Name is needed.
+        // But user request said "super admin is ... create a admin".
+        // Let's assume we check by Role Name via Join.
+        // "Admin" role name.
+        $query = "SELECT u.id FROM users u 
+                  JOIN user_roles ur ON u.id = ur.user_id 
+                  JOIN roles r ON ur.role_id = r.id
+                  WHERE u.tenant_id = :tenant_id AND r.name = 'Admin' AND u.deleted_at IS NULL LIMIT 1";
+                  
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':tenant_id', $tenantId);
+        $stmt->execute();
+
+        return $stmt->rowCount() > 0;
+    }
+
+    /**
+     * Soft Delete (works for users table)
+     */
+    public function softDelete($id)
+    {
+        $query = "UPDATE " . $this->table . " SET deleted_at = NOW() WHERE id = :id";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':id', $id);
+        return $stmt->execute();
     }
 }
 

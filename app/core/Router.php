@@ -30,9 +30,20 @@ class Router
 
         // 1. Clean URL
         $scriptDir = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME']));
+        
+        // If the request path starts with the script dir (e.g. /project/public/api...), strip it
         if (strpos($path, $scriptDir) === 0) {
             $path = substr($path, strlen($scriptDir));
+        } 
+        // If not, maybe we are accessing via root but index.php is in /public (Rewrite Rule case)
+        // e.g. ScriptDir: /project/public, Path: /project/api/auth
+        else {
+             $parentDir = dirname($scriptDir); // /project
+             if ($parentDir !== '/' && $parentDir !== '.' && strpos($path, $parentDir) === 0) {
+                 $path = substr($path, strlen($parentDir));
+             }
         }
+
         $path = '/' . ltrim($path, '/');
 
         // 2. Search for route

@@ -60,13 +60,6 @@ class TenantController
     public function index()
     {
         AuthMiddleware::handle();
-
-        //Role Check: Only SuperAdmin should be allowed to create tenants
-        $currentUser = $_REQUEST['user'];
-        if ($currentUser['role'] !== 'SuperAdmin') {
-            ResponseHelper::send(false, "Forbidden: Only SuperAdmin can create tenants.", [], 403);
-            return;
-        }
         
         $tenants = $this->tenantModel->getAll();
         ResponseHelper::send(true, "Tenants retrieved.", $tenants);

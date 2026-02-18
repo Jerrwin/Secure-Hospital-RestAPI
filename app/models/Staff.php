@@ -20,12 +20,13 @@ class Staff
     public function create($data)
     {
         $query = "INSERT INTO " . $this->table . " 
-                  (tenant_id, name, gender, address, phone_number) 
-                  VALUES (:tenant_id, :name, :gender, :address, :phone_number)";
+                  (tenant_id, user_id, name, gender, address, phone_number) 
+                  VALUES (:tenant_id, :user_id, :name, :gender, :address, :phone_number)";
 
         $stmt = $this->conn->prepare($query);
 
         $stmt->bindParam(':tenant_id', $data['tenant_id']);
+        $stmt->bindParam(':user_id', $data['user_id']);
         $stmt->bindParam(':name', $data['name']);
         $stmt->bindParam(':gender', $data['gender']);
         $stmt->bindParam(':address', $data['address']);
@@ -44,15 +45,15 @@ class Staff
     {
         $query = "SELECT * FROM " . $this->table . " 
                   WHERE tenant_id = :tenant_id AND deleted_at IS NULL";
-        
+
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(':tenant_id', $tenantId);
         $stmt->execute();
 
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
-    
-     /**
+
+    /**
      * Get Single Staff (By ID)
      */
     public function getById($id)

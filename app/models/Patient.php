@@ -17,17 +17,22 @@ class Patient
     public function create($data)
     {
         $query = "INSERT INTO " . $this->table . " 
-                  (tenant_id, name, medical_history, phone_hash, created_at) 
-                  VALUES (:tenant_id, :name, :medical_history, :phone_hash, NOW())";
+              (tenant_id, first_name, last_name, dob, gender, medical_history, created_by) 
+              VALUES (:tenant_id, :first_name, :last_name, :dob, :gender, :medical_history, :created_by)";
 
         $stmt = $this->conn->prepare($query);
 
-        $stmt->bindParam(':tenant_id', $data['tenant_id']);
-        $stmt->bindParam(':name', $data['name']);
-        $stmt->bindParam(':medical_history', $data['medical_history']); // Encrypted
-        $stmt->bindParam(':phone_hash', $data['phone_hash']); // Blind Index
-
-        if ($stmt->execute()) {
+        if (
+            $stmt->execute([
+                ':tenant_id' => $data['tenant_id'],
+                ':first_name' => $data['first_name'],
+                ':last_name' => $data['last_name'],
+                ':dob' => $data['dob'] ?? null,
+                ':gender' => $data['gender'] ?? null,
+                ':medical_history' => $data['medical_history'],
+                ':created_by' => $data['created_by']
+            ])
+        ) {
             return $this->conn->lastInsertId();
         }
         return false;
@@ -35,7 +40,11 @@ class Patient
 
     public function getAllByTenant($tenantId)
     {
-        $query = "SELECT * FROM " . $this->table . " WHERE tenant_id = :tenant_id AND deleted_at IS NULL";
+        // Selecting specific columns is faster than SELECT *
+        $query = "SELECT id, first_name, last_name, dob, gender, created_at 
+              FROM " . $this->table . " 
+              WHERE tenant_id = :tenant_id AND deleted_at IS NULL";
+
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(':tenant_id', $tenantId);
         $stmt->execute();

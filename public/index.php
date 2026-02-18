@@ -28,12 +28,16 @@ require_once __DIR__ . '/../app/models/User.php';
 require_once __DIR__ . '/../app/models/Tenant.php';
 require_once __DIR__ . '/../app/models/Staff.php'; // Added
 require_once __DIR__ . '/../app/models/Patient.php'; // Added
+require_once __DIR__ . '/../app/models/Appointment.php';
+
 
 // 5. Load Controllers
 require_once __DIR__ . '/../app/controllers/AuthController.php';
 require_once __DIR__ . '/../app/controllers/TenantController.php';
 require_once __DIR__ . '/../app/controllers/StaffController.php'; // Added
 require_once __DIR__ . '/../app/controllers/PatientController.php'; // Added
+require_once __DIR__ . '/../app/controllers/AppointmentController.php';
+
 
 // 6. Use Classes
 use App\Core\Router;
@@ -42,6 +46,7 @@ use App\Controllers\AuthController;
 use App\Controllers\TenantController;
 use App\Controllers\StaffController; // Added
 use App\Controllers\PatientController; // Added
+use App\Controllers\AppointmentController;
 
 // 7. Run Global Middleware
 JsonMiddleware::handle();
@@ -70,6 +75,15 @@ $router->delete('/api/staff/{id}', [StaffController::class, 'delete']);
 $router->post('/api/patients', [PatientController::class, 'create']);
 $router->get('/api/patients', [PatientController::class, 'index']);
 $router->delete('/api/patients/{id}', [PatientController::class, 'delete']);
+
+//appointement
+$router->post('/api/appointments', [AppointmentController::class, 'create']);
+$router->get('/api/appointments/upcoming', [AppointmentController::class, 'getUpcoming']);
+$router->get('/api/appointments/list', [AppointmentController::class, 'getAll']);
+$router->get('/api/appointments/show/{id}', [AppointmentController::class, 'show']);
+$router->put('/api/appointments/cancel/{id}', [AppointmentController::class, 'cancel']);
+$router->put('/api/appointments/update/{id}', [AppointmentController::class, 'update']);
+$router->put('/api/appointments/complete/{id}', [AppointmentController::class, 'complete']);
 
 // 10. Dispatch
 $router->dispatch($_SERVER['REQUEST_URI'], $_SERVER['REQUEST_METHOD']);

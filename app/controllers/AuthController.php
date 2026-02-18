@@ -40,7 +40,12 @@ class AuthController
 
         $data = json_decode(file_get_contents("php://input"));
 
-        if (!isset($data->tenant_id) || empty($data->tenant_id) || !isset($data->name) || !isset($data->email) || !isset($data->password) || !isset($data->role_id)) {
+        if (!$data) {
+            ResponseHelper::send(false, "Invalid JSON format provided.", [], 400);
+            return;
+        }
+
+        if (!isset($data->tenant_id) || empty($data->tenant_id) || !isset($data->name) || !isset($data->email) || !isset($data->password)) {
             ResponseHelper::send(false, "Required fields missing", [], 400);
             return;
         }
@@ -54,10 +59,10 @@ class AuthController
 
         // 3. Email duplicate check
         if ($this->userModel->findAnyUserByEmail($data->email)) {
-             ResponseHelper::send(false, "Email already exists", [], 409);
-             return;
+            ResponseHelper::send(false, "Email already exists", [], 409);
+            return;
         }
-        
+
         // 3.5 One Admin Per Tenant Rule
         // Check if ANY user with Role 'Admin' (assuming role_id 1 or similar) exists for this tenant
         // We need a method in User model for this or query here.
@@ -73,7 +78,7 @@ class AuthController
             'name' => strip_tags($data->name),
             'email' => filter_var($data->email, FILTER_SANITIZE_EMAIL),
             'password' => password_hash($data->password, PASSWORD_BCRYPT),
-            'role_id' => $data->role_id
+            'role_id' => 1
         ];
 
         $userId = $this->userModel->create($userData);
@@ -91,7 +96,13 @@ class AuthController
      */
     public function login()
     {
+
         $data = json_decode(file_get_contents("php://input"));
+
+        if (!$data) {
+            ResponseHelper::send(false, "Invalid JSON format provided.", [], 400);
+            return;
+        }
 
         if (!isset($data->email) || !isset($data->password)) {
             ResponseHelper::send(false, "Please provide email and password", [], 400);
@@ -235,7 +246,7 @@ class AuthController
             'user_id' => $user['id'],
             'email' => $user['email'],
             'user_type' => $expiredUserType,
-            'role'      => $user['role_name'],
+            'role' => $user['role_name'],
             'tenant_id' => $user['tenant_id'],
             'iat' => time(),
             'exp' => $jwtExpiry

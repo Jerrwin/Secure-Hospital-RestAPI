@@ -24,13 +24,17 @@ class User
         if ($res = $stmt->fetch(PDO::FETCH_ASSOC))
             return $res;
 
-        // 2. Check Tenant Admins (Users table)
-        $stmt = $this->conn->prepare("SELECT u.id, 'users' as type, u.tenant_id, u.NAME as name, u.email, u.PASSWORD as password, r.NAME as role_name 
-                                  FROM users u 
-                                  LEFT JOIN user_roles ur ON u.id = ur.user_id 
-                                  LEFT JOIN roles r ON ur.role_id = r.id 
-                                  WHERE u.email = :e LIMIT 1");
+        // 2. Check Users (Dynamic Role from Database)
+        // We join the 'roles' table using u.role_id = r.id
+        $query = "SELECT u.id, 'users' as type, u.tenant_id, u.NAME as name, u.email, u.PASSWORD as password, 
+                     r.NAME as role_name 
+              FROM users u 
+              LEFT JOIN roles r ON u.role_id = r.id 
+              WHERE u.email = :e LIMIT 1";
+
+        $stmt = $this->conn->prepare($query);
         $stmt->execute([':e' => $email]);
+
         if ($res = $stmt->fetch(PDO::FETCH_ASSOC))
             return $res;
 
@@ -47,24 +51,24 @@ class User
     public function getUserByType($id, $type)
     {
         if ($type === 'system_admin') {
-            $query = "SELECT id, NAME as name, email, NULL as tenant_id, 'SuperAdmin' as role_name FROM system_admins WHERE id = :id LIMIT 1";
-        } elseif ($type === 'staff') {
-            // FIXED: Table name 'staff' instead of 'staffs'
-            // Added deleted_at check
-            $query = "SELECT id, name, email, tenant_id, 'Staff' as role_name FROM staff WHERE id = :id AND deleted_at IS NULL LIMIT 1";
+            // System Admins don't have a role_id, they are always SuperAdmin
+            $query = "SELECT id, NAME as name, email, NULL as tenant_id, 'SuperAdmin' as role_name 
+                  FROM system_admins 
+                  WHERE id = :id LIMIT 1";
         } else {
-            // Default to users table (tenant_admin)
-            $query = "SELECT u.id, u.NAME as name, u.email, u.tenant_id, r.NAME as role_name 
-                      FROM users u 
-                      LEFT JOIN user_roles ur ON u.id = ur.user_id 
-                      LEFT JOIN roles r ON ur.role_id = r.id 
-                      WHERE u.id = :id AND u.deleted_at IS NULL LIMIT 1";
+            // All other users (Admin, Provider, Nurse, etc.) are in the 'users' table.
+            // We JOIN with the 'roles' table to get the correct name (e.g., 'Provider')
+            $query = "SELECT u.id, u.NAME as name, u.email, u.tenant_id, 
+                         r.NAME as role_name 
+                  FROM users u 
+                  LEFT JOIN roles r ON u.role_id = r.id 
+                  WHERE u.id = :id AND u.deleted_at IS NULL LIMIT 1";
         }
+
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(':id', $id);
         $stmt->execute();
         return $stmt->fetch(PDO::FETCH_ASSOC);
-
     }
 
     /**
@@ -161,25 +165,19 @@ class User
             }
 
             $query = "INSERT INTO " . $this->table . " 
-                      (tenant_id, NAME, email, PASSWORD, STATUS) 
-                      VALUES (:tenant_id, :name, :email, :password, 'active')";
+                (tenant_id, NAME, email, PASSWORD, role_id, STATUS) 
+                VALUES (:tenant_id, :name, :email, :password, :role_id, 'active')";
 
             $stmt = $this->conn->prepare($query);
             $stmt->execute([
                 ':tenant_id' => $data['tenant_id'],
                 ':name' => $data['name'],
                 ':email' => $data['email'],
-                ':password' => $data['password']
+                ':password' => $data['password'],
+                ':role_id' => $data['role_id'] // Add this line
             ]);
 
             $userId = $this->conn->lastInsertId();
-
-            $roleQuery = "INSERT INTO user_roles (user_id, role_id) VALUES (:user_id, :role_id)";
-            $roleStmt = $this->conn->prepare($roleQuery);
-            $roleStmt->execute([
-                ':user_id' => $userId,
-                ':role_id' => $data['role_id']
-            ]);
 
             if ($useTransaction) {
                 $this->conn->commit();
@@ -206,19 +204,19 @@ class User
 
     public function checkAdminExistsForTenant($tenantId)
     {
-        // Assuming Role ID 2 is 'Admin' or using Join if Role Name is needed.
-        // But user request said "super admin is ... create a admin".
-        // Let's assume we check by Role Name via Join.
-        // "Admin" role name.
-        $query = "SELECT u.id FROM users u 
-                  JOIN user_roles ur ON u.id = ur.user_id 
-                  JOIN roles r ON ur.role_id = r.id
-                  WHERE u.tenant_id = :tenant_id AND r.name = 'Admin' AND u.deleted_at IS NULL LIMIT 1";
-                  
+        // We check the 'users' table directly now.
+        // I'm using role_id = 1 (assuming 1 is your Admin ID).
+        $query = "SELECT id FROM users 
+              WHERE tenant_id = :tenant_id 
+              AND role_id = 1 
+              AND deleted_at IS NULL 
+              LIMIT 1";
+
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(':tenant_id', $tenantId);
         $stmt->execute();
 
+        // If rowCount > 0, an Admin already exists!
         return $stmt->rowCount() > 0;
     }
 
@@ -232,6 +230,22 @@ class User
         $stmt->bindParam(':id', $id);
         return $stmt->execute();
     }
+
+    // In app/models/User.php
+
+    public function findById($id)
+    {
+        // Query that joins roles so we can check if they are a 'Provider'
+        $query = "SELECT u.*, r.name as role_name 
+              FROM " . $this->table . " u
+              LEFT JOIN roles r ON u.role_id = r.id
+              WHERE u.id = :id LIMIT 1";
+
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute([':id' => $id]);
+        return $stmt->fetch(\PDO::FETCH_ASSOC);
+    }
+
 }
 
 ?>

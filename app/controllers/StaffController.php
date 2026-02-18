@@ -39,7 +39,7 @@ class StaffController
 
         // If SuperAdmin is registering, they must provide tenant_id
         $data = json_decode(file_get_contents("php://input"), true);
-        
+
         if ($currentUser['role'] === 'SuperAdmin') {
             if (!isset($data['tenant_id'])) {
                 ResponseHelper::send(false, "SuperAdmin must provide tenant_id", [], 400);
@@ -72,13 +72,14 @@ class StaffController
                 'password' => password_hash($data['password'], PASSWORD_BCRYPT),
                 'role_id' => $data['role_id']
             ];
-            
+
             // Pass false to prevent internal commit/rollback
-            $userId = $this->userModel->create($userData, false); 
+            $userId = $this->userModel->create($userData, false);
 
             // B. Create Staff Profile
             $staffData = [
                 'tenant_id' => $tenantId,
+                'user_id' => $userId,
                 'name' => $data['name'], // Verify if name should match
                 'gender' => $data['gender'],
                 'address' => $data['address'] ?? null,
@@ -113,36 +114,36 @@ class StaffController
         $tenantId = $currentUser['tenant_id'];
 
         if ($currentUser['role'] === 'SuperAdmin') {
-             // SuperAdmin might want to see all or filter by tenant params
-             // For now, return empty or all if implemented
-             ResponseHelper::send(false, "SuperAdmin view not implemented yet", [], 501);
-             return;
+            // SuperAdmin might want to see all or filter by tenant params
+            // For now, return empty or all if implemented
+            ResponseHelper::send(false, "SuperAdmin view not implemented yet", [], 501);
+            return;
         }
 
         $staffMembers = $this->staffModel->getAllByTenant($tenantId);
         ResponseHelper::send(true, "Staff list retrieved", $staffMembers);
     }
-    
+
     /**
      * DELETE /api/staff/{id}
      * Check: Admin Only
      */
     public function delete($id)
     {
-         AuthMiddleware::handle();
-         RoleMiddleware::handle(['Admin']);
-         
-         // Verify staff belongs to this tenant! (Security Check)
-         $staff = $this->staffModel->getById($id);
-         if (!$staff || $staff['tenant_id'] != $_REQUEST['user']['tenant_id']) {
-             ResponseHelper::send(false, "Staff not found or access denied", [], 404);
-             return;
-         }
+        AuthMiddleware::handle();
+        RoleMiddleware::handle(['Admin']);
 
-         if ($this->staffModel->delete($id)) {
-             ResponseHelper::send(true, "Staff deleted successfully");
-         } else {
-             ResponseHelper::send(false, "Failed to delete staff", [], 500);
-         }
+        // Verify staff belongs to this tenant! (Security Check)
+        $staff = $this->staffModel->getById($id);
+        if (!$staff || $staff['tenant_id'] != $_REQUEST['user']['tenant_id']) {
+            ResponseHelper::send(false, "Staff not found or access denied", [], 404);
+            return;
+        }
+
+        if ($this->staffModel->delete($id)) {
+            ResponseHelper::send(true, "Staff deleted successfully");
+        } else {
+            ResponseHelper::send(false, "Failed to delete staff", [], 500);
+        }
     }
 }

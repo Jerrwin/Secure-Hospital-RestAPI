@@ -27,39 +27,48 @@ class PatientController
     public function create()
     {
         AuthMiddleware::handle();
-        RoleMiddleware::handle(['Provider', 'Nurse', 'Admin']); // Admin too? User said "patient crud can be done by only provider and nurse others cant". So remove Admin.
-        
-        // Re-check role strictly based on user request
-        $currentUser = $_REQUEST['user'];
+
+        $currentUser = $_REQUEST['user']; // From your JWT
         if (!in_array($currentUser['role'], ['Provider', 'Nurse'])) {
-            ResponseHelper::send(false, "Forbidden: Only Provider and Nurse can manage patients.", [], 403);
+            ResponseHelper::send(false, "Forbidden", [], 403);
             return;
         }
 
         $data = json_decode(file_get_contents("php://input"), true);
 
-        if (empty($data['name']) || empty($data['medical_history'])) {
-            ResponseHelper::send(false, "Name and Medical History are required.", [], 400);
+        // Validate the actual columns in your table
+        if (empty($data['first_name']) || empty($data['medical_history'])) {
+            ResponseHelper::send(false, "First Name and Medical History are required.", [], 400);
             return;
         }
 
         // Encrypt Medical Data
-        $encryptedData = Encryption::encrypt($data['medical_history']);
-        
-        // Blind Index for Phone (if provided)
-        $phoneHash = isset($data['phone']) ? hash_hmac('sha256', $data['phone'], $_ENV['HASH_SECRET']) : null;
+        $encryptedHistory = Encryption::encrypt($data['medical_history']);
 
         $patientData = [
             'tenant_id' => $currentUser['tenant_id'],
-            'name' => $data['name'],
-            'medical_history' => $encryptedData,
-            'phone_hash' => $phoneHash
+            'first_name' => $data['first_name'],
+            'last_name' => $data['last_name'] ?? null,
+            'dob' => $data['dob'] ?? null,
+            'gender' => $data['gender'] ?? null,
+            'medical_history' => $encryptedHistory,
+            'created_by' => $currentUser['user_id'] // Use the ID from JWT
         ];
 
         $id = $this->patientModel->create($patientData);
 
         if ($id) {
-            ResponseHelper::send(true, "Patient created successfully", ['id' => $id], 201);
+            // 🎯 Prepare the response with the ID and the details
+            // We use the original medical history from $data so it's readable (not encrypted)
+            $responseData = [
+                'id' => (int) $id,
+                'first_name' => $data['first_name'],
+                'last_name' => $data['last_name'] ?? null,
+                'dob' => $data['dob'] ?? null,
+                'gender' => $data['gender'] ?? null,
+                'medical_history' => $data['medical_history']
+            ];
+            ResponseHelper::send(true, "Patient created successfully", $responseData, 201);
         } else {
             ResponseHelper::send(false, "Failed to create patient", [], 500);
         }
@@ -85,7 +94,7 @@ class PatientController
 
         ResponseHelper::send(true, "Patients retrieved", $patients);
     }
-    
+
     /**
      * Delete Patient
      */

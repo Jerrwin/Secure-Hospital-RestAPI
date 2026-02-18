@@ -8,53 +8,32 @@ class JsonMiddleware
 {
     public static function handle()
     {
-        // 1. Force all responses to be JSON
         header('Content-Type: application/json; charset=UTF-8');
 
         $method = $_SERVER['REQUEST_METHOD'];
-        $requestUri = $_SERVER['REQUEST_URI'];
 
-        // Loose check for specific routes that might not have a body
-        $isRefreshRoute = (stripos($requestUri, 'refresh') !== false);
-        $isLogoutRoute = (stripos($requestUri, 'logout') !== false);
-
-        // 2. Only validate input for methods that send data (POST, PUT, PATCH)
-        if (in_array($method, ['POST', 'PUT', 'PATCH'])) {
-
+        if (in_array($method, ['POST', 'PUT', 'PATCH', 'DELETE'])) {
             $input = file_get_contents("php://input");
-
-            // 3. If it's a special route and body is empty, skip validation
-            if (($isRefreshRoute || $isLogoutRoute) && empty($input)) {
-                return;
-            }
-
-            // Get Headers safely
-            $headers = getallheaders();
-            $contentType = isset($headers['Content-Type']) ? $headers['Content-Type'] : '';
-
-            // 4. VALIDATION: Check if Content-Type is 'application/json'
-            if (stripos($contentType, 'application/json') === false) {
-                ResponseHelper::send(false, "Error: Content-Type must be application/json", [], 415);
-            }
-
-            // 5. VALIDATION: Check if body is empty
+            
+            // 1. SILENT: If body is empty, just let it pass (for Logout/Refresh)
             if (empty($input)) {
-                ResponseHelper::send(false, "Error: Request body is empty", [], 400);
+                return; 
             }
 
-            // 6. Decode JSON into an associative array
+            // 2. STRICT: If there IS a body, it MUST be valid JSON
             $data = json_decode($input, true);
 
-            // 7. VALIDATION: Check for JSON syntax errors
             if (json_last_error() !== JSON_ERROR_NONE) {
-                ResponseHelper::send(false, "Error: Invalid JSON Format - " . json_last_error_msg(), [], 400);
+                // 🎯 Show error ONLY if the format is actually wrong
+                ResponseHelper::send(false, "Invalid JSON Format: " . json_last_error_msg(), [], 400);
+                exit; 
             }
 
-            // 8. Success: Attach data to global $_POST for Controllers to use
-            $_POST = $data;
-            $_REQUEST = array_merge($_REQUEST, $data);
+            // 3. Success: Populate globals
+            if (!empty($data)) {
+                $_POST = $data;
+                $_REQUEST = array_merge($_REQUEST, $data);
+            }
         }
     }
 }
-
-?>

@@ -23,62 +23,70 @@ class AuthController
 
     /**
      * POST /api/auth/register
-     * Creates an Admin and validates that the Tenant ID exists in the database.
+     * Creates an Admin/User and validates that the Tenant ID exists.
      */
     public function register()
     {
-
-        // 1. IDENTITY CHECK: Verify JWT and CSRF
+        // 1. IDENTITY CHECK
         \App\Middleware\AuthMiddleware::handle();
 
-        // 2. PERMISSION CHECK: Only SuperAdmin should create Admins/Tenants
         $currentUser = $_REQUEST['user'];
+
+        // 2. PERMISSION CHECK: Only SuperAdmin should create Admins/Tenants
         if ($currentUser['role'] !== 'SuperAdmin') {
             ResponseHelper::send(false, "Forbidden: Only SuperAdmin can register users.", [], 403);
             return;
         }
 
-        $data = json_decode(file_get_contents("php://input"));
+        // 3. GET DATA (Using $_POST from JsonMiddleware if available, or fallback)
+        $data = !empty($_POST) ? $_POST : json_decode(file_get_contents("php://input"), true);
 
-        if (!$data) {
-            ResponseHelper::send(false, "Invalid JSON format provided.", [], 400);
-            return;
-        }
+        // Convert to object for easier access if it's an array
+        $data = (object) $data;
 
-        if (!isset($data->tenant_id) || empty($data->tenant_id) || !isset($data->name) || !isset($data->email) || !isset($data->password)) {
+        if (empty($data->tenant_id) || empty($data->name) || empty($data->email) || empty($data->password)) {
             ResponseHelper::send(false, "Required fields missing", [], 400);
             return;
         }
 
-        // 2. DATABASE CHECK: Does the tenant exist?
-        // We use a dedicated model method for this
+        // 4. INPUT VALIDATION (From Praveen's Code - Stronger Security)
+        if (!Validator::email($data->email)) {
+            ResponseHelper::send(false, "Invalid email format.", [], 400);
+            return;
+        }
+
+        if (!Validator::password($data->password)) {
+            ResponseHelper::send(false, "Password weak. (Min 8 chars, 1 Upper, 1 Special).", [], 400);
+            return;
+        }
+
+        // 5. DATABASE CHECKS
         if (!$this->userModel->tenantExists($data->tenant_id)) {
             ResponseHelper::send(false, "Registration failed: No such tenant exists.", [], 404);
             return;
         }
 
-        // 3. Email duplicate check
         if ($this->userModel->findAnyUserByEmail($data->email)) {
             ResponseHelper::send(false, "Email already exists", [], 409);
             return;
         }
 
-        // 3.5 One Admin Per Tenant Rule
-        // Check if ANY user with Role 'Admin' (assuming role_id 1 or similar) exists for this tenant
-        // We need a method in User model for this or query here.
-        // Assuming we add a method default admin role search.
+        // One Admin Per Tenant Rule
         if ($this->userModel->checkAdminExistsForTenant($data->tenant_id)) {
-            ResponseHelper::send(false, "Registration Validation Error: This tenant already has an Admin. Only one Admin per tenant is allowed.", [], 409);
+            ResponseHelper::send(false, "This tenant already has an Admin. Only one allowed.", [], 409);
             return;
         }
 
-        // 4. Prepare and Create
+        // 6. CREATE USER
+        // Use provided role_id or default to 1 (Admin)
+        $roleId = isset($data->role_id) ? $data->role_id : 1;
+
         $userData = [
             'tenant_id' => $data->tenant_id,
             'name' => strip_tags($data->name),
             'email' => filter_var($data->email, FILTER_SANITIZE_EMAIL),
             'password' => password_hash($data->password, PASSWORD_BCRYPT),
-            'role_id' => 1
+            'role_id' => $roleId
         ];
 
         $userId = $this->userModel->create($userData);
@@ -92,56 +100,48 @@ class AuthController
 
     /**
      * POST /api/auth/login
-     * Handles initial authentication and issues tokens.
      */
     public function login()
     {
+        // 1. GET DATA
+        $data = !empty($_POST) ? $_POST : json_decode(file_get_contents("php://input"), true);
+        $data = (object) $data;
 
-        $data = json_decode(file_get_contents("php://input"));
-
-        if (!$data) {
-            ResponseHelper::send(false, "Invalid JSON format provided.", [], 400);
-            return;
-        }
-
-        if (!isset($data->email) || !isset($data->password)) {
+        if (empty($data->email) || empty($data->password)) {
             ResponseHelper::send(false, "Please provide email and password", [], 400);
             return;
         }
 
-        // 1. Fetch User (includes Role and Tenant ID)
+        // 2. FETCH USER
         $user = $this->userModel->findAnyUserByEmail($data->email);
 
-        // 2. Security Check: Password Verify
         if (!$user || !password_verify($data->password, $user['password'])) {
             ResponseHelper::send(false, "Invalid credentials", [], 401);
             return;
         }
 
+        // 3. PREPARE TOKEN DATA
         $userType = $user['type'];
-
-        // 3. Generate CSRF Baseline
-        $csrfToken = CSRF::generate();
-
-        // 4. Generate Access Token (JWT)
         $jwtExpiry = time() + (int) ($_ENV['JWT_ACCESS_LIFETIME'] ?? 3600);
-        $accessToken = JWT::encode([
+
+        // [MERGE] Added role_id to payload (from Praveen's code)
+        $payload = [
             'user_id' => $user['id'],
             'email' => $user['email'],
             'user_type' => $userType,
             'role' => $user['role_name'],
+            'role_id' => $user['role_id'], // Crucial for RoleMiddleware
             'tenant_id' => $user['tenant_id'],
             'iat' => time(),
             'exp' => $jwtExpiry
-        ], $_ENV['JWT_SECRET']);
+        ];
 
-        // 5. Generate Refresh Token (Rotation Baseline)
+        $accessToken = JWT::encode($payload, $_ENV['JWT_SECRET']);
+        $csrfToken = CSRF::generate();
         $refreshData = RefreshToken::generate();
 
-        // Optional: Clear all previous sessions for this user before creating a new one
+        // 4. HANDLE SESSION
         $this->userModel->deleteSessionByUserIdAndType($user['id'], $userType);
-
-        // 6. Secure Storage: Save Hashed Refresh Token to DB
         $this->userModel->storeRefreshToken(
             $user['id'],
             $userType,
@@ -149,7 +149,6 @@ class AuthController
             $refreshData['expiry']
         );
 
-        // 7. Set HttpOnly Cookie for Refresh Token
         $cookieLifetime = (int) ($_ENV['REFRESH_TOKEN_LIFETIME'] ?? 604800);
         setcookie(
             'refresh_token',
@@ -157,43 +156,39 @@ class AuthController
             time() + $cookieLifetime,
             '/',
             '',
-            false, // Set to true if using HTTPS
-            true   // Prevents JavaScript access (XSS Protection)
+            false,
+            true
         );
 
-        // 8. Final Response
+        // 5. RESPONSE
         ResponseHelper::send(true, "Login successful", [
             'access_token' => $accessToken,
             'csrf_token' => $csrfToken,
-            'access_token_expires_at' => date('Y-m-d H:i:s', $jwtExpiry),
-            'refresh_token_expires_at' => $refreshData['expiry'],
             'user' => [
                 'id' => $user['id'],
                 'name' => $user['name'],
+                'email' => $user['email'],
                 'role' => $user['role_name'],
-                'tenant_id' => $user['tenant_id'],
-                'type' => $userType
+                'tenant_id' => $user['tenant_id']
             ]
         ]);
     }
 
     /**
      * POST /api/auth/refresh
-     * Rotates both Access Token, Refresh Token, AND CSRF Token.
      */
     public function refresh()
     {
-        // 1. Get Refresh Token from Cookie
         $incomingToken = $_COOKIE['refresh_token'] ?? null;
         if (!$incomingToken) {
-            ResponseHelper::send(false, "Session not found. Please login again.", [], 401);
+            ResponseHelper::send(false, "Session not found.", [], 401);
             return;
         }
 
-        // 2. Extract Identity from Authorization Header (Even if expired)
         $headers = getallheaders();
         $authHeader = $headers['Authorization'] ?? $headers['authorization'] ?? null;
         $expiredUserId = null;
+        $expiredUserType = null;
 
         if ($authHeader && preg_match('/Bearer\s(\S+)/', $authHeader, $matches)) {
             $parts = explode('.', $matches[1]);
@@ -204,16 +199,11 @@ class AuthController
             }
         }
 
-        // FIX: Ensure both ID and Type are present
         if (!$expiredUserId || !$expiredUserType) {
-
             ResponseHelper::send(false, "Identity verification failed.", [], 401);
-
             return;
-
         }
 
-        // 3. Database Validation (Matches your logic for Mismatch/Expired)
         $tokenRow = $this->userModel->verifyRefreshToken($expiredUserId, $expiredUserType, $incomingToken);
 
         if ($tokenRow === "NO_DATA_FOUND" || $tokenRow === "IDENTITY_MISMATCH" || $tokenRow === "EXPIRED") {
@@ -222,44 +212,33 @@ class AuthController
             return;
         }
 
-        // 4. SECURITY: ROTATION (Delete old token, Issue new set)
         $this->userModel->deleteRefreshTokenById($tokenRow['id']);
-
-        // FIX: Re-fetch user from the CORRECT table (system_admins, users, or staffs)
-
         $user = $this->userModel->getUserByType($expiredUserId, $expiredUserType);
 
         if (!$user) {
-
             ResponseHelper::send(false, "User account no longer exists.", [], 404);
-
             return;
-
         }
 
-        // New CSRF Token
         $newCsrf = CSRF::generate();
-
-        // New Access Token
         $jwtExpiry = time() + (int) ($_ENV['JWT_ACCESS_LIFETIME'] ?? 3600);
+
         $newAccessToken = JWT::encode([
             'user_id' => $user['id'],
             'email' => $user['email'],
             'user_type' => $expiredUserType,
             'role' => $user['role_name'],
+            'role_id' => $user['role_id'], // Added here too
             'tenant_id' => $user['tenant_id'],
             'iat' => time(),
             'exp' => $jwtExpiry
         ], $_ENV['JWT_SECRET']);
 
-        // New Refresh Token
         $newRefreshData = RefreshToken::generate();
         $this->userModel->storeRefreshToken($expiredUserId, $expiredUserType, $newRefreshData['token'], $newRefreshData['expiry']);
 
-        // Update Cookie
         setcookie('refresh_token', $newRefreshData['token'], time() + 604800, '/', '', false, true);
 
-        // 5. Respond with Rotated Credentials
         ResponseHelper::send(true, "Tokens rotated successfully", [
             'access_token' => $newAccessToken,
             'csrf_token' => $newCsrf,
@@ -272,26 +251,67 @@ class AuthController
      */
     public function logout()
     {
-
-        // 1. IDENTITY CHECK: Need to know WHO is logging out
         \App\Middleware\AuthMiddleware::handle();
 
         $userId = $_REQUEST['user']['user_id'] ?? null;
         $userType = $_REQUEST['user']['user_type'] ?? null;
 
         if ($userId && $userType) {
-
             $this->userModel->deleteSessionByUserIdAndType($userId, $userType);
-
         }
 
         setcookie('refresh_token', '', time() - 3600, '/');
-        if (session_status() === PHP_SESSION_ACTIVE) {
-            session_destroy();
-        }
-
         ResponseHelper::send(true, "Logged out successfully.");
     }
-}
 
-?>
+    /**
+     * POST /api/auth/change-password (Merged from Praveen's Code)
+     */
+    public function changePassword()
+    {
+        \App\Middleware\AuthMiddleware::handle();
+
+        // Use array syntax as handle() populates $_REQUEST['user']
+        $userId = $_REQUEST['user']['user_id'];
+
+        // Get data safely
+        $data = !empty($_POST) ? $_POST : json_decode(file_get_contents("php://input"), true);
+
+        $currentPassword = $data['current_password'] ?? '';
+        $newPassword = $data['new_password'] ?? '';
+
+        if (empty($currentPassword) || empty($newPassword)) {
+            ResponseHelper::send(false, "Current and new password are required.", [], 400);
+            return;
+        }
+
+        if (!Validator::password($newPassword)) {
+            ResponseHelper::send(false, "New password weak.", [], 400);
+            return;
+        }
+
+        // We need a specific getById method in UserModel
+        $user = $this->userModel->getById($userId);
+        if (!$user) {
+            ResponseHelper::send(false, "User not found.", [], 404);
+            return;
+        }
+
+        // Verify current password 
+        // Note: Check if your DB column is 'password' or 'PASSWORD' (case sensitive on Linux)
+        $dbPass = $user['password'] ?? $user['PASSWORD'];
+
+        if (!password_verify($currentPassword, $dbPass)) {
+            ResponseHelper::send(false, "Incorrect current password.", [], 401);
+            return;
+        }
+
+        $newPasswordHash = password_hash($newPassword, PASSWORD_BCRYPT);
+
+        if ($this->userModel->updatePassword($userId, $newPasswordHash)) {
+            ResponseHelper::send(true, "Password changed successfully.");
+        } else {
+            ResponseHelper::send(false, "Failed to update password.", [], 500);
+        }
+    }
+}

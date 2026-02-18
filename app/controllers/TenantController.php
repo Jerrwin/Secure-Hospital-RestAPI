@@ -24,26 +24,26 @@ class TenantController
      */
     public function create()
     {
-        // 1. Protect the route: Verify JWT and CSRF
-        // This ensures only logged-in users can add tenants
+        // 1. Protect the route
         AuthMiddleware::handle();
 
-        // 2. Role Check: Only SuperAdmin should be allowed to create tenants
+        // 2. Role Check: Only SuperAdmin
         $currentUser = $_REQUEST['user'];
         if ($currentUser['role'] !== 'SuperAdmin') {
             ResponseHelper::send(false, "Forbidden: Only SuperAdmin can create tenants.", [], 403);
             return;
         }
 
-        $data = json_decode(file_get_contents("php://input"), true);
+        // 3. Get Data (Compatible with JsonMiddleware)
+        $data = !empty($_POST) ? $_POST : json_decode(file_get_contents("php://input"), true);
 
-        // 3. Validation
-        if (!isset($data['name']) || empty($data['name'])) {
-            ResponseHelper::send(false, "Hospital name is required.", [], 400);
+        // 4. Validation
+        if (empty($data['name']) || empty($data['email']) || empty($data['phone']) || empty($data['address'])) {
+            ResponseHelper::send(false, "All fields (name, email, phone, address) are required.", [], 400);
             return;
         }
 
-        // 4. Create Tenant
+        // 5. Create Tenant
         $tenantId = $this->tenantModel->create($data);
 
         if ($tenantId) {
@@ -61,16 +61,14 @@ class TenantController
     {
         AuthMiddleware::handle();
 
-        // Role Check: Only SuperAdmin should be allowed to create tenants
+        // Role Check
         $currentUser = $_REQUEST['user'];
         if ($currentUser['role'] !== 'SuperAdmin') {
-            ResponseHelper::send(false, "Forbidden: Only SuperAdmin can create tenants.", [], 403);
+            ResponseHelper::send(false, "Forbidden: Only SuperAdmin can view all tenants.", [], 403);
             return;
         }
-        
+
         $tenants = $this->tenantModel->getAll();
         ResponseHelper::send(true, "Tenants retrieved.", $tenants);
     }
 }
-
-?>

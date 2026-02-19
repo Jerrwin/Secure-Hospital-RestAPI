@@ -8,6 +8,7 @@ use App\Helpers\ResponseHelper;
 use App\Helpers\Encryption;
 use App\Middleware\AuthMiddleware;
 use App\Middleware\RoleMiddleware;
+use App\Helpers\Validator;
 
 class PatientController
 {
@@ -27,14 +28,41 @@ class PatientController
     public function create()
     {
         AuthMiddleware::handle();
-        // Fixed: Strictly only Provider and Nurse
         RoleMiddleware::handle(['Provider', 'Nurse']);
 
         $currentUser = $_REQUEST['user'];
         $data = !empty($_POST) ? $_POST : json_decode(file_get_contents("php://input"), true);
 
-        if (empty($data['first_name']) || empty($data['last_name']) || empty($data['dob']) || empty($data['gender']) || empty($data['medical_history'])) {
-            ResponseHelper::send(false, "First Name, Last Name, DOB, Gender, and Medical History are required.", [], 400);
+        $requiredFields = [
+            'first_name' => 'First Name',
+            'last_name' => 'Last Name',
+            'dob' => 'Date of Birth',
+            'gender' => 'Gender',
+            'medical_history' => 'Medical History',
+            'email' => 'Email',
+            'password' => 'Password'
+        ];
+
+        foreach ($requiredFields as $field => $label) {
+            if (empty($data[$field])) {
+                ResponseHelper::send(false, "$label is required.", [], 400);
+                return;
+            }
+        }
+
+        if (!Validator::email($data['email'])) {
+            ResponseHelper::send(false, "Invalid email format.", [], 400);
+            return;
+        }
+
+        if (!Validator::password($data['password'])) {
+            ResponseHelper::send(false, "Password does not meet complexity requirements.", [], 400);
+            return;
+        }
+
+        // Check for duplicate email
+        if ($this->patientModel->findByEmail($data['email'])) {
+            ResponseHelper::send(false, "Patient already exists with this email.", [], 409);
             return;
         }
 
@@ -45,6 +73,8 @@ class PatientController
             'tenant_id' => $currentUser['tenant_id'],
             'first_name' => $data['first_name'],
             'last_name' => $data['last_name'],
+            'email' => $data['email'],
+            'password' => password_hash($data['password'], PASSWORD_BCRYPT),
             'dob' => $data['dob'],
             'gender' => $data['gender'],
             'medical_history' => $encryptedHistory,
@@ -93,9 +123,36 @@ class PatientController
         $data = !empty($_POST) ? $_POST : json_decode(file_get_contents("php://input"), true);
 
         $patient = $this->patientModel->getById($id);
-        if (!$patient || $patient['tenant_id'] != $currentUser['tenant_id']) {
-            ResponseHelper::send(false, "Patient not found or access denied.", [], 404);
+        if (!$patient) {
+            ResponseHelper::send(false, "Patient not found.", [], 404);
             return;
+        }
+
+        if ($patient['tenant_id'] != $currentUser['tenant_id']) {
+            ResponseHelper::send(false, "Access denied.", [], 403);
+            return;
+        }
+
+        // [SECURE] Validate and Hash password if updated
+        if (!empty($data['password'])) {
+            if (!Validator::password($data['password'])) {
+                ResponseHelper::send(false, "New password does not meet complexity requirements.", [], 400);
+                return;
+            }
+            $data['password'] = password_hash($data['password'], PASSWORD_BCRYPT);
+        }
+
+        // Validate email if updated
+        if (!empty($data['email'])) {
+            if (!Validator::email($data['email'])) {
+                ResponseHelper::send(false, "Invalid email format.", [], 400);
+                return;
+            }
+            $existing = $this->patientModel->findByEmail($data['email']);
+            if ($existing && $existing['id'] != $id) {
+                ResponseHelper::send(false, "Email already in use by another patient.", [], 409);
+                return;
+            }
         }
 
         // [SECURE] Encrypt if updated
@@ -121,8 +178,13 @@ class PatientController
         $currentUser = $_REQUEST['user'];
         $patient = $this->patientModel->getById($id);
 
-        if (!$patient || $patient['tenant_id'] != $currentUser['tenant_id']) {
-            ResponseHelper::send(false, "Patient not found or access denied.", [], 404);
+        if (!$patient) {
+            ResponseHelper::send(false, "Patient not found.", [], 404);
+            return;
+        }
+
+        if ($patient['tenant_id'] != $currentUser['tenant_id']) {
+            ResponseHelper::send(false, "Access denied.", [], 403);
             return;
         }
 

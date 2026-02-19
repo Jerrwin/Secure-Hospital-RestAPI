@@ -85,7 +85,7 @@ class BillingController
             return;
         }
 
-        if ($user['role'] === 'Patient' && $appointment['patient_id'] != $user['patient_id']) {
+        if ($user['role'] === 'Patient' && $appointment['patient_id'] != $user['user_id']) {
             ResponseHelper::send(false, "Unauthorized.", [], 403);
             return;
         }
@@ -128,5 +128,34 @@ class BillingController
         } else {
             ResponseHelper::send(false, "Failed to record payment.", [], 500);
         }
+    }
+
+    // GET /api/invoices/{id}
+    public function show($id)
+    {
+        AuthMiddleware::handle();
+        $user = $_REQUEST['user'];
+
+        $invoice = $this->billingModel->getInvoiceById($id);
+
+        if (!$invoice) {
+            ResponseHelper::send(false, "Invoice not found.", [], 404);
+            return;
+        }
+
+        // Verify Tenant via Appointment
+        $appointment = $this->appointmentModel->find($invoice['appointment_id']);
+        if (!$appointment || $user['tenant_id'] != $appointment['tenant_id']) {
+            ResponseHelper::send(false, "Access denied.", [], 403);
+            return;
+        }
+
+        // Patient access check
+        if ($user['role'] === 'Patient' && $appointment['patient_id'] != $user['user_id']) {
+            ResponseHelper::send(false, "Access denied.", [], 403);
+            return;
+        }
+
+        ResponseHelper::send(true, "Invoice retrieved.", $invoice);
     }
 }

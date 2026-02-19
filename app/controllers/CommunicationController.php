@@ -44,7 +44,7 @@ class CommunicationController
 
         // Logic to restrict access: only participant or tenant admin
         // For MVP, we allow tenant staff and the patient
-        if ($user['role'] === 'Patient' && $appointment['patient_id'] != $user['patient_id']) {
+        if ($user['role'] === 'Patient' && $appointment['patient_id'] != $user['user_id']) {
             ResponseHelper::send(false, "Unauthorized.", [], 403);
             return;
         }
@@ -83,7 +83,7 @@ class CommunicationController
             return;
         }
 
-        if ($user['role'] === 'Patient' && $appointment['patient_id'] != $user['patient_id']) {
+        if ($user['role'] === 'Patient' && $appointment['patient_id'] != $user['user_id']) {
             ResponseHelper::send(false, "Unauthorized.", [], 403);
             return;
         }

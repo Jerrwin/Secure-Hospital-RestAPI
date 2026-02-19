@@ -40,8 +40,13 @@ class PrescriptionController
         // 1. Verify Appointment matches Tenant and is COMPLETED
         $appointment = $this->prescriptionModel->getAppointmentDetails($data['appointment_id']);
 
-        if (!$appointment || $appointment['tenant_id'] != $currentUser['tenant_id']) {
+        if (!$appointment) {
             ResponseHelper::send(false, "Appointment not found.", [], 404);
+            return;
+        }
+
+        if ($appointment['tenant_id'] != $currentUser['tenant_id']) {
+            ResponseHelper::send(false, "Access denied.", [], 403);
             return;
         }
 
@@ -95,8 +100,13 @@ class PrescriptionController
 
         // Verify Tenant
         $prescription = $this->prescriptionModel->getById($id);
-        if (!$prescription || $prescription['tenant_id'] != $currentUser['tenant_id']) {
+        if (!$prescription) {
             ResponseHelper::send(false, "Prescription not found.", [], 404);
+            return;
+        }
+
+        if ($prescription['tenant_id'] != $currentUser['tenant_id']) {
+            ResponseHelper::send(false, "Access denied.", [], 403);
             return;
         }
 

@@ -76,6 +76,10 @@ class Appointment
             $query .= " AND a.appointment_date <= :end_date";
             $params[':end_date'] = $filters['end_date'];
         }
+        if (!empty($filters['patient_id'])) {
+            $query .= " AND a.patient_id = :patient_id";
+            $params[':patient_id'] = $filters['patient_id'];
+        }
 
         $query .= " ORDER BY a.appointment_date ASC, a.start_time ASC";
 
@@ -85,7 +89,7 @@ class Appointment
     }
 
     // [RESTORED] Get Upcoming (Specific Logic)
-    public function getUpcomingByTenant($tenantId)
+    public function getUpcomingByTenant($tenantId, $patientId = null)
     {
         $query = "SELECT a.*, 
                          CONCAT(p.first_name, ' ', p.last_name) as patient_name,
@@ -95,11 +99,18 @@ class Appointment
                   LEFT JOIN users u ON a.provider_id = u.id
                   WHERE a.tenant_id = :tenant_id 
                   AND a.STATUS = 'scheduled'
-                  AND a.appointment_date >= CURDATE()
-                  ORDER BY a.appointment_date ASC, a.start_time ASC";
+                  AND a.appointment_date >= CURDATE()";
+
+        $params = [':tenant_id' => $tenantId];
+        if ($patientId) {
+            $query .= " AND a.patient_id = :patient_id";
+            $params[':patient_id'] = $patientId;
+        }
+
+        $query .= " ORDER BY a.appointment_date ASC, a.start_time ASC";
 
         $stmt = $this->conn->prepare($query);
-        $stmt->execute([':tenant_id' => $tenantId]);
+        $stmt->execute($params);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
@@ -142,6 +153,15 @@ class Appointment
     {
         $query = "SELECT COUNT(*) as total FROM " . $this->table . " 
                   WHERE tenant_id = :tenant_id AND appointment_date = CURDATE() AND STATUS != 'cancelled'";
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute([':tenant_id' => $tenantId]);
+        return $stmt->fetch(PDO::FETCH_ASSOC)['total'];
+    }
+
+    public function countUpcomingByTenant($tenantId)
+    {
+        $query = "SELECT COUNT(*) as total FROM " . $this->table . " 
+                  WHERE tenant_id = :tenant_id AND appointment_date > CURDATE() AND STATUS != 'cancelled'";
         $stmt = $this->conn->prepare($query);
         $stmt->execute([':tenant_id' => $tenantId]);
         return $stmt->fetch(PDO::FETCH_ASSOC)['total'];

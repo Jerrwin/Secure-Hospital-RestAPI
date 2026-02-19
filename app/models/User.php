@@ -21,24 +21,31 @@ class User
         // 1. Check System Admins
         $stmt = $this->conn->prepare("SELECT id, 'system_admin' as type, name, email, password, 'SuperAdmin' as role_name, 999 as role_id, NULL as tenant_id FROM system_admins WHERE email = :e LIMIT 1");
         $stmt->execute([':e' => $email]);
-        if ($res = $stmt->fetch(PDO::FETCH_ASSOC))
+        if ($res = $stmt->fetch(PDO::FETCH_ASSOC)) {
             return $res;
+        }
 
-        // 2. Check Tenant Admins (Users table)
-        //  Joined users -> roles directly.
-        // Fixed: Column names (password -> password_hash)
-        // 2. Check Tenant Admins (Users table)
+        // 2. Check Tenant Admins/Staff (Users table)
         $stmt = $this->conn->prepare("SELECT u.id, 'users' as type, u.tenant_id, u.role_id, u.name, u.email, u.PASSWORD as password, r.name as role_name 
                                   FROM users u 
                                   LEFT JOIN roles r ON u.role_id = r.id 
                                   WHERE u.email = :e LIMIT 1");
         $stmt->execute([':e' => $email]);
-        if ($res = $stmt->fetch(PDO::FETCH_ASSOC))
+        if ($res = $stmt->fetch(PDO::FETCH_ASSOC)) {
             return $res;
-        $stmt->execute([':e' => $email]);
-        if ($res = $stmt->fetch(PDO::FETCH_ASSOC))
-            return $res;
+        }
 
+        // 3. Check Patients
+        // Note: Patients table does not have role_id, use virtual role_name 'Patient'
+        $stmt = $this->conn->prepare("SELECT id, 'patients' as type, tenant_id, first_name as name, email, password, 'Patient' as role_name 
+                                  FROM patients 
+                                  WHERE email = :e AND deleted_at IS NULL LIMIT 1");
+        $stmt->execute([':e' => $email]);
+        if ($res = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            // Assign a virtual role_id for patients for RBAC consistency
+            $res['role_id'] = 6;
+            return $res;
+        }
 
         return false;
     }
@@ -53,6 +60,8 @@ class User
     {
         if ($type === 'system_admin') {
             $query = "SELECT id, NAME as name, email, NULL as tenant_id, 'SuperAdmin' as role_name FROM system_admins WHERE id = :id LIMIT 1";
+        } elseif ($type === 'patients') {
+            $query = "SELECT id, first_name as name, email, tenant_id, 'Patient' as role_name FROM patients WHERE id = :id AND deleted_at IS NULL LIMIT 1";
         } elseif ($type === 'staff') {
             // FIXED: Table name 'staff' instead of 'staffs'
             // Added deleted_at check

@@ -22,8 +22,8 @@ class Patient
     public function create($data)
     {
         $query = "INSERT INTO " . $this->table . " 
-                  (tenant_id, first_name, last_name, dob, gender, medical_history, created_by, created_at) 
-                  VALUES (:tenant_id, :first_name, :last_name, :dob, :gender, :medical_history, :created_by, NOW())";
+                  (tenant_id, first_name, last_name, email, password, dob, gender, medical_history, created_by, created_at) 
+                  VALUES (:tenant_id, :first_name, :last_name, :email, :password, :dob, :gender, :medical_history, :created_by, NOW())";
 
         $stmt = $this->conn->prepare($query);
 
@@ -33,6 +33,8 @@ class Patient
         $stmt->bindParam(':tenant_id', $data['tenant_id']);
         $stmt->bindParam(':first_name', $data['first_name']);
         $stmt->bindParam(':last_name', $data['last_name']);
+        $stmt->bindParam(':email', $data['email']);
+        $stmt->bindParam(':password', $data['password']);
         $stmt->bindParam(':dob', $data['dob']);
         $stmt->bindParam(':gender', $data['gender']);
         $stmt->bindParam(':medical_history', $encryptedHistory);
@@ -50,7 +52,7 @@ class Patient
      */
     public function getAllByTenant($tenantId)
     {
-        $query = "SELECT * FROM " . $this->table . " WHERE tenant_id = :tenant_id AND deleted_at IS NULL";
+        $query = "SELECT id, tenant_id, first_name, last_name, email, dob, gender, medical_history, created_by, created_at, updated_at FROM " . $this->table . " WHERE tenant_id = :tenant_id AND deleted_at IS NULL";
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(':tenant_id', $tenantId);
         $stmt->execute();
@@ -70,7 +72,7 @@ class Patient
      */
     public function getById($id)
     {
-        $query = "SELECT * FROM " . $this->table . " WHERE id = :id AND deleted_at IS NULL LIMIT 1";
+        $query = "SELECT id, tenant_id, first_name, last_name, email, dob, gender, medical_history, created_by, created_at, updated_at FROM " . $this->table . " WHERE id = :id AND deleted_at IS NULL LIMIT 1";
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(':id', $id);
         $stmt->execute();
@@ -116,6 +118,10 @@ class Patient
             $fields[] = "dob = :dob";
         if (isset($data['gender']))
             $fields[] = "gender = :gender";
+        if (isset($data['email']))
+            $fields[] = "email = :email";
+        if (isset($data['password']))
+            $fields[] = "password = :password";
         if (isset($data['medical_history']))
             $fields[] = "medical_history = :medical_history";
 
@@ -138,6 +144,10 @@ class Patient
             $stmt->bindParam(':dob', $data['dob']);
         if (isset($data['gender']))
             $stmt->bindParam(':gender', $data['gender']);
+        if (isset($data['email']))
+            $stmt->bindParam(':email', $data['email']);
+        if (isset($data['password']))
+            $stmt->bindParam(':password', $data['password']);
 
         if (isset($data['medical_history'])) {
             $encrypted = Encryption::encrypt($data['medical_history']);
@@ -163,5 +173,14 @@ class Patient
         $stmt->execute();
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
         return $row['total'];
+    }
+
+    public function findByEmail($email)
+    {
+        $query = "SELECT * FROM " . $this->table . " WHERE email = :email AND deleted_at IS NULL LIMIT 1";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':email', $email);
+        $stmt->execute();
+        return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 }

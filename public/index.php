@@ -83,6 +83,8 @@ $router->get('/api/dashboard/stats', [DashboardController::class, 'getStats']);
 // Tenant Endpoints
 $router->post('/api/tenants', [TenantController::class, 'create']);//
 $router->get('/api/tenants', [TenantController::class, 'index']);//
+$router->put('/api/tenants/{id}', [TenantController::class, 'update']);// 
+$router->delete('/api/tenants/{id}', [TenantController::class, 'delete']);//
 
 // Staff Endpoints (Merged)
 $router->post('/api/staff/register', [StaffController::class, 'register']);//
@@ -117,6 +119,7 @@ $router->get('/api/communications', [CommunicationController::class, 'index']);
 // [MERGE] Billing Endpoints (New)
 $router->post('/api/invoices', [BillingController::class, 'createInvoice']);
 $router->get('/api/invoices', [BillingController::class, 'getInvoice']);
+$router->get('/api/invoices/{id}', [BillingController::class, 'show']);
 $router->post('/api/payments', [BillingController::class, 'processPayment']);
 
 

@@ -62,8 +62,13 @@ class AppointmentController
         }
 
         $patient = $this->patientModel->getById($data['patient_id']);
-        if (!$patient || $patient['tenant_id'] != $tenantId) {
-            ResponseHelper::send(false, "Patient not found or access denied.", [], 404);
+        if (!$patient) {
+            ResponseHelper::send(false, "Patient not found.", [], 404);
+            return;
+        }
+
+        if ($patient['tenant_id'] != $tenantId) {
+            ResponseHelper::send(false, "Access denied.", [], 403);
             return;
         }
 
@@ -109,10 +114,18 @@ class AppointmentController
         AuthMiddleware::handle();
         $currentUser = $_REQUEST['user'];
 
-        $filters = [
-            'start_date' => $_GET['start_date'] ?? null,
-            'end_date' => $_GET['end_date'] ?? null
-        ];
+        $filters = [];
+        if ($currentUser['role'] === 'Patient') {
+            $filters['patient_id'] = $currentUser['user_id'];
+        }
+
+        // Extract date filters from query string
+        if (!empty($_GET['start_date'])) {
+            $filters['start_date'] = $_GET['start_date'];
+        }
+        if (!empty($_GET['end_date'])) {
+            $filters['end_date'] = $_GET['end_date'];
+        }
 
         $list = $this->appointmentModel->getAllByTenant($currentUser['tenant_id'], $filters);
         ResponseHelper::send(true, "Appointments retrieved", $list);
@@ -124,8 +137,10 @@ class AppointmentController
         AuthMiddleware::handle();
         $currentUser = $_REQUEST['user'];
 
+        $patientId = ($currentUser['role'] === 'Patient') ? $currentUser['user_id'] : null;
+
         // Use the dedicated method we are about to add to the Model
-        $list = $this->appointmentModel->getUpcomingByTenant($currentUser['tenant_id']);
+        $list = $this->appointmentModel->getUpcomingByTenant($currentUser['tenant_id'], $patientId);
         ResponseHelper::send(true, "Upcoming appointments", $list);
     }
 
@@ -140,8 +155,13 @@ class AppointmentController
 
         // 1. Check if appointment exists
         $existing = $this->appointmentModel->find($id);
-        if (!$existing || $existing['tenant_id'] != $tenantId) {
-            ResponseHelper::send(false, "Appointment not found or access denied", [], 404);
+        if (!$existing) {
+            ResponseHelper::send(false, "Appointment not found.", [], 404);
+            return;
+        }
+
+        if ($existing['tenant_id'] != $tenantId) {
+            ResponseHelper::send(false, "Access denied.", [], 403);
             return;
         }
 
@@ -178,8 +198,13 @@ class AppointmentController
         $tenantId = $_REQUEST['user']['tenant_id'];
         $existing = $this->appointmentModel->find($id);
 
-        if (!$existing || $existing['tenant_id'] != $tenantId) {
-            ResponseHelper::send(false, "Not found", [], 404);
+        if (!$existing) {
+            ResponseHelper::send(false, "Appointment not found.", [], 404);
+            return;
+        }
+
+        if ($existing['tenant_id'] != $tenantId) {
+            ResponseHelper::send(false, "Access denied.", [], 403);
             return;
         }
 
@@ -201,8 +226,13 @@ class AppointmentController
         $tenantId = $_REQUEST['user']['tenant_id'];
         $existing = $this->appointmentModel->find($id);
 
-        if (!$existing || $existing['tenant_id'] != $tenantId) {
-            ResponseHelper::send(false, "Not found", [], 404);
+        if (!$existing) {
+            ResponseHelper::send(false, "Appointment not found.", [], 404);
+            return;
+        }
+
+        if ($existing['tenant_id'] != $tenantId) {
+            ResponseHelper::send(false, "Access denied.", [], 403);
             return;
         }
 
@@ -214,11 +244,22 @@ class AppointmentController
     public function show($id)
     {
         AuthMiddleware::handle();
+        $currentUser = $_REQUEST['user'];
         $appointment = $this->appointmentModel->find($id);
 
         // Security Check
-        if (!$appointment || $appointment['tenant_id'] != $_REQUEST['user']['tenant_id']) {
-            ResponseHelper::send(false, "Access denied", [], 404);
+        if (!$appointment) {
+            ResponseHelper::send(false, "Appointment not found.", [], 404);
+            return;
+        }
+
+        if ($appointment['tenant_id'] != $currentUser['tenant_id']) {
+            ResponseHelper::send(false, "Access denied.", [], 403);
+            return;
+        }
+
+        if ($currentUser['role'] === 'Patient' && $appointment['patient_id'] != $currentUser['user_id']) {
+            ResponseHelper::send(false, "Access denied", [], 403);
             return;
         }
         ResponseHelper::send(true, "Details", $appointment);

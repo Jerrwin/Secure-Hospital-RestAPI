@@ -166,8 +166,13 @@ class StaffController
 
         // Security: Ensure staff belongs to this tenant
         $staff = $this->staffModel->getById($id);
-        if (!$staff || $staff['tenant_id'] != $currentUser['tenant_id']) {
-            ResponseHelper::send(false, "Staff not found or access denied", [], 404);
+        if (!$staff) {
+            ResponseHelper::send(false, "Staff not found.", [], 404);
+            return;
+        }
+
+        if ($staff['tenant_id'] != $currentUser['tenant_id']) {
+            ResponseHelper::send(false, "Access denied.", [], 403);
             return;
         }
 
@@ -203,8 +208,13 @@ class StaffController
 
         // Verify staff belongs to this tenant! (Security Check)
         $staff = $this->staffModel->getById($id);
-        if (!$staff || $staff['tenant_id'] != $_REQUEST['user']['tenant_id']) {
-            ResponseHelper::send(false, "Staff not found or access denied", [], 404);
+        if (!$staff) {
+            ResponseHelper::send(false, "Staff not found.", [], 404);
+            return;
+        }
+
+        if ($staff['tenant_id'] != $_REQUEST['user']['tenant_id']) {
+            ResponseHelper::send(false, "Access denied.", [], 403);
             return;
         }
 

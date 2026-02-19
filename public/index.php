@@ -30,9 +30,9 @@ require_once __DIR__ . '/../app/models/Staff.php';
 require_once __DIR__ . '/../app/models/Patient.php';
 require_once __DIR__ . '/../app/models/Appointment.php';
 // [MERGE] Added His New Models
-// require_once __DIR__ . '/../app/models/Prescription.php';
-// require_once __DIR__ . '/../app/models/Communication.php';
-// require_once __DIR__ . '/../app/models/Billing.php';
+require_once __DIR__ . '/../app/models/Prescription.php';
+require_once __DIR__ . '/../app/models/Communication.php';
+require_once __DIR__ . '/../app/models/Billing.php';
 
 // 5. Load Controllers
 require_once __DIR__ . '/../app/controllers/AuthController.php';
@@ -41,10 +41,10 @@ require_once __DIR__ . '/../app/controllers/StaffController.php';
 require_once __DIR__ . '/../app/controllers/PatientController.php';
 require_once __DIR__ . '/../app/controllers/AppointmentController.php';
 // [MERGE] Added His New Controllers
-// require_once __DIR__ . '/../app/controllers/PrescriptionController.php';
-// require_once __DIR__ . '/../app/controllers/CommunicationController.php';
-// require_once __DIR__ . '/../app/controllers/BillingController.php';
-// require_once __DIR__ . '/../app/controllers/DashboardController.php';
+require_once __DIR__ . '/../app/controllers/PrescriptionController.php';
+require_once __DIR__ . '/../app/controllers/CommunicationController.php';
+require_once __DIR__ . '/../app/controllers/BillingController.php';
+require_once __DIR__ . '/../app/controllers/DashboardController.php';
 
 
 // 6. Use Classes
@@ -56,10 +56,10 @@ use App\Controllers\StaffController;
 use App\Controllers\PatientController;
 use App\Controllers\AppointmentController;
 // [MERGE] Added His Classes
-// use App\Controllers\PrescriptionController;
-// use App\Controllers\CommunicationController;
-// use App\Controllers\BillingController;
-// use App\Controllers\DashboardController;
+use App\Controllers\PrescriptionController;
+use App\Controllers\CommunicationController;
+use App\Controllers\BillingController;
+use App\Controllers\DashboardController;
 
 
 // 7. Run Global Middleware (YOUR LOGIC IS SAFER HERE)
@@ -78,7 +78,7 @@ $router->post('/api/auth/logout', [AuthController::class, 'logout']);//
 $router->post('/api/auth/change-password', [AuthController::class, 'changePassword']);//
 
 // [MERGE] Dashboard Endpoints (New)
-// $router->get('/api/dashboard/stats', [DashboardController::class, 'getStats']);
+$router->get('/api/dashboard/stats', [DashboardController::class, 'getStats']);
 
 // Tenant Endpoints
 $router->post('/api/tenants', [TenantController::class, 'create']);//
@@ -105,19 +105,19 @@ $router->put('/api/appointments/cancel/{id}', [AppointmentController::class, 'ca
 $router->put('/api/appointments/update/{id}', [AppointmentController::class, 'update']);//
 $router->put('/api/appointments/complete/{id}', [AppointmentController::class, 'complete']);//
 
-// [MERGE] Prescription Endpoints (New)
-// $router->post('/api/prescriptions', [PrescriptionController::class, 'create']);
-// $router->put('/api/prescriptions/{id}/status', [PrescriptionController::class, 'updateStatus']);
-// $router->get('/api/prescriptions', [PrescriptionController::class, 'index']);
+// Prescription Endpoints (New)
+$router->post('/api/prescriptions', [PrescriptionController::class, 'create']);
+$router->put('/api/prescriptions/{id}/status', [PrescriptionController::class, 'updateStatus']);
+$router->get('/api/prescriptions', [PrescriptionController::class, 'index']);
 
-// [MERGE] Communication Endpoints (New)
-// $router->post('/api/communications', [CommunicationController::class, 'create']);
-// $router->get('/api/communications', [CommunicationController::class, 'index']);
+// Communication Endpoints (New)
+$router->post('/api/communications', [CommunicationController::class, 'create']);
+$router->get('/api/communications', [CommunicationController::class, 'index']);
 
 // [MERGE] Billing Endpoints (New)
-// $router->post('/api/invoices', [BillingController::class, 'createInvoice']);
-// $router->get('/api/invoices', [BillingController::class, 'getInvoice']);
-// $router->post('/api/payments', [BillingController::class, 'processPayment']);
+$router->post('/api/invoices', [BillingController::class, 'createInvoice']);
+$router->get('/api/invoices', [BillingController::class, 'getInvoice']);
+$router->post('/api/payments', [BillingController::class, 'processPayment']);
 
 // 10. Dispatch
 $router->dispatch($_SERVER['REQUEST_URI'], $_SERVER['REQUEST_METHOD']);

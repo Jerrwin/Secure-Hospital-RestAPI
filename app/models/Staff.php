@@ -15,7 +15,7 @@ class Staff
     }
 
     /**
-     * Create new Staff Profile
+     * Create new Staff
      */
     public function create($data)
     {
@@ -28,7 +28,7 @@ class Staff
         $status = $data['status'] ?? 'active';
 
         $stmt->bindParam(':tenant_id', $data['tenant_id']);
-        $stmt->bindParam(':user_id', $data['user_id']);
+        $stmt->bindParam(':user_id', $data['user_id']); // Added user_id
         $stmt->bindParam(':name', $data['name']);
         $stmt->bindParam(':gender', $data['gender']);
         $stmt->bindParam(':address', $data['address']);
@@ -42,7 +42,7 @@ class Staff
     }
 
     /**
-     * Update Staff Profile
+     * Update Staff
      */
     public function update($id, $data)
     {
@@ -64,12 +64,14 @@ class Staff
         $stmt->bindParam(':status', $data['status']);
         $stmt->bindParam(':id', $id);
 
-        return $stmt->execute();
+        if ($stmt->execute()) {
+            return true;
+        }
+        return false;
     }
 
     /**
      * Get All Staff (Admin View - By Tenant)
-     * [MERGE] Joins with users and roles to provide full details
      */
     public function getAllByTenant($tenantId)
     {
@@ -113,12 +115,20 @@ class Staff
     }
 
     /**
-     * Count Staff (For Dashboard)
+     * Find staff by phone number (Duplicate check)
      */
+    public function findByPhone($phone)
+    {
+        $query = "SELECT id FROM " . $this->table . " WHERE phone_number = :phone AND deleted_at IS NULL LIMIT 1";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':phone', $phone);
+        $stmt->execute();
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
     public function countByTenant($tenantId)
     {
-        $query = "SELECT COUNT(*) as total FROM " . $this->table . " 
-                  WHERE tenant_id = :tenant_id AND deleted_at IS NULL";
+        $query = "SELECT COUNT(*) as total FROM " . $this->table . " WHERE tenant_id = :tenant_id AND deleted_at IS NULL";
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(':tenant_id', $tenantId);
         $stmt->execute();

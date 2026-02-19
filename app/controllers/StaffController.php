@@ -6,7 +6,6 @@ use App\Core\Database;
 use App\Models\User;
 use App\Models\Staff;
 use App\Helpers\ResponseHelper;
-use App\Helpers\Validator;
 use App\Middleware\AuthMiddleware;
 use App\Middleware\RoleMiddleware;
 
@@ -26,18 +25,21 @@ class StaffController
 
     /**
      * POST /api/staff/register
+     * Check: Admin Only
+     * Action: Register Staff (User + Staff Profile)
      */
     public function register()
     {
+        // 1. Auth & Role Check
         AuthMiddleware::handle();
-        RoleMiddleware::handle(['Admin', 'SuperAdmin']);
+        RoleMiddleware::handle(['Admin', 'SuperAdmin']); // Allow SuperAdmin too if needed, but req says 'Admin'
 
         $currentUser = $_REQUEST['user'];
         $tenantId = $currentUser['tenant_id'];
 
-        $data = !empty($_POST) ? $_POST : json_decode(file_get_contents("php://input"), true);
+        // If SuperAdmin is registering, they must provide tenant_id
+        $data = json_decode(file_get_contents("php://input"), true);
 
-        // [MERGE] SuperAdmin Tenant Assignment
         if ($currentUser['role'] === 'SuperAdmin') {
             if (!isset($data['tenant_id'])) {
                 ResponseHelper::send(false, "SuperAdmin must provide tenant_id", [], 400);
@@ -46,34 +48,39 @@ class StaffController
             $tenantId = $data['tenant_id'];
         }
 
-        // 1. [MERGE] Strict Validation (From Praveen's Code)
-        if (empty($data['name']) || empty($data['email']) || empty($data['password']) || empty($data['role_id']) || empty($data['gender'])) {
-            ResponseHelper::send(false, "Missing required fields.", [], 400);
+        // 2. Validate Input
+        if (empty($data['name']) || empty($data['email']) || empty($data['password']) || empty($data['role_id']) || empty($data['gender']) || empty($data['phone_number']) || empty($data['address'])) {
+            ResponseHelper::send(false, "Missing required fields (name, email, password, role_id, gender, phone_number, address)", [], 400);
             return;
         }
 
-        if (!Validator::email($data['email'])) {
+        if (!\App\Helpers\Validator::email($data['email'])) {
             ResponseHelper::send(false, "Invalid email format.", [], 400);
             return;
         }
 
-        if (!Validator::password($data['password'])) {
-            ResponseHelper::send(false, "Password too weak.", [], 400);
+        if (!\App\Helpers\Validator::password($data['password'])) {
+            ResponseHelper::send(false, "Password does not meet complexity requirements.", [], 400);
             return;
         }
 
-        if (!empty($data['phone_number']) && !Validator::phone($data['phone_number'])) {
-            ResponseHelper::send(false, "Invalid phone number (10 digits required).", [], 400);
+        if (!empty($data['phone_number']) && !\App\Helpers\Validator::phone($data['phone_number'])) {
+            ResponseHelper::send(false, "Invalid phone number (exactly 10 digits required).", [], 400);
             return;
         }
 
-        // 2. Email Check
+        // 3. Email & Phone Check
         if ($this->userModel->findAnyUserByEmail($data['email'])) {
             ResponseHelper::send(false, "Email already exists", [], 409);
             return;
         }
 
-        // 3. Transactional Create
+        if ($this->staffModel->findByPhone($data['phone_number'])) {
+            ResponseHelper::send(false, "Phone number already exists", [], 409);
+            return;
+        }
+
+        // 4. Transactional Create
         try {
             $this->db->beginTransaction();
 
@@ -86,12 +93,13 @@ class StaffController
                 'role_id' => $data['role_id']
             ];
 
+            // Pass false to prevent internal commit/rollback
             $userId = $this->userModel->create($userData, false);
 
             // B. Create Staff Profile
             $staffData = [
                 'tenant_id' => $tenantId,
-                'user_id' => $userId,
+                'user_id' => $userId, // Added user_id link
                 'name' => $data['name'],
                 'gender' => $data['gender'],
                 'address' => $data['address'] ?? null,
@@ -100,6 +108,10 @@ class StaffController
             ];
 
             $staffId = $this->staffModel->create($staffData);
+
+            if (!$userId || !$staffId) {
+                throw new \Exception("Failed to create records.");
+            }
 
             $this->db->commit();
             ResponseHelper::send(true, "Staff registered successfully", ['user_id' => $userId, 'staff_id' => $staffId], 201);
@@ -112,16 +124,18 @@ class StaffController
 
     /**
      * GET /api/staff
+     * Check: Admin, Provider, Nurse
      */
     public function index()
     {
         AuthMiddleware::handle();
-        RoleMiddleware::handle(['Admin', 'SuperAdmin', 'Provider', 'Nurse']);
+        RoleMiddleware::handle(['Admin', 'SuperAdmin', 'Provider', 'Nurse']); // Adjust visibility rules as needed
 
         $currentUser = $_REQUEST['user'];
+        $tenantId = $currentUser['tenant_id'];
 
-        // [MERGE] Praveen's SuperAdmin view logic
         if ($currentUser['role'] === 'SuperAdmin') {
+            // SuperAdmin can see everyone
             $query = "SELECT s.*, u.email, r.name as role_name 
                        FROM staff s 
                        JOIN users u ON s.user_id = u.id 
@@ -133,13 +147,14 @@ class StaffController
             return;
         }
 
-        $staffMembers = $this->staffModel->getAllByTenant($currentUser['tenant_id']);
+        $staffMembers = $this->staffModel->getAllByTenant($tenantId);
         ResponseHelper::send(true, "Staff list retrieved", $staffMembers);
     }
 
     /**
      * PUT /api/staff/{id}
-     * [MERGE] Added Praveen's Update logic
+     * Check: Admin Only
+     * Action: Update Staff Details
      */
     public function update($id)
     {
@@ -147,19 +162,21 @@ class StaffController
         RoleMiddleware::handle(['Admin']);
 
         $currentUser = $_REQUEST['user'];
-        $data = !empty($_POST) ? $_POST : json_decode(file_get_contents("php://input"), true);
+        $data = json_decode(file_get_contents("php://input"), true);
 
+        // Security: Ensure staff belongs to this tenant
         $staff = $this->staffModel->getById($id);
         if (!$staff || $staff['tenant_id'] != $currentUser['tenant_id']) {
             ResponseHelper::send(false, "Staff not found or access denied", [], 404);
             return;
         }
 
-        if (!empty($data['phone_number']) && !Validator::phone($data['phone_number'])) {
+        if (!empty($data['phone_number']) && !\App\Helpers\Validator::phone($data['phone_number'])) {
             ResponseHelper::send(false, "Invalid phone number format.", [], 400);
             return;
         }
 
+        // Prepare data for update
         $updateData = [
             'name' => $data['name'] ?? $staff['name'],
             'gender' => $data['gender'] ?? $staff['gender'],
@@ -177,12 +194,14 @@ class StaffController
 
     /**
      * DELETE /api/staff/{id}
+     * Check: Admin Only
      */
     public function delete($id)
     {
         AuthMiddleware::handle();
         RoleMiddleware::handle(['Admin']);
 
+        // Verify staff belongs to this tenant! (Security Check)
         $staff = $this->staffModel->getById($id);
         if (!$staff || $staff['tenant_id'] != $_REQUEST['user']['tenant_id']) {
             ResponseHelper::send(false, "Staff not found or access denied", [], 404);

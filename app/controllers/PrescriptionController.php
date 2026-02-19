@@ -27,7 +27,7 @@ class PrescriptionController
     public function create()
     {
         AuthMiddleware::handle();
-        RoleMiddleware::handle(['Provider']); 
+        RoleMiddleware::handle(['Provider']);
 
         $currentUser = $_REQUEST['user'];
         $data = json_decode(file_get_contents("php://input"), true);
@@ -54,8 +54,8 @@ class PrescriptionController
 
         // 2. Check if prescription already exists
         if ($this->prescriptionModel->existsForAppointment($data['appointment_id'])) {
-             ResponseHelper::send(false, "Prescription already exists for this appointment.", [], 409);
-             return;
+            ResponseHelper::send(false, "Prescription already exists for this appointment.", [], 409);
+            return;
         }
 
         // 3. Create
@@ -82,15 +82,15 @@ class PrescriptionController
     public function updateStatus($id)
     {
         AuthMiddleware::handle();
-        RoleMiddleware::handle(['Pharmacist']); 
+        RoleMiddleware::handle(['Pharmacist']);
 
         $currentUser = $_REQUEST['user'];
         $data = json_decode(file_get_contents("php://input"), true);
-        
+
         $status = $data['status'] ?? null;
         if (!in_array($status, ['verified', 'created'])) { // Add other statuses if needed
-             ResponseHelper::send(false, "Invalid status.", [], 400);
-             return;
+            ResponseHelper::send(false, "Invalid status.", [], 400);
+            return;
         }
 
         // Verify Tenant

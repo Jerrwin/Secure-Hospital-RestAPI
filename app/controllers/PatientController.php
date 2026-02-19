@@ -22,51 +22,46 @@ class PatientController
 
     /**
      * Create Patient
-     * Roles: Provider, Nurse
+     * Roles: Provider, Nurse Only
      */
     public function create()
     {
         AuthMiddleware::handle();
-        RoleMiddleware::handle(['Provider', 'Nurse', 'Admin']); // Admin too? User said "patient crud can be done by only provider and nurse others cant". So remove Admin.
-        
-        // Re-check role strictly based on user request
+        // Fixed: Strictly only Provider and Nurse
+        RoleMiddleware::handle(['Provider', 'Nurse']);
+
         $currentUser = $_REQUEST['user'];
-        if (!in_array($currentUser['role'], ['Provider', 'Nurse'])) {
-            ResponseHelper::send(false, "Forbidden: Only Provider and Nurse can manage patients.", [], 403);
+        $data = !empty($_POST) ? $_POST : json_decode(file_get_contents("php://input"), true);
+
+        if (empty($data['first_name']) || empty($data['last_name']) || empty($data['dob']) || empty($data['gender']) || empty($data['medical_history'])) {
+            ResponseHelper::send(false, "First Name, Last Name, DOB, Gender, and Medical History are required.", [], 400);
             return;
         }
 
-        $data = json_decode(file_get_contents("php://input"), true);
-
-        if (empty($data['name']) || empty($data['medical_history'])) {
-            ResponseHelper::send(false, "Name and Medical History are required.", [], 400);
-            return;
-        }
-
-        // Encrypt Medical Data
-        $encryptedData = Encryption::encrypt($data['medical_history']);
-        
-        // Blind Index for Phone (if provided)
-        $phoneHash = isset($data['phone']) ? hash_hmac('sha256', $data['phone'], $_ENV['HASH_SECRET']) : null;
+        // [SECURE] Encrypt the history before it ever touches the DB
+        $encryptedHistory = Encryption::encrypt($data['medical_history']);
 
         $patientData = [
             'tenant_id' => $currentUser['tenant_id'],
-            'name' => $data['name'],
-            'medical_history' => $encryptedData,
-            'phone_hash' => $phoneHash
+            'first_name' => $data['first_name'],
+            'last_name' => $data['last_name'],
+            'dob' => $data['dob'],
+            'gender' => $data['gender'],
+            'medical_history' => $encryptedHistory,
+            'created_by' => $currentUser['user_id']
         ];
 
         $id = $this->patientModel->create($patientData);
 
         if ($id) {
-            ResponseHelper::send(true, "Patient created successfully", ['id' => $id], 201);
+            ResponseHelper::send(true, "Patient created successfully", ['id' => (int) $id], 201);
         } else {
             ResponseHelper::send(false, "Failed to create patient", [], 500);
         }
     }
 
     /**
-     * Get All Patients (Tenant Scoped)
+     * Get All Patients
      */
     public function index()
     {
@@ -76,7 +71,7 @@ class PatientController
         $currentUser = $_REQUEST['user'];
         $patients = $this->patientModel->getAllByTenant($currentUser['tenant_id']);
 
-        // Decrypt data for display
+        // [SECURE] Decrypt history so staff can actually read it
         foreach ($patients as &$patient) {
             if (!empty($patient['medical_history'])) {
                 $patient['medical_history'] = Encryption::decrypt($patient['medical_history']);
@@ -85,25 +80,53 @@ class PatientController
 
         ResponseHelper::send(true, "Patients retrieved", $patients);
     }
-    
+
+    /**
+     * Update Patient
+     */
+    public function update($id)
+    {
+        AuthMiddleware::handle();
+        RoleMiddleware::handle(['Provider', 'Nurse']);
+
+        $currentUser = $_REQUEST['user'];
+        $data = !empty($_POST) ? $_POST : json_decode(file_get_contents("php://input"), true);
+
+        $patient = $this->patientModel->getById($id);
+        if (!$patient || $patient['tenant_id'] != $currentUser['tenant_id']) {
+            ResponseHelper::send(false, "Patient not found or access denied.", [], 404);
+            return;
+        }
+
+        // [SECURE] Encrypt if updated
+        if (!empty($data['medical_history'])) {
+            $data['medical_history'] = Encryption::encrypt($data['medical_history']);
+        }
+
+        if ($this->patientModel->update($id, $data, $currentUser['tenant_id'])) {
+            ResponseHelper::send(true, "Patient updated successfully.");
+        } else {
+            ResponseHelper::send(false, "Failed to update patient.", [], 500);
+        }
+    }
+
     /**
      * Delete Patient
      */
     public function delete($id)
     {
         AuthMiddleware::handle();
-        RoleMiddleware::handle(['Provider', 'Nurse']); // "others cant"
+        RoleMiddleware::handle(['Provider', 'Nurse']);
 
-        // Verify ownership/tenant
-        $patient = $this->patientModel->getById($id);
         $currentUser = $_REQUEST['user'];
+        $patient = $this->patientModel->getById($id);
 
         if (!$patient || $patient['tenant_id'] != $currentUser['tenant_id']) {
-            ResponseHelper::send(false, "Patient not found or access denied", [], 404);
+            ResponseHelper::send(false, "Patient not found or access denied.", [], 404);
             return;
         }
 
-        if ($this->patientModel->softDelete($id)) {
+        if ($this->patientModel->softDelete($id, $currentUser['tenant_id'])) {
             ResponseHelper::send(true, "Patient deleted successfully");
         } else {
             ResponseHelper::send(false, "Failed to delete patient", [], 500);

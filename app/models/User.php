@@ -19,17 +19,22 @@ class User
     public function findAnyUserByEmail($email)
     {
         // 1. Check System Admins
-        $stmt = $this->conn->prepare("SELECT id, 'system_admin' as type, NAME as name, email, PASSWORD as password, 'SuperAdmin' as role_name, NULL as tenant_id FROM system_admins WHERE email = :e LIMIT 1");
+        $stmt = $this->conn->prepare("SELECT id, 'system_admin' as type, name, email, password, 'SuperAdmin' as role_name, 999 as role_id, NULL as tenant_id FROM system_admins WHERE email = :e LIMIT 1");
         $stmt->execute([':e' => $email]);
         if ($res = $stmt->fetch(PDO::FETCH_ASSOC))
             return $res;
 
         // 2. Check Tenant Admins (Users table)
-        $stmt = $this->conn->prepare("SELECT u.id, 'users' as type, u.tenant_id, u.NAME as name, u.email, u.PASSWORD as password, r.NAME as role_name 
+        //  Joined users -> roles directly.
+        // Fixed: Column names (password -> password_hash)
+        // 2. Check Tenant Admins (Users table)
+        $stmt = $this->conn->prepare("SELECT u.id, 'users' as type, u.tenant_id, u.role_id, u.name, u.email, u.PASSWORD as password, r.name as role_name 
                                   FROM users u 
-                                  LEFT JOIN user_roles ur ON u.id = ur.user_id 
-                                  LEFT JOIN roles r ON ur.role_id = r.id 
+                                  LEFT JOIN roles r ON u.role_id = r.id 
                                   WHERE u.email = :e LIMIT 1");
+        $stmt->execute([':e' => $email]);
+        if ($res = $stmt->fetch(PDO::FETCH_ASSOC))
+            return $res;
         $stmt->execute([':e' => $email]);
         if ($res = $stmt->fetch(PDO::FETCH_ASSOC))
             return $res;
@@ -54,10 +59,9 @@ class User
             $query = "SELECT id, name, email, tenant_id, 'Staff' as role_name FROM staff WHERE id = :id AND deleted_at IS NULL LIMIT 1";
         } else {
             // Default to users table (tenant_admin)
-            $query = "SELECT u.id, u.NAME as name, u.email, u.tenant_id, r.NAME as role_name 
+            $query = "SELECT u.id, u.name, u.email, u.tenant_id, r.name as role_name 
                       FROM users u 
-                      LEFT JOIN user_roles ur ON u.id = ur.user_id 
-                      LEFT JOIN roles r ON ur.role_id = r.id 
+                      LEFT JOIN roles r ON u.role_id = r.id 
                       WHERE u.id = :id AND u.deleted_at IS NULL LIMIT 1";
         }
         $stmt = $this->conn->prepare($query);
@@ -161,25 +165,29 @@ class User
             }
 
             $query = "INSERT INTO " . $this->table . " 
-                      (tenant_id, NAME, email, PASSWORD, STATUS) 
-                      VALUES (:tenant_id, :name, :email, :password, 'active')";
+                      (tenant_id, name, email, PASSWORD, role_id, STATUS) 
+                      VALUES (:tenant_id, :name, :email, :password, :role_id, 'active')";
 
             $stmt = $this->conn->prepare($query);
             $stmt->execute([
                 ':tenant_id' => $data['tenant_id'],
                 ':name' => $data['name'],
                 ':email' => $data['email'],
-                ':password' => $data['password']
+                ':password' => $data['password'],
+                ':role_id' => $data['role_id'] // Added role_id
             ]);
 
             $userId = $this->conn->lastInsertId();
 
-            $roleQuery = "INSERT INTO user_roles (user_id, role_id) VALUES (:user_id, :role_id)";
-            $roleStmt = $this->conn->prepare($roleQuery);
-            $roleStmt->execute([
-                ':user_id' => $userId,
-                ':role_id' => $data['role_id']
-            ]);
+
+            // Note: In case we need to update users.role_id specifically if the INSERT above didn't include it (it didn't include role_id in values list)
+            // The INSERT above was: (tenant_id, NAME, email, PASSWORD, STATUS) ...
+            // Validating if role_id is in users table... YES.
+            // So we should add role_id to the INSERT query instead of separate table.
+
+            $updateRole = "UPDATE users SET role_id = :role_id WHERE id = :id";
+            $updateStmt = $this->conn->prepare($updateRole);
+            $updateStmt->execute([':role_id' => $data['role_id'], ':id' => $userId]);
 
             if ($useTransaction) {
                 $this->conn->commit();
@@ -210,16 +218,34 @@ class User
         // But user request said "super admin is ... create a admin".
         // Let's assume we check by Role Name via Join.
         // "Admin" role name.
+        // "Admin" role name.
         $query = "SELECT u.id FROM users u 
-                  JOIN user_roles ur ON u.id = ur.user_id 
-                  JOIN roles r ON ur.role_id = r.id
+                  JOIN roles r ON u.role_id = r.id
                   WHERE u.tenant_id = :tenant_id AND r.name = 'Admin' AND u.deleted_at IS NULL LIMIT 1";
-                  
+
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(':tenant_id', $tenantId);
         $stmt->execute();
 
         return $stmt->rowCount() > 0;
+    }
+
+    public function getById($id)
+    {
+        $query = "SELECT * FROM " . $this->table . " WHERE id = :id LIMIT 1";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':id', $id);
+        $stmt->execute();
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    public function updatePassword($id, $newPasswordHash)
+    {
+        $query = "UPDATE " . $this->table . " SET PASSWORD = :password WHERE id = :id";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':password', $newPasswordHash);
+        $stmt->bindParam(':id', $id);
+        return $stmt->execute();
     }
 
     /**

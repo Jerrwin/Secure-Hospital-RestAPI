@@ -39,7 +39,7 @@ class StaffController
 
         // If SuperAdmin is registering, they must provide tenant_id
         $data = json_decode(file_get_contents("php://input"), true);
-        
+
         if ($currentUser['role'] === 'SuperAdmin') {
             if (!isset($data['tenant_id'])) {
                 ResponseHelper::send(false, "SuperAdmin must provide tenant_id", [], 400);
@@ -49,14 +49,34 @@ class StaffController
         }
 
         // 2. Validate Input
-        if (empty($data['name']) || empty($data['email']) || empty($data['password']) || empty($data['role_id']) || empty($data['gender'])) {
-            ResponseHelper::send(false, "Missing required fields (name, email, password, role_id, gender)", [], 400);
+        if (empty($data['name']) || empty($data['email']) || empty($data['password']) || empty($data['role_id']) || empty($data['gender']) || empty($data['phone_number']) || empty($data['address'])) {
+            ResponseHelper::send(false, "Missing required fields (name, email, password, role_id, gender, phone_number, address)", [], 400);
             return;
         }
 
-        // 3. Email Check
+        if (!\App\Helpers\Validator::email($data['email'])) {
+            ResponseHelper::send(false, "Invalid email format.", [], 400);
+            return;
+        }
+
+        if (!\App\Helpers\Validator::password($data['password'])) {
+            ResponseHelper::send(false, "Password does not meet complexity requirements.", [], 400);
+            return;
+        }
+
+        if (!empty($data['phone_number']) && !\App\Helpers\Validator::phone($data['phone_number'])) {
+            ResponseHelper::send(false, "Invalid phone number (exactly 10 digits required).", [], 400);
+            return;
+        }
+
+        // 3. Email & Phone Check
         if ($this->userModel->findAnyUserByEmail($data['email'])) {
             ResponseHelper::send(false, "Email already exists", [], 409);
+            return;
+        }
+
+        if ($this->staffModel->findByPhone($data['phone_number'])) {
+            ResponseHelper::send(false, "Phone number already exists", [], 409);
             return;
         }
 
@@ -72,17 +92,19 @@ class StaffController
                 'password' => password_hash($data['password'], PASSWORD_BCRYPT),
                 'role_id' => $data['role_id']
             ];
-            
+
             // Pass false to prevent internal commit/rollback
-            $userId = $this->userModel->create($userData, false); 
+            $userId = $this->userModel->create($userData, false);
 
             // B. Create Staff Profile
             $staffData = [
                 'tenant_id' => $tenantId,
-                'name' => $data['name'], // Verify if name should match
+                'user_id' => $userId, // Added user_id link
+                'name' => $data['name'],
                 'gender' => $data['gender'],
                 'address' => $data['address'] ?? null,
-                'phone_number' => $data['phone_number'] ?? null
+                'phone_number' => $data['phone_number'] ?? null,
+                'status' => $data['status'] ?? 'active'
             ];
 
             $staffId = $this->staffModel->create($staffData);
@@ -113,36 +135,83 @@ class StaffController
         $tenantId = $currentUser['tenant_id'];
 
         if ($currentUser['role'] === 'SuperAdmin') {
-             // SuperAdmin might want to see all or filter by tenant params
-             // For now, return empty or all if implemented
-             ResponseHelper::send(false, "SuperAdmin view not implemented yet", [], 501);
-             return;
+            // SuperAdmin can see everyone
+            $query = "SELECT s.*, u.email, r.name as role_name 
+                       FROM staff s 
+                       JOIN users u ON s.user_id = u.id 
+                       JOIN roles r ON u.role_id = r.id 
+                       WHERE s.deleted_at IS NULL";
+            $stmt = $this->db->prepare($query);
+            $stmt->execute();
+            ResponseHelper::send(true, "All System Staff retrieved", $stmt->fetchAll(\PDO::FETCH_ASSOC));
+            return;
         }
 
         $staffMembers = $this->staffModel->getAllByTenant($tenantId);
         ResponseHelper::send(true, "Staff list retrieved", $staffMembers);
     }
-    
+
+    /**
+     * PUT /api/staff/{id}
+     * Check: Admin Only
+     * Action: Update Staff Details
+     */
+    public function update($id)
+    {
+        AuthMiddleware::handle();
+        RoleMiddleware::handle(['Admin']);
+
+        $currentUser = $_REQUEST['user'];
+        $data = json_decode(file_get_contents("php://input"), true);
+
+        // Security: Ensure staff belongs to this tenant
+        $staff = $this->staffModel->getById($id);
+        if (!$staff || $staff['tenant_id'] != $currentUser['tenant_id']) {
+            ResponseHelper::send(false, "Staff not found or access denied", [], 404);
+            return;
+        }
+
+        if (!empty($data['phone_number']) && !\App\Helpers\Validator::phone($data['phone_number'])) {
+            ResponseHelper::send(false, "Invalid phone number format.", [], 400);
+            return;
+        }
+
+        // Prepare data for update
+        $updateData = [
+            'name' => $data['name'] ?? $staff['name'],
+            'gender' => $data['gender'] ?? $staff['gender'],
+            'address' => $data['address'] ?? $staff['address'],
+            'phone_number' => $data['phone_number'] ?? $staff['phone_number'],
+            'status' => $data['status'] ?? $staff['status']
+        ];
+
+        if ($this->staffModel->update($id, $updateData)) {
+            ResponseHelper::send(true, "Staff updated successfully");
+        } else {
+            ResponseHelper::send(false, "Failed to update staff", [], 500);
+        }
+    }
+
     /**
      * DELETE /api/staff/{id}
      * Check: Admin Only
      */
     public function delete($id)
     {
-         AuthMiddleware::handle();
-         RoleMiddleware::handle(['Admin']);
-         
-         // Verify staff belongs to this tenant! (Security Check)
-         $staff = $this->staffModel->getById($id);
-         if (!$staff || $staff['tenant_id'] != $_REQUEST['user']['tenant_id']) {
-             ResponseHelper::send(false, "Staff not found or access denied", [], 404);
-             return;
-         }
+        AuthMiddleware::handle();
+        RoleMiddleware::handle(['Admin']);
 
-         if ($this->staffModel->delete($id)) {
-             ResponseHelper::send(true, "Staff deleted successfully");
-         } else {
-             ResponseHelper::send(false, "Failed to delete staff", [], 500);
-         }
+        // Verify staff belongs to this tenant! (Security Check)
+        $staff = $this->staffModel->getById($id);
+        if (!$staff || $staff['tenant_id'] != $_REQUEST['user']['tenant_id']) {
+            ResponseHelper::send(false, "Staff not found or access denied", [], 404);
+            return;
+        }
+
+        if ($this->staffModel->delete($id)) {
+            ResponseHelper::send(true, "Staff deleted successfully");
+        } else {
+            ResponseHelper::send(false, "Failed to delete staff", [], 500);
+        }
     }
 }

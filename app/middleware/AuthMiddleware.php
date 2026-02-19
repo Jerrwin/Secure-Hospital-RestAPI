@@ -6,7 +6,7 @@ use App\Core\Database;
 use App\Helpers\ResponseHelper;
 use App\Helpers\JWT;
 use App\Helpers\CSRF;
-use App\Models\User; 
+use App\Models\User;
 
 class AuthMiddleware
 {
@@ -16,6 +16,7 @@ class AuthMiddleware
         $headers = getallheaders();
         $authHeader = $headers['Authorization'] ?? $headers['authorization'] ?? null;
         $providedCsrf = $headers['X-CSRF-TOKEN'] ?? $headers['x-csrf-token'] ?? null;
+
         $token = null;
 
         // Extract Bearer Token
@@ -24,9 +25,12 @@ class AuthMiddleware
         }
 
         // --- 1. CSRF Security Check ---
-        // Note: We need to create the CSRF helper for this line to work
-        if (!CSRF::verify($providedCsrf)) {
-            ResponseHelper::send(false, "Security Alert: Invalid or missing CSRF token.", [], 403);
+        // Skip for GET, HEAD, OPTIONS
+        $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
+        if (!in_array($method, ['GET', 'HEAD', 'OPTIONS'])) {
+            if (!CSRF::verify($providedCsrf)) {
+                ResponseHelper::send(false, "Security Alert: Invalid or missing CSRF token.", [], 403);
+            }
         }
 
         // --- 2. Try Validating Access Token (Success path) ---
@@ -39,7 +43,7 @@ class AuthMiddleware
             }
         }
 
-        // --- 3. Access Token Failed. Check Session Integrity ---
+
         if (!isset($_COOKIE['refresh_token'])) {
             ResponseHelper::send(false, "Unauthorized: No session found. Please login again.", [], 401);
         }

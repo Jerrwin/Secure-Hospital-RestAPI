@@ -43,7 +43,7 @@ class Billing
         $stmt->execute();
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
-    
+
     // Get Invoice by ID
     public function getInvoiceById($id)
     {

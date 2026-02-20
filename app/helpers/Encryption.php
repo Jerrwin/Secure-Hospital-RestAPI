@@ -23,7 +23,15 @@ class Encryption
     public static function decrypt($data)
     {
         $key = hex2bin($_ENV['ENCRYPTION_KEY']);
-        list($encrypted_data, $iv) = explode('::', base64_decode($data), 2);
+        
+        $decoded = base64_decode($data, true);
+        
+        // Robust check: properly formatted encrypted string must have '::' separator
+        if ($decoded === false || strpos($decoded, '::') === false) {
+            return $data; // Assume it's legacy plaintext
+        }
+
+        list($encrypted_data, $iv) = explode('::', $decoded, 2);
         return openssl_decrypt($encrypted_data, self::$method, $key, 0, $iv);
     }
 }

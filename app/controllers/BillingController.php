@@ -156,6 +156,37 @@ class BillingController
             return;
         }
 
-        ResponseHelper::send(true, "Invoice retrieved.", $invoice);
+    ResponseHelper::send(true, "Invoice retrieved.", $invoice);
+    }
+
+    // PUT /api/invoices/{id}
+    public function update($id)
+    {
+        AuthMiddleware::handle();
+        RoleMiddleware::handle(['Admin', 'Receptionist']);
+
+        $user = $_REQUEST['user'];
+        $data = json_decode(file_get_contents("php://input"), true);
+
+        // 1. Check if invoice exists
+        $invoice = $this->billingModel->getInvoiceById($id);
+        if (!$invoice) {
+            ResponseHelper::send(false, "Invoice not found.", [], 404);
+            return;
+        }
+
+        // 2. Verify Tenant via Appointment
+        $appointment = $this->appointmentModel->find($invoice['appointment_id']);
+        if (!$appointment || $user['tenant_id'] != $appointment['tenant_id']) {
+            ResponseHelper::send(false, "Access denied.", [], 403);
+            return;
+        }
+
+        // 3. Update
+        if ($this->billingModel->update($id, $data)) {
+            ResponseHelper::send(true, "Invoice updated successfully.");
+        } else {
+            ResponseHelper::send(false, "Update failed or no changes made.", [], 500);
+        }
     }
 }

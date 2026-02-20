@@ -85,4 +85,26 @@ class Billing
         $stmt->bindParam(':id', $id);
         return $stmt->execute();
     }
+
+    public function update($id, $data)
+    {
+        $allowedColumns = ['amount', 'status'];
+        $filteredData = array_intersect_key($data, array_flip($allowedColumns));
+
+        if (empty($filteredData)) {
+            return false;
+        }
+
+        $fields = "";
+        foreach ($filteredData as $key => $value) {
+            $fields .= "$key = :$key, ";
+        }
+        $fields = rtrim($fields, ", ");
+
+        $query = "UPDATE " . $this->invoiceTable . " SET $fields WHERE id = :id";
+        $filteredData['id'] = $id;
+
+        $stmt = $this->conn->prepare($query);
+        return $stmt->execute($filteredData);
+    }
 }

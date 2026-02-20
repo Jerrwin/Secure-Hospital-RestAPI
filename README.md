@@ -1,25 +1,6 @@
-# 🚀 Beginner's Guide: Testing Your API with Postman
+ 1. Authentication [SuperAdmin for Registration]
 
-Welcome! This guide will help you test every part of your Healthcare API. We've made it simple: just follow the **"What to do"** and check if you see the **"What you should see"**.
-
----
-
-## 🛠️ Getting Started (The Setup)
-
-Before you start, open Postman and set these up for **every request**:
-
-1.  **URL**: Paste this first: `http://localhost/RestAPI_TeamProject-1/RestAPI_TeamProject/public/index.php/api`
-2.  **Headers Tab**: Add these three rows:
-    *   `Content-Type` → `application/json`
-    *   `Authorization` → `Bearer YOUR_TOKEN_HERE` (You get this after login)
-    *   `X-CSRF-TOKEN` → `YOUR_CSRF_HERE` (You get this after login)
-3.  **Body Tab**: Select **raw** and then pick **JSON** from the dropdown menu.
-
----
-
-## 🔐 1. Authentication [SuperAdmin for Registration]
-
-### Case A: Login (Happy Path) [Anyone]
+Case A: Login (Happy Path) [Anyone]
 *   **Method**: `POST`
 *   **URL**: `.../api/auth/login`
 *   **Body**: `{"email": "superadmin@ems.com", "password": "Password@123"}`
@@ -28,7 +9,7 @@ Before you start, open Postman and set these up for **every request**:
     *   **Message**: `"Login successful"`
     *   **Action**: Copy the `access_token` and `csrf_token` from the response. You'll need them for all other tests!
 
-### Case B: Register a Hospital Admin [SuperAdmin Only]
+Case B: Register a Hospital Admin [SuperAdmin Only]
 *   **Method**: `POST`
 *   **URL**: `.../api/auth/register`
 *   **Body**: 
@@ -223,6 +204,14 @@ Before you start, open Postman and set these up for **every request**:
     *   **Status**: `201 Created`
     *   **Message**: `"Invoice created successfully"`
 
+### Case B: Update Invoice [Admin & Receptionist Only]
+*   **Method**: `PUT`
+*   **URL**: `.../api/invoices/1` (Change '1' to real invoice ID)
+*   **Body**: `{"amount": 300.00, "status": "paid"}`
+*   **✅ What you should see**:
+    *   **Status**: `200 OK`
+    *   **Message**: `"Invoice updated successfully"`
+
 ---
 
 ## 🔐 7. Security [Any Logged-in User]
@@ -301,6 +290,62 @@ Before you start, open Postman and set these up for **every request**:
 
 ---
 
+## 📅 12. Calendar System [Staff Only]
 
----
+### Case A: Get Month View Data (For Calendar Grid)
+*   **Method**: `GET`
+*   **URL**: `.../api/calendar/range?start=2026-03-01&end=2026-03-31`
+*   **✅ What you should see**:
+*       **Status**: `200 OK`
+*       **Data**: A list of dates within the range, each containing a summary of appointments (count and basic details).
+    ```json
+    {
+        "success": true,
+        "message": "Calendar month data",
+        "data": [
+            {
+                "date": "2026-03-20",
+                "total_appointments": 1,
+                "appointments": [
+                    {
+                        "time": "10:00 AM",
+                        "patient": "John Doe",
+                        "status": "scheduled",
+                        "doctor": "Dr. House"
+                    }
+                ]
+            }
+        ]
+    }
+    ```
+
+### Case B: Get Single Date Details (For Tooltip/Popup)
+*   **Method**: `GET`
+*   **URL**: `.../api/calendar/date?date=2026-03-20`
+*   **✅ What you should see**:
+*       **Status**: `200 OK`
+*       **Data**: Detailed list of appointments for that specific day, including decrypted medical history.
+    ```json
+    {
+        "success": true,
+        "message": "Selected date appointments",
+        "data": [
+            {
+                "date": "2026-03-20",
+                "time": "10:00 AM - 11:00 AM",
+                "status": "scheduled",
+                "patient": {
+                    "full_name": "John Doe",
+                    "medical_history": "Diagnosed with mild flu. Prescribed Paracetamol."
+                },
+                "doctor": {
+                    "name": "Dr. House",
+                    "phone": null,
+                    "email": "house@hospital1.com"
+                }
+            }
+        ]
+    }
+    ```
+
 

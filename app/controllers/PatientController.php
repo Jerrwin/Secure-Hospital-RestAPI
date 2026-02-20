@@ -194,4 +194,39 @@ class PatientController
             ResponseHelper::send(false, "Failed to delete patient", [], 500);
         }
     }
+
+    /**
+     * Get Single Patient Details
+     * GET /api/patients/{id}
+     */
+    public function show($id)
+    {
+        AuthMiddleware::handle();
+        $currentUser = $_REQUEST['user'];
+
+        $patient = $this->patientModel->getById($id);
+
+        if (!$patient) {
+            ResponseHelper::send(false, "Patient not found.", [], 404);
+            return;
+        }
+
+        // Access Control: 
+        // 1. Staff can view patients in their own tenant
+        // 2. Patient can only view their own record
+        if ($currentUser['role'] === 'Patient') {
+            if ($patient['id'] != $currentUser['user_id']) {
+                ResponseHelper::send(false, "Access denied. You can only view your own profile.", [], 403);
+                return;
+            }
+        } else {
+            // Admin, Provider, Nurse, etc.
+            if ($patient['tenant_id'] != $currentUser['tenant_id']) {
+                ResponseHelper::send(false, "Access denied. Patient belongs to another hospital.", [], 403);
+                return;
+            }
+        }
+
+        ResponseHelper::send(true, "Patient details retrieved", $patient);
+    }
 }

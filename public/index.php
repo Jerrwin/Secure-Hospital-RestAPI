@@ -33,6 +33,7 @@ require_once __DIR__ . '/../app/models/Appointment.php';
 require_once __DIR__ . '/../app/models/Prescription.php';
 require_once __DIR__ . '/../app/models/Communication.php';
 require_once __DIR__ . '/../app/models/Billing.php';
+require_once __DIR__ . '/../app/models/Calendar.php'; // Added Calendar Model
 
 // 5. Load Controllers
 require_once __DIR__ . '/../app/controllers/AuthController.php';
@@ -45,6 +46,7 @@ require_once __DIR__ . '/../app/controllers/PrescriptionController.php';
 require_once __DIR__ . '/../app/controllers/CommunicationController.php';
 require_once __DIR__ . '/../app/controllers/BillingController.php';
 require_once __DIR__ . '/../app/controllers/DashboardController.php';
+require_once __DIR__ . '/../app/controllers/CalendarController.php'; // Added CalendarController
 
 
 // 6. Use Classes
@@ -60,6 +62,7 @@ use App\Controllers\PrescriptionController;
 use App\Controllers\CommunicationController;
 use App\Controllers\BillingController;
 use App\Controllers\DashboardController;
+use App\Controllers\CalendarController; // Added CalendarController
 
 
 // 7. Run Global Middleware (YOUR LOGIC IS SAFER HERE)
@@ -94,6 +97,7 @@ $router->put('/api/staff/{id}', [StaffController::class, 'update']); //
 
 // Patient Endpoints (Merged)
 $router->post('/api/patients', [PatientController::class, 'create']);//
+$router->get('/api/patients/{id}', [PatientController::class, 'show']);//
 $router->get('/api/patients', [PatientController::class, 'index']);//
 $router->delete('/api/patients/{id}', [PatientController::class, 'delete']);//
 $router->put('/api/patients/{id}', [PatientController::class, 'update']); // 
@@ -106,6 +110,11 @@ $router->get('/api/appointments/show/{id}', [AppointmentController::class, 'show
 $router->put('/api/appointments/cancel/{id}', [AppointmentController::class, 'cancel']);//
 $router->put('/api/appointments/update/{id}', [AppointmentController::class, 'update']);//
 $router->put('/api/appointments/complete/{id}', [AppointmentController::class, 'complete']);//
+
+// Calendar Endpoints
+$router->get('/api/calendar', [CalendarController::class, 'index']);      // Default (current month)
+$router->get('/api/calendar/range', [CalendarController::class, 'range']);  // Custom range
+$router->get('/api/calendar/date', [CalendarController::class, 'getByDate']); // Tooltip
 
 // Prescription Endpoints (New)
 $router->post('/api/prescriptions', [PrescriptionController::class, 'create']);
@@ -136,6 +145,7 @@ $router->get('/api/communications', [CommunicationController::class, 'index']);
 // Billing Endpoints
 $router->post('/api/invoices', [BillingController::class, 'createInvoice']);
 $router->get('/api/invoices', [BillingController::class, 'getInvoice']);
+$router->put('/api/invoices/{id}', [BillingController::class, 'update']);
 $router->post('/api/payments', [BillingController::class, 'processPayment']);
 
 // 10. Dispatch

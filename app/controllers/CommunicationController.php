@@ -26,6 +26,9 @@ class CommunicationController
     public function create()
     {
         AuthMiddleware::handle();
+
+        RoleMiddleware::handle(['Provider', 'Nurse']);
+
         // Provider, Nurse, Admin, Receptionist, Patient (if owner)
         $user = $_REQUEST['user'];
         $data = json_decode(file_get_contents("php://input"), true);
@@ -67,6 +70,9 @@ class CommunicationController
     public function index()
     {
         AuthMiddleware::handle();
+
+        RoleMiddleware::handle(['Provider', 'Nurse', 'Patient']);
+
         $user = $_REQUEST['user'];
 
         $appointmentId = $_GET['appointment_id'] ?? null;

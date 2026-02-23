@@ -86,6 +86,7 @@ $router->get('/api/dashboard/stats', [DashboardController::class, 'getStats']);
 // Tenant Endpoints
 $router->post('/api/tenants', [TenantController::class, 'create']);//
 $router->get('/api/tenants', [TenantController::class, 'index']);//
+$router->get('/api/tenants/{id}', [TenantController::class, 'show']); //
 $router->put('/api/tenants/{id}', [TenantController::class, 'update']);// 
 $router->delete('/api/tenants/{id}', [TenantController::class, 'delete']);//
 

@@ -153,6 +153,19 @@ class AuthController
             return;
         }
 
+        // 2.5 TENANT STATUS CHECK: Block login if the hospital is suspended
+        // (We check !empty because SuperAdmin has a NULL tenant_id and should never be blocked)
+        if (!empty($user['tenant_id'])) {
+            $stmt = $this->db->prepare("SELECT STATUS FROM tenants WHERE id = :tenant_id LIMIT 1");
+            $stmt->execute([':tenant_id' => $user['tenant_id']]);
+            $tenant = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+            if ($tenant && $tenant['STATUS'] === 'inactive') {
+                ResponseHelper::send(false, "Your hospital's account is currently suspended. Please contact the platform administrator.", [], 403);
+                return;
+            }
+        }
+
         $userType = $user['type'];
 
         // 3. Generate CSRF Baseline

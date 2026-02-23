@@ -59,16 +59,13 @@ class User
     public function getUserByType($id, $type)
     {
         if ($type === 'system_admin') {
-            $query = "SELECT id, NAME as name, email, NULL as tenant_id, 'SuperAdmin' as role_name FROM system_admins WHERE id = :id LIMIT 1";
+            $query = "SELECT id, NAME as name, email, NULL as tenant_id, 'SuperAdmin' as role_name, 999 as role_id FROM system_admins WHERE id = :id LIMIT 1";
         } elseif ($type === 'patients') {
-            $query = "SELECT id, first_name as name, email, tenant_id, 'Patient' as role_name FROM patients WHERE id = :id AND deleted_at IS NULL LIMIT 1";
+            $query = "SELECT id, first_name as name, email, tenant_id, 'Patient' as role_name, 6 as role_id FROM patients WHERE id = :id AND deleted_at IS NULL LIMIT 1";
         } elseif ($type === 'staff') {
-            // FIXED: Table name 'staff' instead of 'staffs'
-            // Added deleted_at check
-            $query = "SELECT id, name, email, tenant_id, 'Staff' as role_name FROM staff WHERE id = :id AND deleted_at IS NULL LIMIT 1";
+            $query = "SELECT id, name, email, tenant_id, 'Staff' as role_name, NULL as role_id FROM staff WHERE id = :id AND deleted_at IS NULL LIMIT 1";
         } else {
-            // Default to users table (tenant_admin)
-            $query = "SELECT u.id, u.name, u.email, u.tenant_id, r.name as role_name 
+            $query = "SELECT u.id, u.name, u.email, u.tenant_id, u.role_id, r.name as role_name 
                       FROM users u 
                       LEFT JOIN roles r ON u.role_id = r.id 
                       WHERE u.id = :id AND u.deleted_at IS NULL LIMIT 1";
@@ -77,7 +74,6 @@ class User
         $stmt->bindParam(':id', $id);
         $stmt->execute();
         return $stmt->fetch(PDO::FETCH_ASSOC);
-
     }
 
     /**

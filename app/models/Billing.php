@@ -18,14 +18,15 @@ class Billing
     // Create Invoice
     public function createInvoice($data)
     {
-        $query = "INSERT INTO " . $this->invoiceTable . " 
-                  (tenant_id, appointment_id, amount, status) 
-                  VALUES (:tenant_id, :appointment_id, :amount, 'unpaid')";
-
+        $query = "INSERT INTO invoices (tenant_id, appointment_id, patient_id, amount, STATUS) 
+                  VALUES (:tenant_id, :appointment_id, :patient_id, :amount, 'pending')";
+                  
         $stmt = $this->conn->prepare($query);
 
+        // Bind the data perfectly to the SQL statement
         $stmt->bindParam(':tenant_id', $data['tenant_id']);
         $stmt->bindParam(':appointment_id', $data['appointment_id']);
+        $stmt->bindParam(':patient_id', $data['patient_id']);
         $stmt->bindParam(':amount', $data['amount']);
 
         if ($stmt->execute()) {
@@ -54,28 +55,33 @@ class Billing
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
-    // Record Payment
-    public function createPayment($data)
-    {
-        $query = "INSERT INTO " . $this->paymentTable . " 
-                  (invoice_id, amount, method, transaction_id) 
-                  VALUES (:invoice_id, :amount, :method, :transaction_id)";
+    public function createPayment($data) {
+    try {
+        $this->conn->beginTransaction();
 
+        // 1. Insert the payment record
+        $query = "INSERT INTO payments (invoice_id, amount, method, transaction_id, payment_date, STATUS) 
+                  VALUES (:invoice_id, :amount, :method, :transaction_id, CURDATE(), 'success')";
         $stmt = $this->conn->prepare($query);
-
         $stmt->bindParam(':invoice_id', $data['invoice_id']);
         $stmt->bindParam(':amount', $data['amount']);
         $stmt->bindParam(':method', $data['method']);
         $stmt->bindParam(':transaction_id', $data['transaction_id']);
+        $stmt->execute();
 
-        if ($stmt->execute()) {
-            // Update Invoice Status to 'paid' if full amount (simplified for MVP: any payment marks as paid)
-            // In a real system, we'd check total paid vs invoice amount.
-            $this->updateInvoiceStatus($data['invoice_id'], 'paid');
-            return $this->conn->lastInsertId();
-        }
+        // 2. Automatically flip the invoice status to 'paid'
+        $updateQuery = "UPDATE invoices SET STATUS = 'paid' WHERE id = :invoice_id";
+        $updateStmt = $this->conn->prepare($updateQuery);
+        $updateStmt->bindParam(':invoice_id', $data['invoice_id']);
+        $updateStmt->execute();
+
+        $this->conn->commit();
+        return true;
+    } catch (\Exception $e) {
+        $this->conn->rollBack();
         return false;
     }
+}
 
     public function updateInvoiceStatus($id, $status)
     {

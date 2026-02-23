@@ -39,8 +39,12 @@ class BillingController
             return;
         }
 
-        if ($user['tenant_id'] != $appointment['tenant_id']) {
+        if ($appointment['STATUS'] !== 'completed') {
+            ResponseHelper::send(false, "Invoices can only be generated for completed appointments.", [], 400);
+            return;
+        }
 
+        if ($user['tenant_id'] != $appointment['tenant_id']) {
             ResponseHelper::send(false, "Unauthorized tenant.", [], 403);
             return;
         }
@@ -52,10 +56,16 @@ class BillingController
             return;
         }
 
+        // Set the required database fields
         $data['tenant_id'] = $user['tenant_id'];
 
-        if ($this->billingModel->createInvoice($data)) {
-            ResponseHelper::send(true, "Invoice created successfully.", [], 201);
+        // Automatically attach the patient to the bill
+        $data['patient_id'] = $appointment['patient_id'];
+
+        $invoiceId = $this->billingModel->createInvoice($data);
+
+        if ($invoiceId) {
+            ResponseHelper::send(true, "Invoice created successfully.", ['invoice_id' => $invoiceId], 201);
         } else {
             ResponseHelper::send(false, "Failed to create invoice.", [], 500);
         }
@@ -103,7 +113,7 @@ class BillingController
     public function processPayment()
     {
         AuthMiddleware::handle();
-        RoleMiddleware::handle(['Admin', 'Receptionist']); // Only staff resolves payment
+        RoleMiddleware::handle(['Admin', 'Receptionist']);
 
         $user = $_REQUEST['user'];
         $data = json_decode(file_get_contents("php://input"), true);
@@ -113,6 +123,12 @@ class BillingController
 
         if (!$invoice) {
             ResponseHelper::send(false, "Invoice not found.", [], 404);
+            return;
+        }
+
+        // Compare the payment amount with the invoice amount
+        if ((float)$data['amount'] !== (float)$invoice['amount']) {
+            ResponseHelper::send(false, "Payment amount does not match the invoice amount (Expected: " . $invoice['amount'] . ").", [], 400);
             return;
         }
 
@@ -156,7 +172,7 @@ class BillingController
             return;
         }
 
-    ResponseHelper::send(true, "Invoice retrieved.", $invoice);
+        ResponseHelper::send(true, "Invoice retrieved.", $invoice);
     }
 
     // PUT /api/invoices/{id}

@@ -13,13 +13,34 @@ class CommunicationController
 {
     private $communicationModel;
     private $appointmentModel;
+    private $masterTenantModel;
+    private $db;
 
     public function __construct()
     {
         $database = new Database();
-        $db = $database->connect();
-        $this->communicationModel = new Communication($db);
-        $this->appointmentModel = new Appointment($db);
+        $masterDb = $database->connectMaster();
+        $this->db = $masterDb;
+
+        $this->masterTenantModel = new \App\Models\MasterTenant($masterDb);
+        $this->communicationModel = new Communication($this->db);
+        $this->appointmentModel = new \App\Models\Appointment($this->db);
+    }
+
+    private function connectByTenantId($tenantId)
+    {
+        if (!$tenantId) return false;
+
+        $tenant = $this->masterTenantModel->getDetailsById($tenantId);
+        if (!$tenant || $tenant['status'] !== 'active') return false;
+
+        $database = new Database();
+        $this->db = $database->connectTenant($tenant['db_name']);
+
+        // RE-INITIALIZE Models with the actual Hospital Connection
+        $this->communicationModel = new Communication($this->db);
+        $this->appointmentModel = new \App\Models\Appointment($this->db);
+        return true;
     }
 
     // POST /api/communications
@@ -31,6 +52,12 @@ class CommunicationController
 
         // Provider, Nurse, Admin, Receptionist, Patient (if owner)
         $user = $_REQUEST['user'];
+
+        if (!$this->connectByTenantId($user['tenant_id'])) {
+            ResponseHelper::send(false, "Hospital database not found.", [], 403);
+            return;
+        }
+
         $data = json_decode(file_get_contents("php://input"), true);
 
         if (empty($data['appointment_id']) || empty($data['note'])) {
@@ -74,6 +101,11 @@ class CommunicationController
         RoleMiddleware::handle(['Provider', 'Nurse', 'Patient']);
 
         $user = $_REQUEST['user'];
+
+        if (!$this->connectByTenantId($user['tenant_id'])) {
+            ResponseHelper::send(false, "Hospital database not found.", [], 403);
+            return;
+        }
 
         $appointmentId = $_GET['appointment_id'] ?? null;
 

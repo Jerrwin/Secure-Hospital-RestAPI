@@ -79,7 +79,7 @@ class Staff
                   FROM " . $this->table . " s
                   JOIN users u ON s.user_id = u.id
                   JOIN roles r ON u.role_id = r.id
-                  WHERE s.tenant_id = :tenant_id AND s.deleted_at IS NULL";
+                  WHERE s.tenant_id = :tenant_id AND s.deleted_at IS NULL AND u.deleted_at IS NULL";
 
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(':tenant_id', $tenantId);

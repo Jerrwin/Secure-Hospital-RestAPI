@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use PDO;
-use App\Helpers\Encryption;
 
 class Patient
 {
@@ -27,9 +26,6 @@ class Patient
 
         $stmt = $this->conn->prepare($query);
 
-        // Encrypt sensitive data before binding
-        $encryptedHistory = Encryption::encrypt($data['medical_history']);
-
         $stmt->bindParam(':tenant_id', $data['tenant_id']);
         $stmt->bindParam(':first_name', $data['first_name']);
         $stmt->bindParam(':last_name', $data['last_name']);
@@ -37,7 +33,7 @@ class Patient
         $stmt->bindParam(':password', $data['password']);
         $stmt->bindParam(':dob', $data['dob']);
         $stmt->bindParam(':gender', $data['gender']);
-        $stmt->bindParam(':medical_history', $encryptedHistory);
+        $stmt->bindParam(':medical_history', $data['medical_history']);
         $stmt->bindParam(':created_by', $data['created_by']);
 
         if ($stmt->execute()) {
@@ -59,11 +55,6 @@ class Patient
 
         $patients = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-        foreach ($patients as &$patient) {
-            if (!empty($patient['medical_history'])) {
-                $patient['medical_history'] = Encryption::decrypt($patient['medical_history']);
-            }
-        }
         return $patients;
     }
 
@@ -79,9 +70,6 @@ class Patient
 
         $patient = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        if ($patient && !empty($patient['medical_history'])) {
-            $patient['medical_history'] = Encryption::decrypt($patient['medical_history']);
-        }
         return $patient;
     }
 
@@ -148,10 +136,8 @@ class Patient
             $stmt->bindParam(':email', $data['email']);
         if (isset($data['password']))
             $stmt->bindParam(':password', $data['password']);
-
         if (isset($data['medical_history'])) {
-            $encrypted = Encryption::encrypt($data['medical_history']);
-            $stmt->bindParam(':medical_history', $encrypted);
+            $stmt->bindParam(':medical_history', $data['medical_history']);
         }
 
         $stmt->bindParam(':id', $id);

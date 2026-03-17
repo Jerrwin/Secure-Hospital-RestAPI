@@ -4,6 +4,7 @@ namespace App\Controllers;
 
 use App\Core\Database;
 use App\Models\Prescription;
+use App\Models\MasterTenant;
 use App\Helpers\ResponseHelper;
 use App\Middleware\AuthMiddleware;
 use App\Middleware\RoleMiddleware;
@@ -11,12 +12,34 @@ use App\Middleware\RoleMiddleware;
 class PrescriptionController
 {
     private $prescriptionModel;
+    private $masterTenantModel;
+    private $db;
 
     public function __construct()
     {
         $database = new Database();
-        $db = $database->connect();
-        $this->prescriptionModel = new Prescription($db);
+        $masterDb = $database->connectMaster(); // Connect to Master DB
+        $this->db = $masterDb;
+
+        $this->masterTenantModel = new MasterTenant($this->db);
+        // We initialize the model with masterDb as a fallback
+        $this->prescriptionModel = new Prescription($this->db);
+    }
+
+    private function connectByTenantId($tenantId)
+    {
+        if (!$tenantId) return false;
+
+        $tenant = $this->masterTenantModel->getDetailsById($tenantId);
+
+        if (!$tenant || $tenant['status'] !== 'active') return false;
+
+        $database = new Database();
+        $this->db = $database->connectTenant($tenant['db_name']);
+
+        // Re-initialize the model with the actual Hospital Connection
+        $this->prescriptionModel = new Prescription($this->db);
+        return true;
     }
 
     /**
@@ -30,6 +53,12 @@ class PrescriptionController
         RoleMiddleware::handle(['Provider']);
 
         $currentUser = $_REQUEST['user'];
+
+        if (!$this->connectByTenantId($currentUser['tenant_id'])) {
+            ResponseHelper::send(false, "Hospital database not found.", [], 403);
+            return;
+        }
+
         $data = json_decode(file_get_contents("php://input"), true);
 
         if (empty($data['appointment_id']) || empty($data['notes'])) {
@@ -90,6 +119,12 @@ class PrescriptionController
         RoleMiddleware::handle(['Pharmacist']);
 
         $currentUser = $_REQUEST['user'];
+
+        if (!$this->connectByTenantId($currentUser['tenant_id'])) {
+            ResponseHelper::send(false, "Hospital database not found.", [], 403);
+            return;
+        }
+
         $data = json_decode(file_get_contents("php://input"), true);
 
         $status = $data['status'] ?? null;
@@ -127,6 +162,12 @@ class PrescriptionController
         RoleMiddleware::handle(['Provider', 'Pharmacist', 'Admin']);
 
         $currentUser = $_REQUEST['user'];
+
+        if (!$this->connectByTenantId($currentUser['tenant_id'])) {
+            ResponseHelper::send(false, "Hospital database not found.", [], 403);
+            return;
+        }
+
         $prescriptions = $this->prescriptionModel->getAllByTenant($currentUser['tenant_id']);
 
         ResponseHelper::send(true, "Prescriptions retrieved", $prescriptions);

@@ -13,13 +13,35 @@ class BillingController
 {
     private $billingModel;
     private $appointmentModel;
+    private $masterTenantModel; // Add this
+    private $db;
 
     public function __construct()
     {
         $database = new Database();
-        $db = $database->connect();
-        $this->billingModel = new Billing($db);
-        $this->appointmentModel = new Appointment($db);
+        $masterDb = $database->connectMaster(); 
+        $this->db = $masterDb;
+
+        $this->masterTenantModel = new \App\Models\MasterTenant($masterDb);
+        // Initialize with Master DB initially; helpers will re-initialize these
+        $this->billingModel = new Billing($this->db);
+        $this->appointmentModel = new Appointment($this->db);
+    }
+
+    private function connectByTenantId($tenantId)
+    {
+        if (!$tenantId) return false;
+
+        $tenant = $this->masterTenantModel->getDetailsById($tenantId);
+        if (!$tenant || $tenant['status'] !== 'active') return false;
+
+        $database = new Database();
+        $this->db = $database->connectTenant($tenant['db_name']);
+
+        // RE-INITIALIZE Models with the Tenant Connection
+        $this->billingModel = new Billing($this->db);
+        $this->appointmentModel = new Appointment($this->db);
+        return true;
     }
 
     // POST /api/invoices
@@ -29,6 +51,12 @@ class BillingController
         RoleMiddleware::handle(['Admin', 'Receptionist', 'Provider']);
 
         $user = $_REQUEST['user'];
+
+        if (!$this->connectByTenantId($user['tenant_id'])) {
+            ResponseHelper::send(false, "Hospital database not found.", [], 403);
+            return;
+        }
+
         $data = json_decode(file_get_contents("php://input"), true);
 
         $appointmentId = $data['appointment_id'];
@@ -76,6 +104,12 @@ class BillingController
     {
         AuthMiddleware::handle();
         $user = $_REQUEST['user'];
+
+        if (!$this->connectByTenantId($user['tenant_id'])) {
+            ResponseHelper::send(false, "Hospital database not found.", [], 403);
+            return;
+        }
+
         $appointmentId = $_GET['appointment_id'] ?? null;
 
         if (!$appointmentId) {
@@ -116,6 +150,12 @@ class BillingController
         RoleMiddleware::handle(['Admin', 'Receptionist']);
 
         $user = $_REQUEST['user'];
+
+        if (!$this->connectByTenantId($user['tenant_id'])) {
+            ResponseHelper::send(false, "Hospital database not found.", [], 403);
+            return;
+        }
+
         $data = json_decode(file_get_contents("php://input"), true);
 
         $invoiceId = $data['invoice_id'];
@@ -152,6 +192,11 @@ class BillingController
         AuthMiddleware::handle();
         $user = $_REQUEST['user'];
 
+        if (!$this->connectByTenantId($user['tenant_id'])) {
+            ResponseHelper::send(false, "Hospital database not found.", [], 403);
+            return;
+        }
+
         $invoice = $this->billingModel->getInvoiceById($id);
 
         if (!$invoice) {
@@ -182,6 +227,12 @@ class BillingController
         RoleMiddleware::handle(['Admin', 'Receptionist']);
 
         $user = $_REQUEST['user'];
+
+        if (!$this->connectByTenantId($user['tenant_id'])) {
+            ResponseHelper::send(false, "Hospital database not found.", [], 403);
+            return;
+        }
+
         $data = json_decode(file_get_contents("php://input"), true);
 
         // 1. Check if invoice exists

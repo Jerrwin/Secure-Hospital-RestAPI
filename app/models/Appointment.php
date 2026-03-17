@@ -48,8 +48,9 @@ class Appointment
         }
         $fields = rtrim($fields, ", ");
 
-        $query = "UPDATE " . $this->table . " SET $fields WHERE id = :id";
+        $query = "UPDATE " . $this->table . " SET $fields WHERE id = :id AND tenant_id = :tenant_id";
         $filteredData['id'] = $id;
+        $filteredData['tenant_id'] = $data['tenant_id'];
 
         $stmt = $this->conn->prepare($query);
         return $stmt->execute($filteredData);

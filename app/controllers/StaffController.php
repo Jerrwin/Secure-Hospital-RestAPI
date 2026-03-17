@@ -5,6 +5,7 @@ namespace App\Controllers;
 use App\Core\Database;
 use App\Models\User;
 use App\Models\Staff;
+use App\Models\MasterTenant;
 use App\Helpers\ResponseHelper;
 use App\Middleware\AuthMiddleware;
 use App\Middleware\RoleMiddleware;
@@ -14,73 +15,102 @@ class StaffController
     private $db;
     private $userModel;
     private $staffModel;
+    private $masterTenantModel; // 2. Property for the MasterTenant model
 
     public function __construct()
     {
         $database = new Database();
-        $this->db = $database->connect();
-        $this->userModel = new User($this->db);
+        // Start with Master connection to initialize models
+        $masterDb = $database->connectMaster();
+        $this->db = $masterDb;
+
+        $this->masterTenantModel = new MasterTenant($masterDb); // Initialize MasterTenant
         $this->staffModel = new Staff($this->db);
+        $this->userModel = new User($this->db);
     }
 
-    /**
-     * POST /api/staff/register
-     * Check: Admin Only
-     * Action: Register Staff (User + Staff Profile)
-     */
+    private function connectByTenantId($tenantId)
+    {
+        if (!$tenantId) return false;
+
+        // 3. Use getDetailsById from MasterTenant instead of local SQL
+        $tenant = $this->masterTenantModel->getDetailsById($tenantId);
+
+        if (!$tenant || $tenant['status'] !== 'active') {
+            return false;
+        }
+
+        $database = new Database();
+        $this->db = $database->connectTenant($tenant['db_name']);
+
+        // Re-initialize models with the actual Tenant Connection
+        $this->staffModel = new Staff($this->db);
+        $this->userModel = new User($this->db);
+        return true;
+    }
+
     public function register()
     {
         // 1. Auth & Role Check
         AuthMiddleware::handle();
-        RoleMiddleware::handle(['Admin', 'SuperAdmin']); // Allow SuperAdmin too if needed, but req says 'Admin'
+        RoleMiddleware::handle(['Admin']);
 
         $currentUser = $_REQUEST['user'];
+
+        // ALWAYS use the tenant_id from the Admin's token for security
         $tenantId = $currentUser['tenant_id'];
 
-        // If SuperAdmin is registering, they must provide tenant_id
         $data = json_decode(file_get_contents("php://input"), true);
 
-        if ($currentUser['role'] === 'SuperAdmin') {
-            if (!isset($data['tenant_id'])) {
-                ResponseHelper::send(false, "SuperAdmin must provide tenant_id", [], 400);
+        // 2. Basic Validation: Ensure all fields are present
+        $requiredFields = ['name', 'email', 'password', 'role_id', 'gender', 'phone_number'];
+        foreach ($requiredFields as $field) {
+            if (empty($data[$field])) {
+                ResponseHelper::send(false, "Missing required field: $field", [], 400);
                 return;
             }
-            $tenantId = $data['tenant_id'];
         }
 
-        // 2. Validate Input
-        if (empty($data['name']) || empty($data['email']) || empty($data['password']) || empty($data['role_id']) || empty($data['gender']) || empty($data['phone_number']) || empty($data['address'])) {
-            ResponseHelper::send(false, "Missing required fields (name, email, password, role_id, gender, phone_number, address)", [], 400);
-            return;
-        }
-
+        // Advanced Validation (Email, Password, Phone)
         if (!\App\Helpers\Validator::email($data['email'])) {
             ResponseHelper::send(false, "Invalid email format.", [], 400);
             return;
         }
 
         if (!\App\Helpers\Validator::password($data['password'])) {
-            ResponseHelper::send(false, "Password does not meet complexity requirements.", [], 400);
+            ResponseHelper::send(false, "Password must be at least 8 characters and include uppercase, numbers, and symbols.", [], 400);
             return;
         }
 
-        if (!empty($data['phone_number']) && !\App\Helpers\Validator::phone($data['phone_number'])) {
-            ResponseHelper::send(false, "Invalid phone number (exactly 10 digits required).", [], 400);
+        if (!\App\Helpers\Validator::phone($data['phone_number'])) {
+            ResponseHelper::send(false, "Invalid phone number. Exactly 10 digits required.", [], 400);
             return;
         }
 
-        // 3. Email & Phone Check
+        if (!$tenantId) {
+            ResponseHelper::send(false, "Tenant ID context missing.", [], 400);
+            return;
+        }
+
+        // 3. CRITICAL: Switch the connection NOW
+        // This re-initializes $this->userModel and $this->staffModel with the Tenant DB
+        if (!$this->connectByTenantId($tenantId)) {
+            ResponseHelper::send(false, "Hospital database not found.", [], 404);
+            return;
+        }
+
+        // 4. NOW it is safe to check the email and phone because we are in the Tenant DB
         if ($this->userModel->findAnyUserByEmail($data['email'])) {
-            ResponseHelper::send(false, "Email already exists", [], 409);
+            ResponseHelper::send(false, "Email already exists in this hospital.", [], 409);
             return;
         }
 
         if ($this->staffModel->findByPhone($data['phone_number'])) {
-            ResponseHelper::send(false, "Phone number already exists", [], 409);
+            ResponseHelper::send(false, "Phone number already exists in this hospital.", [], 409);
             return;
         }
 
-        // 4. Transactional Create
+        // 5. Transactional Create
         try {
             $this->db->beginTransaction();
 
@@ -115,7 +145,6 @@ class StaffController
 
             $this->db->commit();
             ResponseHelper::send(true, "Staff registered successfully", ['user_id' => $userId, 'staff_id' => $staffId], 201);
-
         } catch (\Exception $e) {
             $this->db->rollBack();
             ResponseHelper::send(false, "Registration Failed: " . $e->getMessage(), [], 500);
@@ -124,26 +153,19 @@ class StaffController
 
     /**
      * GET /api/staff
-     * Check: Admin, Provider, Nurse
+     * Check: Admin Only
      */
     public function index()
     {
         AuthMiddleware::handle();
-        RoleMiddleware::handle(['Admin', 'SuperAdmin', 'Provider', 'Nurse']); // Adjust visibility rules as needed
+        // Removed SuperAdmin - Only Hospital Staff can see other Hospital Staff
+        RoleMiddleware::handle(['Admin']); 
 
         $currentUser = $_REQUEST['user'];
         $tenantId = $currentUser['tenant_id'];
 
-        if ($currentUser['role'] === 'SuperAdmin') {
-            // SuperAdmin can see everyone
-            $query = "SELECT s.*, u.email, r.name as role_name 
-                       FROM staff s 
-                       JOIN users u ON s.user_id = u.id 
-                       JOIN roles r ON u.role_id = r.id 
-                       WHERE s.deleted_at IS NULL";
-            $stmt = $this->db->prepare($query);
-            $stmt->execute();
-            ResponseHelper::send(true, "All System Staff retrieved", $stmt->fetchAll(\PDO::FETCH_ASSOC));
+        if (!$this->connectByTenantId($tenantId)) {
+            ResponseHelper::send(false, "Hospital database not found or inactive.", [], 403);
             return;
         }
 
@@ -164,15 +186,16 @@ class StaffController
         $currentUser = $_REQUEST['user'];
         $data = json_decode(file_get_contents("php://input"), true);
 
+        // FIX: Switch connection first!
+        if (!$this->connectByTenantId($currentUser['tenant_id'])) {
+            ResponseHelper::send(false, "Tenant database error.", [], 500);
+            return;
+        }
+
         // Security: Ensure staff belongs to this tenant
         $staff = $this->staffModel->getById($id);
         if (!$staff) {
             ResponseHelper::send(false, "Staff not found.", [], 404);
-            return;
-        }
-
-        if ($staff['tenant_id'] != $currentUser['tenant_id']) {
-            ResponseHelper::send(false, "Access denied.", [], 403);
             return;
         }
 
@@ -205,16 +228,18 @@ class StaffController
     {
         AuthMiddleware::handle();
         RoleMiddleware::handle(['Admin']);
+        $currentUser = $_REQUEST['user'];
+
+        // FIX: Switch connection first!
+        if (!$this->connectByTenantId($currentUser['tenant_id'])) {
+            ResponseHelper::send(false, "Tenant database error.", [], 500);
+            return;
+        }
 
         // Verify staff belongs to this tenant! (Security Check)
         $staff = $this->staffModel->getById($id);
         if (!$staff) {
             ResponseHelper::send(false, "Staff not found.", [], 404);
-            return;
-        }
-
-        if ($staff['tenant_id'] != $_REQUEST['user']['tenant_id']) {
-            ResponseHelper::send(false, "Access denied.", [], 403);
             return;
         }
 

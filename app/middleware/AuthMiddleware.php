@@ -33,14 +33,48 @@ class AuthMiddleware
             }
         }
 
-        // --- 2. Try Validating Access Token (Success path) ---
+        // --- 2. Try Validating Access Token EARLY ---
+        // This allows SuperAdmins on the master domain to bypass the subdomain check.
+        $userData = null;
         if ($token) {
-            // Validate using your JWT Helper
             $userData = JWT::validate($token, $_ENV['JWT_SECRET']);
-            if ($userData) {
+            if ($userData && $userData['user_type'] === 'system_admin') {
                 $_REQUEST['user'] = $userData;
-                return; // User is authenticated, let them pass
+                return; // SuperAdmin detected on master domain, allow bypass!
             }
+        }
+
+        // --- 3. Resolve Tenant from Subdomain (For all other users) ---
+        $host = $_SERVER['HTTP_HOST'] ?? '';
+        $parts = explode('.', $host);
+        if (count($parts) < 2 || $parts[0] === 'www') {
+            ResponseHelper::send(false, "Tenant domain not specified.", [], 400);
+            exit;
+        }
+        $subdomain = strtolower($parts[0]);
+
+        $database = new Database();
+        $masterDb = $database->connectMaster();
+        
+        $stmt = $masterDb->prepare("SELECT id, db_name, status FROM tenant_details WHERE LOWER(tenant_code) = ?");
+        $stmt->execute([$subdomain]);
+        $currentTenant = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+        if (!$currentTenant || $currentTenant['status'] !== 'active') {
+            ResponseHelper::send(false, "Invalid hospital domain or account inactive.", [], 403);
+            exit;
+        }
+
+        // --- 4. Validate Regular Tenant User (With Cross-Tenant Protection) ---
+        if ($userData) {
+            // SECURITY ENFORCEMENT: Cross-Tenant Protection
+            if (isset($userData['tenant_id']) && $userData['tenant_id'] != $currentTenant['id']) {
+                ResponseHelper::send(false, "Security Alert: Cross-tenant access denied.", [], 403);
+                exit;
+            }
+
+            $_REQUEST['user'] = $userData;
+            return; // User is authenticated and matches subdomain
         }
 
 
@@ -66,8 +100,8 @@ class AuthMiddleware
         }
 
         // --- 4. Identity & Session Check (The "Risk Score" Logic) ---
-        $database = new Database();
-        $db = $database->connect();
+        // We already resolved $currentTenant and $database in Step 2!
+        $db = $database->connectTenant($currentTenant['db_name']);
         $userModel = new User($db);
 
         // This function must exist in your User Model

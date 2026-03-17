@@ -14,36 +14,34 @@ class User
         $this->conn = $db;
     }
 
-    // --- AUTHENTICATION FUNCTIONS ---
-
+    /**
+     * AUTHENTICATION: Find hospital staff or patients in the CURRENT tenant database.
+     */
     public function findAnyUserByEmail($email)
     {
-        // 1. Check System Admins
-        $stmt = $this->conn->prepare("SELECT id, 'system_admin' as type, name, email, password, 'SuperAdmin' as role_name, 999 as role_id, NULL as tenant_id FROM system_admins WHERE email = :e LIMIT 1");
+        // 1. Check Hospital Staff (Admins, Doctors, Nurses)
+        $sqlUsers = "SELECT u.id, 'users' as type, u.tenant_id, u.role_id, u.name, u.email, 
+                            u.PASSWORD as password, r.name as role_name 
+                     FROM users u 
+                     LEFT JOIN roles r ON u.role_id = r.id 
+                     WHERE u.email = :e AND u.deleted_at IS NULL LIMIT 1";
+
+        $stmt = $this->conn->prepare($sqlUsers);
         $stmt->execute([':e' => $email]);
         if ($res = $stmt->fetch(PDO::FETCH_ASSOC)) {
             return $res;
         }
 
-        // 2. Check Tenant Admins/Staff (Users table)
-        $stmt = $this->conn->prepare("SELECT u.id, 'users' as type, u.tenant_id, u.role_id, u.name, u.email, u.PASSWORD as password, r.name as role_name 
-                                  FROM users u 
-                                  LEFT JOIN roles r ON u.role_id = r.id 
-                                  WHERE u.email = :e LIMIT 1");
-        $stmt->execute([':e' => $email]);
-        if ($res = $stmt->fetch(PDO::FETCH_ASSOC)) {
-            return $res;
-        }
+        // 2. Check Patients (In the same tenant database)
+        $sqlPatients = "SELECT id, 'patients' as type, tenant_id, first_name as name, email, 
+                               password, 'Patient' as role_name 
+                        FROM patients 
+                        WHERE email = :e AND deleted_at IS NULL LIMIT 1";
 
-        // 3. Check Patients
-        // Note: Patients table does not have role_id, use virtual role_name 'Patient'
-        $stmt = $this->conn->prepare("SELECT id, 'patients' as type, tenant_id, first_name as name, email, password, 'Patient' as role_name 
-                                  FROM patients 
-                                  WHERE email = :e AND deleted_at IS NULL LIMIT 1");
+        $stmt = $this->conn->prepare($sqlPatients);
         $stmt->execute([':e' => $email]);
         if ($res = $stmt->fetch(PDO::FETCH_ASSOC)) {
-            // Assign a virtual role_id for patients for RBAC consistency
-            $res['role_id'] = 6;
+            $res['role_id'] = 6; // Fixed Role ID for Patients
             return $res;
         }
 
@@ -51,16 +49,12 @@ class User
     }
 
     /**
-     * Polymorphic User Lookup
-
      * Used during Token Refresh to get fresh data from the correct table.
-
      */
     public function getUserByType($id, $type)
     {
-        if ($type === 'system_admin') {
-            $query = "SELECT id, NAME as name, email, NULL as tenant_id, 'SuperAdmin' as role_name, 999 as role_id FROM system_admins WHERE id = :id LIMIT 1";
-        } elseif ($type === 'patients') {
+        // Removed 'system_admin' check because that table is in the Master DB
+        if ($type === 'patients') {
             $query = "SELECT id, first_name as name, email, tenant_id, 'Patient' as role_name, 6 as role_id FROM patients WHERE id = :id AND deleted_at IS NULL LIMIT 1";
         } elseif ($type === 'staff') {
             $query = "SELECT id, name, email, tenant_id, 'Staff' as role_name, NULL as role_id FROM staff WHERE id = :id AND deleted_at IS NULL LIMIT 1";
@@ -71,8 +65,7 @@ class User
                       WHERE u.id = :id AND u.deleted_at IS NULL LIMIT 1";
         }
         $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(':id', $id);
-        $stmt->execute();
+        $stmt->execute([':id' => $id]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
@@ -148,7 +141,6 @@ class User
         $stmt->bindParam(':user_type', $userType);
 
         return $stmt->execute();
-
     }
 
     // Added this for the Rotation logic in AuthController
@@ -164,75 +156,20 @@ class User
 
     public function create($data, $useTransaction = true)
     {
-        try {
-            if ($useTransaction) {
-                $this->conn->beginTransaction();
-            }
-
-            $query = "INSERT INTO " . $this->table . " 
-                      (tenant_id, name, email, PASSWORD, role_id, STATUS) 
-                      VALUES (:tenant_id, :name, :email, :password, :role_id, 'active')";
-
-            $stmt = $this->conn->prepare($query);
-            $stmt->execute([
-                ':tenant_id' => $data['tenant_id'],
-                ':name' => $data['name'],
-                ':email' => $data['email'],
-                ':password' => $data['password'],
-                ':role_id' => $data['role_id'] // Added role_id
-            ]);
-
-            $userId = $this->conn->lastInsertId();
-
-
-            // Note: In case we need to update users.role_id specifically if the INSERT above didn't include it (it didn't include role_id in values list)
-            // The INSERT above was: (tenant_id, NAME, email, PASSWORD, STATUS) ...
-            // Validating if role_id is in users table... YES.
-            // So we should add role_id to the INSERT query instead of separate table.
-
-            $updateRole = "UPDATE users SET role_id = :role_id WHERE id = :id";
-            $updateStmt = $this->conn->prepare($updateRole);
-            $updateStmt->execute([':role_id' => $data['role_id'], ':id' => $userId]);
-
-            if ($useTransaction) {
-                $this->conn->commit();
-            }
-            return $userId;
-
-        } catch (\Exception $e) {
-            if ($useTransaction) {
-                $this->conn->rollBack();
-            }
-            throw $e; // Re-throw to let caller handle rollback
-        }
-    }
-
-    public function tenantExists($tenantId)
-    {
-        $query = "SELECT id FROM tenants WHERE id = :id AND deleted_at IS NULL LIMIT 1";
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(':id', $tenantId);
-        $stmt->execute();
-
-        return $stmt->rowCount() > 0;
-    }
-
-    public function checkAdminExistsForTenant($tenantId)
-    {
-        // Assuming Role ID 2 is 'Admin' or using Join if Role Name is needed.
-        // But user request said "super admin is ... create a admin".
-        // Let's assume we check by Role Name via Join.
-        // "Admin" role name.
-        // "Admin" role name.
-        $query = "SELECT u.id FROM users u 
-                  JOIN roles r ON u.role_id = r.id
-                  WHERE u.tenant_id = :tenant_id AND r.name = 'Admin' AND u.deleted_at IS NULL LIMIT 1";
+        $query = "INSERT INTO users (tenant_id, name, email, PASSWORD, role_id, STATUS) 
+          VALUES (:tenant_id, :name, :email, :password, :role_id, 'active')";
 
         $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(':tenant_id', $tenantId);
-        $stmt->execute();
+        $stmt->execute([
+            ':tenant_id' => $data['tenant_id'],
+            ':name'      => $data['name'],
+            ':email'     => $data['email'],
+            ':password'  => $data['password'],
+            ':role_id'   => $data['role_id']
+        ]);
 
-        return $stmt->rowCount() > 0;
+        $userId = $this->conn->lastInsertId();
+        return $userId;
     }
 
     public function getById($id)
@@ -264,5 +201,3 @@ class User
         return $stmt->execute();
     }
 }
-
-?>

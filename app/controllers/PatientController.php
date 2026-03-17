@@ -4,6 +4,7 @@ namespace App\Controllers;
 
 use App\Core\Database;
 use App\Models\Patient;
+use App\Models\MasterTenant;
 use App\Helpers\ResponseHelper;
 use App\Helpers\Encryption;
 use App\Middleware\AuthMiddleware;
@@ -12,13 +13,34 @@ use App\Helpers\Validator;
 
 class PatientController
 {
+    private $db;
     private $patientModel;
+    private $masterTenantModel;
 
     public function __construct()
     {
         $database = new Database();
-        $db = $database->connect();
-        $this->patientModel = new Patient($db);
+        $masterDb = $database->connectMaster();
+        $this->db = $masterDb;
+
+        $this->masterTenantModel = new MasterTenant($masterDb);
+        $this->patientModel = new Patient($this->db);
+    }
+
+    private function connectByTenantId($tenantId)
+    {
+        if (!$tenantId) return false;
+
+        $tenant = $this->masterTenantModel->getDetailsById($tenantId);
+
+        if (!$tenant || $tenant['status'] !== 'active') return false;
+
+        $database = new Database();
+        $this->db = $database->connectTenant($tenant['db_name']);
+
+        // Re-initialize model with the actual Tenant Connection
+        $this->patientModel = new Patient($this->db);
+        return true;
     }
 
     /**
@@ -31,6 +53,13 @@ class PatientController
         RoleMiddleware::handle(['Provider', 'Nurse']);
 
         $currentUser = $_REQUEST['user'];
+
+        // Switch to the Tenant DB before doing any queries!
+        if (!$this->connectByTenantId($currentUser['tenant_id'])) {
+            ResponseHelper::send(false, "Hospital database not found or inactive.", [], 403);
+            return;
+        }
+
         $data = !empty($_POST) ? $_POST : json_decode(file_get_contents("php://input"), true);
 
         $requiredFields = [
@@ -99,6 +128,13 @@ class PatientController
         RoleMiddleware::handle(['Provider', 'Nurse']);
 
         $currentUser = $_REQUEST['user'];
+
+        // Switch to the Tenant DB before doing any queries!
+        if (!$this->connectByTenantId($currentUser['tenant_id'])) {
+            ResponseHelper::send(false, "Hospital database not found or inactive.", [], 403);
+            return;
+        }
+
         $patients = $this->patientModel->getAllByTenant($currentUser['tenant_id']);
 
         // [SECURE] Decrypt history so staff can actually read it
@@ -120,6 +156,13 @@ class PatientController
         RoleMiddleware::handle(['Provider', 'Nurse']);
 
         $currentUser = $_REQUEST['user'];
+
+        // Switch to the Tenant DB before doing any queries!
+        if (!$this->connectByTenantId($currentUser['tenant_id'])) {
+            ResponseHelper::send(false, "Hospital database not found or inactive.", [], 403);
+            return;
+        }
+
         $data = !empty($_POST) ? $_POST : json_decode(file_get_contents("php://input"), true);
 
         $patient = $this->patientModel->getById($id);
@@ -176,6 +219,13 @@ class PatientController
         RoleMiddleware::handle(['Provider', 'Nurse']);
 
         $currentUser = $_REQUEST['user'];
+
+        // Switch to the Tenant DB before doing any queries!
+        if (!$this->connectByTenantId($currentUser['tenant_id'])) {
+            ResponseHelper::send(false, "Hospital database not found or inactive.", [], 403);
+            return;
+        }
+
         $patient = $this->patientModel->getById($id);
 
         if (!$patient) {
@@ -204,6 +254,12 @@ class PatientController
         AuthMiddleware::handle();
         $currentUser = $_REQUEST['user'];
 
+        // Switch to the Tenant DB before doing any queries!
+        if (!$this->connectByTenantId($currentUser['tenant_id'])) {
+            ResponseHelper::send(false, "Hospital database not found or inactive.", [], 403);
+            return;
+        }
+
         $patient = $this->patientModel->getById($id);
 
         if (!$patient) {
@@ -225,6 +281,10 @@ class PatientController
                 ResponseHelper::send(false, "Access denied. Patient belongs to another hospital.", [], 403);
                 return;
             }
+        }
+
+        if (!empty($patient['medical_history'])) {
+            $patient['medical_history'] = Encryption::decrypt($patient['medical_history']);
         }
 
         ResponseHelper::send(true, "Patient details retrieved", $patient);

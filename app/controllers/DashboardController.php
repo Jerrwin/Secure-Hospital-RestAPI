@@ -17,15 +17,41 @@ class DashboardController
     private $appointmentModel;
     private $prescriptionModel;
     private $staffModel;
+    private $masterTenantModel;
+    private $db;
 
     public function __construct()
     {
         $database = new Database();
-        $db = $database->connect();
-        $this->patientModel = new Patient($db);
-        $this->appointmentModel = new Appointment($db);
-        $this->prescriptionModel = new Prescription($db);
-        $this->staffModel = new Staff($db);
+        $masterDb = $database->connectMaster();
+        $this->db = $masterDb;
+
+        $this->masterTenantModel = new \App\Models\MasterTenant($masterDb);
+
+        // Initialize models with masterDb as a fallback
+        $this->patientModel = new Patient($this->db);
+        $this->appointmentModel = new Appointment($this->db);
+        $this->prescriptionModel = new Prescription($this->db);
+        $this->staffModel = new Staff($this->db);
+    }
+
+    private function connectByTenantId($tenantId)
+    {
+        if (!$tenantId) return false;
+
+        $tenant = $this->masterTenantModel->getDetailsById($tenantId);
+        if (!$tenant || $tenant['status'] !== 'active') return false;
+
+        $database = new Database();
+        $this->db = $database->connectTenant($tenant['db_name']);
+
+        // RE-INITIALIZE all models with the actual Hospital Connection
+        $this->patientModel = new Patient($this->db);
+        $this->appointmentModel = new Appointment($this->db);
+        $this->prescriptionModel = new Prescription($this->db);
+        $this->staffModel = new Staff($this->db);
+
+        return true;
     }
 
     // GET /api/dashboard/stats
@@ -37,6 +63,11 @@ class DashboardController
 
         $user = $_REQUEST['user'];
         $tenantId = $user['tenant_id'];
+
+        if (!$this->connectByTenantId($tenantId)) {
+            ResponseHelper::send(false, "Hospital database not found or inactive.", [], 403);
+            return;
+        }
 
         try {
             $stats = [
@@ -52,7 +83,6 @@ class DashboardController
             }
 
             ResponseHelper::send(true, "Dashboard statistics retrieved successfully.", $stats);
-
         } catch (\Exception $e) {
             ResponseHelper::send(false, "Failed to retrieve statistics: " . $e->getMessage(), [], 500);
         }

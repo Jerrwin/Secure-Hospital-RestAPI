@@ -21,7 +21,7 @@ class User
     {
         // 1. Check Hospital Staff (Admins, Doctors, Nurses)
         $sqlUsers = "SELECT u.id, 'users' as type, u.tenant_id, u.role_id, u.name, u.email, 
-                            u.PASSWORD as password, r.name as role_name 
+                            u.PASSWORD as password, r.name as role_name, u.STATUS as status
                      FROM users u 
                      LEFT JOIN roles r ON u.role_id = r.id 
                      WHERE u.email = :e AND u.deleted_at IS NULL LIMIT 1";
@@ -32,9 +32,21 @@ class User
             return $res;
         }
 
-        // 2. Check Patients (In the same tenant database)
+        // 2. Check Staff (In the same tenant database)
+        $sqlStaff = "SELECT s.id, 'staff' as type, s.tenant_id, s.name, s.email, 
+                            s.password, 'Staff' as role_name, s.status as status, 6 as role_id
+                     FROM staff s 
+                     WHERE s.email = :e AND s.deleted_at IS NULL LIMIT 1";
+
+        $stmt = $this->conn->prepare($sqlStaff);
+        $stmt->execute([':e' => $email]);
+        if ($res = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            return $res;
+        }
+
+        // 3. Check Patients (In the same tenant database)
         $sqlPatients = "SELECT id, 'patients' as type, tenant_id, first_name as name, email, 
-                               password, 'Patient' as role_name 
+                               password, 'Patient' as role_name, status as status
                         FROM patients 
                         WHERE email = :e AND deleted_at IS NULL LIMIT 1";
 
@@ -170,6 +182,22 @@ class User
 
         $userId = $this->conn->lastInsertId();
         return $userId;
+    }
+
+    /**
+     * Update User (Syncs status and name)
+     */
+    public function update($id, $data)
+    {
+        $query = "UPDATE users SET 
+                  name = :name,
+                  STATUS = :status
+                  WHERE id = :id";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':name', $data['name']);
+        $stmt->bindParam(':status', $data['STATUS']); // Notice the uppercase STATUS to match your DB
+        $stmt->bindParam(':id', $id);
+        return $stmt->execute();
     }
 
     public function getById($id)

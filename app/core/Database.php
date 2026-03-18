@@ -22,7 +22,7 @@ class Database
 
         $this->masterDb = $_ENV['DB_MASTER_NAME'] ?? 'tenant';
         $this->masterUser = $_ENV['DB_MASTER_USER'] ?? 'root';
-        $this->masterPass = $_ENV['DB_MASTER_PASS'] ?? '';
+        $this->masterPass = $_ENV['DB_MASTER_PASS'] ?? '200323';
     }
 
     /**

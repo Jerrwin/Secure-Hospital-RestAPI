@@ -95,7 +95,16 @@ class AuthController
         // 2. Fetch User from that specific DB
         $user = $this->userModel->findAnyUserByEmail($data->email);
 
-        // 3. Security Check
+        // 3. Check User Status
+        // Debug: Log to file instead of breaking response
+        file_put_contents(__DIR__ . '/../../debug_login.log', date('Y-m-d H:i:s') . " - Email: " . $data->email . " - User data: " . print_r($user, true) . "\n", FILE_APPEND);
+        $userStatus = strtolower($user['status'] ?? $user['STATUS'] ?? 'active');
+        if ($userStatus !== 'active') {
+            ResponseHelper::send(false, "Your account is inactive. Please contact administrator.", [], 403);
+            return;
+        }
+
+        // 4. Security Check
         // Note: Using password_verify() against your stored hash
         if (!$user || !password_verify($data->password, $user['password'] ?? $user['PASSWORD'])) {
             ResponseHelper::send(false, "Invalid credentials", [], 401);

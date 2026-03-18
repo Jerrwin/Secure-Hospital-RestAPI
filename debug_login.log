@@ -1,0 +1,52 @@
+2026-03-18 18:17:30 - Email: admin@apollo.com - User data: Array
+(
+    [id] => 1
+    [type] => users
+    [tenant_id] => 8
+    [role_id] => 1
+    [name] => Apollo Admin
+    [email] => admin@apollo.com
+    [password] => $2y$10$.En.mvZZWETplR98cZ6OxOHTUBdVm.MkBVG2HZNooGA8l8SKOvgya
+    [role_name] => Admin
+    [status] => active
+)
+
+2026-03-18 18:17:41 - Email: sutha@gmail.com - User data: Array
+(
+    [id] => 4
+    [type] => users
+    [tenant_id] => 8
+    [role_id] => 3
+    [name] => sutha krishnan
+    [email] => sutha@gmail.com
+    [password] => $2y$10$EUe1nl0miV3aaCgY3S7sV.LCrUnxvRw6gMQvr9Ms53EwEBH/fTaiS
+    [role_name] => Nurse
+    [status] => active
+)
+
+2026-03-18 18:20:36 - Email: admin@apollo.com - User data: Array
+(
+    [id] => 1
+    [type] => users
+    [tenant_id] => 8
+    [role_id] => 1
+    [name] => Apollo Admin
+    [email] => admin@apollo.com
+    [password] => $2y$10$.En.mvZZWETplR98cZ6OxOHTUBdVm.MkBVG2HZNooGA8l8SKOvgya
+    [role_name] => Admin
+    [status] => active
+)
+
+2026-03-18 18:46:42 - Email: sutha@gmail.com - User data: Array
+(
+    [id] => 4
+    [type] => users
+    [tenant_id] => 8
+    [role_id] => 3
+    [name] => sutha krishnannnn
+    [email] => sutha@gmail.com
+    [password] => $2y$10$EUe1nl0miV3aaCgY3S7sV.LCrUnxvRw6gMQvr9Ms53EwEBH/fTaiS
+    [role_name] => Nurse
+    [status] => inactive
+)
+

@@ -21,8 +21,8 @@ class Patient
     public function create($data)
     {
         $query = "INSERT INTO " . $this->table . " 
-                  (tenant_id, first_name, last_name, email, password, dob, gender, medical_history, created_by, created_at) 
-                  VALUES (:tenant_id, :first_name, :last_name, :email, :password, :dob, :gender, :medical_history, :created_by, NOW())";
+                  (tenant_id, first_name, last_name, email, phone_number, password, dob, gender, blood_group, status, address, medical_history, created_by, created_at) 
+                  VALUES (:tenant_id, :first_name, :last_name, :email, :phone_number, :password, :dob, :gender, :blood_group, :status, :address, :medical_history, :created_by, NOW())";
 
         $stmt = $this->conn->prepare($query);
 
@@ -30,9 +30,13 @@ class Patient
         $stmt->bindParam(':first_name', $data['first_name']);
         $stmt->bindParam(':last_name', $data['last_name']);
         $stmt->bindParam(':email', $data['email']);
+        $stmt->bindParam(':phone_number', $data['phone_number']);
         $stmt->bindParam(':password', $data['password']);
         $stmt->bindParam(':dob', $data['dob']);
         $stmt->bindParam(':gender', $data['gender']);
+        $stmt->bindParam(':blood_group', $data['blood_group']);
+        $stmt->bindParam(':status', $data['status']);
+        $stmt->bindParam(':address', $data['address']);
         $stmt->bindParam(':medical_history', $data['medical_history']);
         $stmt->bindParam(':created_by', $data['created_by']);
 
@@ -48,7 +52,7 @@ class Patient
      */
     public function getAllByTenant($tenantId)
     {
-        $query = "SELECT id, tenant_id, first_name, last_name, email, dob, gender, medical_history, created_by, created_at, updated_at FROM " . $this->table . " WHERE tenant_id = :tenant_id AND deleted_at IS NULL";
+        $query = "SELECT id, tenant_id, first_name, last_name, email, phone_number, dob, gender, blood_group, status, address, medical_history, created_by, created_at, updated_at FROM " . $this->table . " WHERE tenant_id = :tenant_id AND deleted_at IS NULL";
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(':tenant_id', $tenantId);
         $stmt->execute();
@@ -63,7 +67,7 @@ class Patient
      */
     public function getById($id)
     {
-        $query = "SELECT id, tenant_id, first_name, last_name, email, dob, gender, medical_history, created_by, created_at, updated_at FROM " . $this->table . " WHERE id = :id AND deleted_at IS NULL LIMIT 1";
+        $query = "SELECT id, tenant_id, first_name, last_name, email, phone_number, dob, gender, blood_group, status, address, medical_history, created_by, created_at, updated_at FROM " . $this->table . " WHERE id = :id AND deleted_at IS NULL LIMIT 1";
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(':id', $id);
         $stmt->execute();
@@ -102,14 +106,22 @@ class Patient
             $fields[] = "first_name = :first_name";
         if (isset($data['last_name']))
             $fields[] = "last_name = :last_name";
+        if (isset($data['email']))
+            $fields[] = "email = :email";
+        if (isset($data['phone_number']))
+            $fields[] = "phone_number = :phone_number";
+        if (isset($data['password']))
+            $fields[] = "password = :password";
         if (isset($data['dob']))
             $fields[] = "dob = :dob";
         if (isset($data['gender']))
             $fields[] = "gender = :gender";
-        if (isset($data['email']))
-            $fields[] = "email = :email";
-        if (isset($data['password']))
-            $fields[] = "password = :password";
+        if (isset($data['blood_group']))
+            $fields[] = "blood_group = :blood_group";
+        if (isset($data['status']))
+            $fields[] = "status = :status";
+        if (isset($data['address']))
+            $fields[] = "address = :address";
         if (isset($data['medical_history']))
             $fields[] = "medical_history = :medical_history";
 
@@ -128,14 +140,22 @@ class Patient
             $stmt->bindParam(':first_name', $data['first_name']);
         if (isset($data['last_name']))
             $stmt->bindParam(':last_name', $data['last_name']);
+        if (isset($data['email']))
+            $stmt->bindParam(':email', $data['email']);
+        if (isset($data['phone_number']))
+            $stmt->bindParam(':phone_number', $data['phone_number']);
+        if (isset($data['password']))
+            $stmt->bindParam(':password', $data['password']);
         if (isset($data['dob']))
             $stmt->bindParam(':dob', $data['dob']);
         if (isset($data['gender']))
             $stmt->bindParam(':gender', $data['gender']);
-        if (isset($data['email']))
-            $stmt->bindParam(':email', $data['email']);
-        if (isset($data['password']))
-            $stmt->bindParam(':password', $data['password']);
+        if (isset($data['blood_group']))
+            $stmt->bindParam(':blood_group', $data['blood_group']);
+        if (isset($data['status']))
+            $stmt->bindParam(':status', $data['status']);
+        if (isset($data['address']))
+            $stmt->bindParam(':address', $data['address']);
         if (isset($data['medical_history'])) {
             $stmt->bindParam(':medical_history', $data['medical_history']);
         }

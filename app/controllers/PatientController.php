@@ -64,7 +64,6 @@ class PatientController
 
         $requiredFields = [
             'first_name' => 'First Name',
-            'last_name' => 'Last Name',
             'dob' => 'Date of Birth',
             'gender' => 'Gender',
             'medical_history' => 'Medical History',
@@ -101,11 +100,15 @@ class PatientController
         $patientData = [
             'tenant_id' => $currentUser['tenant_id'],
             'first_name' => $data['first_name'],
-            'last_name' => $data['last_name'],
+            'last_name' => $data['last_name'] ?? null, // Match frontend (optional)
             'email' => $data['email'],
+            'phone_number' => $data['phone_number'], // SAVE PHONE
             'password' => password_hash($data['password'], PASSWORD_BCRYPT),
             'dob' => $data['dob'],
             'gender' => $data['gender'],
+            'blood_group' => $data['blood_group'], // SAVE BLOOD GROUP
+            'status' => $data['status'] ?? 'Regular', // SAVE STATUS
+            'address' => $data['address'], // SAVE ADDRESS
             'medical_history' => $encryptedHistory,
             'created_by' => $currentUser['user_id']
         ];

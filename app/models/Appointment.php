@@ -23,24 +23,34 @@ class Appointment
         $stmt = $this->conn->prepare($query);
 
         return $stmt->execute([
-            ':tenant_id' => $data['tenant_id'],
-            ':patient_id' => $data['patient_id'],
-            ':provider_id' => $data['provider_id'],
+            ':tenant_id'        => $data['tenant_id'],
+            ':patient_id'       => $data['patient_id'],
+            ':provider_id'      => $data['provider_id'],
             ':appointment_date' => $data['appointment_date'],
-            ':start_time' => $data['start_time'],
-            ':end_time' => $data['end_time'],
-            ':created_by' => $data['created_by']
+            ':start_time'       => $data['start_time'],
+            ':end_time'         => $data['end_time'],
+            ':created_by'       => $data['created_by']
         ]) ? $this->conn->lastInsertId() : false;
     }
 
-    // Dynamic Update
     public function update($id, $data)
     {
         $allowedColumns = ['patient_id', 'provider_id', 'appointment_date', 'start_time', 'end_time', 'STATUS'];
-        $filteredData = array_intersect_key($data, array_flip($allowedColumns));
 
-        if (empty($filteredData))
-            return false;
+        // Normalize any case variation of 'status' to 'STATUS'
+        $normalizedData = [];
+        foreach ($data as $key => $value) {
+            if (strtolower($key) === 'status') {
+                $normalizedData['STATUS'] = $value;
+            } else {
+                $normalizedData[$key] = $value;
+            }
+        }
+
+        // Filter only allowed columns
+        $filteredData = array_intersect_key($normalizedData, array_flip($allowedColumns));
+
+        if (empty($filteredData)) return false;
 
         $fields = "";
         foreach ($filteredData as $key => $value) {
@@ -48,15 +58,14 @@ class Appointment
         }
         $fields = rtrim($fields, ", ");
 
-        $query = "UPDATE " . $this->table . " SET $fields WHERE id = :id AND tenant_id = :tenant_id";
+        // Only filter by id — no tenant_id required in $data
+        $query = "UPDATE " . $this->table . " SET $fields WHERE id = :id";
         $filteredData['id'] = $id;
-        $filteredData['tenant_id'] = $data['tenant_id'];
 
         $stmt = $this->conn->prepare($query);
         return $stmt->execute($filteredData);
     }
 
-    // Get All with Filters
     public function getAllByTenant($tenantId, $filters = [])
     {
         $query = "SELECT a.*, 
@@ -89,7 +98,6 @@ class Appointment
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    // [RESTORED] Get Upcoming (Specific Logic)
     public function getUpcomingByTenant($tenantId, $patientId = null)
     {
         $query = "SELECT a.*, 
@@ -115,7 +123,6 @@ class Appointment
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    // Conflict Check
     public function isSlotBooked($providerId, $date, $startTime, $endTime, $excludeId = null)
     {
         $query = "SELECT id FROM " . $this->table . " 
@@ -127,9 +134,9 @@ class Appointment
 
         $params = [
             ':provider_id' => $providerId,
-            ':date' => $date,
-            ':start_time' => $startTime,
-            ':end_time' => $endTime
+            ':date'        => $date,
+            ':start_time'  => $startTime,
+            ':end_time'    => $endTime
         ];
 
         if ($excludeId) {
@@ -153,7 +160,9 @@ class Appointment
     public function countTodayByTenant($tenantId)
     {
         $query = "SELECT COUNT(*) as total FROM " . $this->table . " 
-                  WHERE tenant_id = :tenant_id AND appointment_date = CURDATE() AND STATUS != 'cancelled'";
+                  WHERE tenant_id = :tenant_id 
+                  AND appointment_date = CURDATE() 
+                  AND STATUS != 'cancelled'";
         $stmt = $this->conn->prepare($query);
         $stmt->execute([':tenant_id' => $tenantId]);
         return $stmt->fetch(PDO::FETCH_ASSOC)['total'];
@@ -162,7 +171,9 @@ class Appointment
     public function countUpcomingByTenant($tenantId)
     {
         $query = "SELECT COUNT(*) as total FROM " . $this->table . " 
-                  WHERE tenant_id = :tenant_id AND appointment_date > CURDATE() AND STATUS != 'cancelled'";
+                  WHERE tenant_id = :tenant_id 
+                  AND appointment_date > CURDATE() 
+                  AND STATUS != 'cancelled'";
         $stmt = $this->conn->prepare($query);
         $stmt->execute([':tenant_id' => $tenantId]);
         return $stmt->fetch(PDO::FETCH_ASSOC)['total'];

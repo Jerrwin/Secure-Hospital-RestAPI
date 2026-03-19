@@ -81,11 +81,11 @@ class AuthController
         // Dynamically extract subdomain from the request URL
         $host = $_SERVER['HTTP_HOST'] ?? '';
         $parts = explode('.', $host);
-        
+
         // Ensure we actually got a subdomain (like apollo.localhost or apollo.hospitalapp.com)
         if (count($parts) < 2 || $parts[0] === 'www') {
-             ResponseHelper::send(false, "Tenant domain not specified.", [], 400);
-             return;
+            ResponseHelper::send(false, "Tenant domain not specified.", [], 400);
+            return;
         }
         $subdomain = strtolower($parts[0]);
 
@@ -160,33 +160,32 @@ class AuthController
             return;
         }
 
-        // 2. Extract Identity from Authorization Header (Even if expired)
-        $headers = getallheaders();
-        $authHeader = $headers['Authorization'] ?? $headers['authorization'] ?? null;
-        $payload = null;
-
-        if ($authHeader && preg_match('/Bearer\s(\S+)/', $authHeader, $matches)) {
-            $parts = explode('.', $matches[1]);
-            if (count($parts) === 3) {
-                $payload = json_decode(base64_decode(str_replace(['-', '_'], ['+', '/'], $parts[1])), true);
-            }
+        // 2. STRENGTHENED: Resolve Tenant from Subdomain (NOT from token payload)
+        // This ensures the session stays valid even if the user refreshes the page!
+        $host = $_SERVER['HTTP_HOST'] ?? '';
+        $parts = explode('.', $host);
+        if (count($parts) < 2) {
+            ResponseHelper::send(false, "Tenant domain not specified.", [], 400);
+            return;
         }
+        $subdomain = strtolower($parts[0]);
 
-        if (!$payload || !isset($payload['user_id']) || !isset($payload['user_type']) || !isset($payload['tenant_id'])) {
-            ResponseHelper::send(false, "Identity verification failed.", [], 401);
+        $tenant = $this->masterTenantModel->getDetailsBySubdomain($subdomain);
+        if (!$tenant) {
+            ResponseHelper::send(false, "Invalid hospital context.", [], 404);
             return;
         }
 
-        //Switch to Tenant DB BEFORE querying for tokens!
-        if (!$this->connectByTenantId($payload['tenant_id'])) {
-            ResponseHelper::send(false, "Hospital database context lost.", [], 404);
+        // Switch to the correct DB
+        if (!$this->connectByTenantId($tenant['id'])) {
+            ResponseHelper::send(false, "Database connection failed.", [], 500);
             return;
         }
 
-        // 3. Database Validation
-        $tokenRow = $this->userModel->verifyRefreshToken($payload['user_id'], $payload['user_type'], $incomingToken);
+        // 3. Database Validation (Generic search because we don't have user_id yet)
+        $tokenRow = $this->userModel->verifyRefreshTokenGeneric($incomingToken);
 
-        if ($tokenRow === "NO_DATA_FOUND" || $tokenRow === "IDENTITY_MISMATCH" || $tokenRow === "EXPIRED") {
+        if ($tokenRow === "NO_DATA_FOUND" || $tokenRow === "EXPIRED") {
             setcookie('refresh_token', '', time() - 3600, '/');
             ResponseHelper::send(false, "Session invalid: $tokenRow", [], 401);
             return;
@@ -195,7 +194,7 @@ class AuthController
         // 4. SECURITY: ROTATION (Delete old token, Issue new set)
         $this->userModel->deleteRefreshTokenById($tokenRow['id']);
 
-        $user = $this->userModel->getUserByType($payload['user_id'], $payload['user_type']);
+        $user = $this->userModel->getUserByType($tokenRow['user_id'], $tokenRow['user_type']);
 
         if (!$user) {
             ResponseHelper::send(false, "User account no longer exists.", [], 404);
@@ -210,7 +209,7 @@ class AuthController
         $newAccessToken = JWT::encode([
             'user_id' => $user['id'],
             'email' => $user['email'],
-            'user_type' => $payload['user_type'],
+            'user_type' => $tokenRow['user_type'],
             'role' => $user['role_name'],
             'role_id' => $user['role_id'],
             'tenant_id' => $user['tenant_id'],
@@ -220,7 +219,7 @@ class AuthController
 
         // New Refresh Token
         $newRefreshData = RefreshToken::generate();
-        $this->userModel->storeRefreshToken($payload['user_id'], $payload['user_type'], $newRefreshData['token'], $newRefreshData['expiry']);
+        $this->userModel->storeRefreshToken($tokenRow['user_id'], $tokenRow['user_type'], $newRefreshData['token'], $newRefreshData['expiry']);
 
         // Update Cookie
         setcookie('refresh_token', $newRefreshData['token'], time() + 604800, '/', '', false, true);

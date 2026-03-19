@@ -26,9 +26,9 @@ class AppointmentController
         $this->db = $masterDb;
 
         $this->masterTenantModel = new MasterTenant($masterDb);
-        $this->appointmentModel = new Appointment($this->db);
-        $this->patientModel = new Patient($this->db);
-        $this->userModel = new User($this->db);
+        $this->appointmentModel  = new Appointment($this->db);
+        $this->patientModel      = new Patient($this->db);
+        $this->userModel         = new User($this->db);
     }
 
     private function connectByTenantId($tenantId)
@@ -36,32 +36,28 @@ class AppointmentController
         if (!$tenantId) return false;
 
         $tenant = $this->masterTenantModel->getDetailsById($tenantId);
-
         if (!$tenant || $tenant['status'] !== 'active') return false;
 
         $database = new Database();
         $this->db = $database->connectTenant($tenant['db_name']);
 
-        // Re-initialize all models with the actual Tenant Connection
         $this->appointmentModel = new Appointment($this->db);
-        $this->patientModel = new Patient($this->db);
-        $this->userModel = new User($this->db);
+        $this->patientModel     = new Patient($this->db);
+        $this->userModel        = new User($this->db);
         return true;
     }
 
-    // POST /api/appointments (Tested & Working)
+    // POST /api/appointments
     public function create()
     {
         AuthMiddleware::handle();
         RoleMiddleware::handle(['Provider', 'Nurse', 'Admin', 'Receptionist']);
 
-        $data = !empty($_POST) ? $_POST : json_decode(file_get_contents("php://input"), true);
+        $data        = !empty($_POST) ? $_POST : json_decode(file_get_contents("php://input"), true);
         $currentUser = $_REQUEST['user'];
-        $tenantId = $currentUser['tenant_id'];
+        $tenantId    = $currentUser['tenant_id'];
 
-        // Switch to the Tenant DB!
-        $tenantToConnect = $currentUser['tenant_id'] ?? $_REQUEST['user']['tenant_id'];
-        if (!$this->connectByTenantId($tenantToConnect)) {
+        if (!$this->connectByTenantId($tenantId)) {
             ResponseHelper::send(false, "Hospital database not found or inactive.", [], 403);
             return;
         }
@@ -119,14 +115,14 @@ class AppointmentController
         }
 
         $appointmentData = [
-            'tenant_id' => $tenantId,
-            'patient_id' => $data['patient_id'],
-            'provider_id' => $targetProviderId,
-            'created_by' => $currentUser['user_id'],
+            'tenant_id'        => $tenantId,
+            'patient_id'       => $data['patient_id'],
+            'provider_id'      => $targetProviderId,
+            'created_by'       => $currentUser['user_id'],
             'appointment_date' => $data['appointment_date'],
-            'start_time' => $data['start_time'],
-            'end_time' => $data['end_time'],
-            'STATUS' => 'scheduled'
+            'start_time'       => $data['start_time'],
+            'end_time'         => $data['end_time'],
+            'STATUS'           => 'scheduled'
         ];
 
         $id = $this->appointmentModel->create($appointmentData);
@@ -138,15 +134,13 @@ class AppointmentController
         }
     }
 
-    // GET /api/appointments (Tested & Working)
+    // GET /api/appointments
     public function index()
     {
         AuthMiddleware::handle();
         $currentUser = $_REQUEST['user'];
 
-        // Switch to the Tenant DB!
-        $tenantToConnect = $currentUser['tenant_id'] ?? $_REQUEST['user']['tenant_id'];
-        if (!$this->connectByTenantId($tenantToConnect)) {
+        if (!$this->connectByTenantId($currentUser['tenant_id'])) {
             ResponseHelper::send(false, "Hospital database not found or inactive.", [], 403);
             return;
         }
@@ -155,56 +149,43 @@ class AppointmentController
         if ($currentUser['role'] === 'Patient') {
             $filters['patient_id'] = $currentUser['user_id'];
         }
-
-        // Extract date filters from query string
-        if (!empty($_GET['start_date'])) {
-            $filters['start_date'] = $_GET['start_date'];
-        }
-        if (!empty($_GET['end_date'])) {
-            $filters['end_date'] = $_GET['end_date'];
-        }
+        if (!empty($_GET['start_date'])) $filters['start_date'] = $_GET['start_date'];
+        if (!empty($_GET['end_date']))   $filters['end_date']   = $_GET['end_date'];
 
         $list = $this->appointmentModel->getAllByTenant($currentUser['tenant_id'], $filters);
         ResponseHelper::send(true, "Appointments retrieved", $list);
     }
 
-    // [RESTORED] GET /api/appointments/upcoming
+    // GET /api/appointments/upcoming
     public function getUpcoming()
     {
         AuthMiddleware::handle();
         $currentUser = $_REQUEST['user'];
 
-        // Switch to the Tenant DB!
-        $tenantToConnect = $currentUser['tenant_id'] ?? $_REQUEST['user']['tenant_id'];
-        if (!$this->connectByTenantId($tenantToConnect)) {
+        if (!$this->connectByTenantId($currentUser['tenant_id'])) {
             ResponseHelper::send(false, "Hospital database not found or inactive.", [], 403);
             return;
         }
 
         $patientId = ($currentUser['role'] === 'Patient') ? $currentUser['user_id'] : null;
-
-        // Use the dedicated method we are about to add to the Model
         $list = $this->appointmentModel->getUpcomingByTenant($currentUser['tenant_id'], $patientId);
         ResponseHelper::send(true, "Upcoming appointments", $list);
     }
 
-    // [RESTORED] PUT /api/appointments/update/{id}
+    // PUT /api/appointments/update/{id}
     public function update($id)
     {
         AuthMiddleware::handle();
         $currentUser = $_REQUEST['user'];
-        $tenantId = $currentUser['tenant_id'];
+        $tenantId    = $currentUser['tenant_id'];
 
-        // Switch to the Tenant DB!
-        $tenantToConnect = $currentUser['tenant_id'] ?? $_REQUEST['user']['tenant_id'];
-        if (!$this->connectByTenantId($tenantToConnect)) {
+        if (!$this->connectByTenantId($tenantId)) {
             ResponseHelper::send(false, "Hospital database not found or inactive.", [], 403);
             return;
         }
 
         $data = !empty($_POST) ? $_POST : json_decode(file_get_contents("php://input"), true);
 
-        // 1. Check if appointment exists
         $existing = $this->appointmentModel->find($id);
         if (!$existing) {
             ResponseHelper::send(false, "Appointment not found.", [], 404);
@@ -216,25 +197,21 @@ class AppointmentController
             return;
         }
 
-        // 2. Prevent editing past/completed appointments
         if (in_array(strtolower($existing['STATUS']), ['cancelled', 'completed'])) {
             ResponseHelper::send(false, "Cannot modify finished appointments", [], 400);
             return;
         }
 
-        // 3. Conflict Check (if time is changing)
-        $pId = $data['provider_id'] ?? $existing['provider_id'];
-        $date = $data['appointment_date'] ?? $existing['appointment_date'];
-        $start = $data['start_time'] ?? $existing['start_time'];
-        $end = $data['end_time'] ?? $existing['end_time'];
+        $pId   = $data['provider_id']      ?? $existing['provider_id'];
+        $date  = $data['appointment_date'] ?? $existing['appointment_date'];
+        $start = $data['start_time']       ?? $existing['start_time'];
+        $end   = $data['end_time']         ?? $existing['end_time'];
 
-        // Exclude current ID from conflict check
         if ($this->appointmentModel->isSlotBooked($pId, $date, $start, $end, $id)) {
             ResponseHelper::send(false, "Time slot conflict", [], 409);
             return;
         }
 
-        // 4. Update
         if ($this->appointmentModel->update($id, $data)) {
             ResponseHelper::send(true, "Appointment updated successfully");
         } else {
@@ -242,11 +219,11 @@ class AppointmentController
         }
     }
 
-    // PUT /api/appointments/cancel/{id} (Tested & Working)
+    // PUT /api/appointments/cancel/{id}
     public function cancel($id)
     {
         AuthMiddleware::handle();
-        $currentUser = $_REQUEST['user']; // Define this!
+        $currentUser = $_REQUEST['user'];
 
         if (!$this->connectByTenantId($currentUser['tenant_id'])) {
             ResponseHelper::send(false, "Hospital database not found.", [], 403);
@@ -254,7 +231,6 @@ class AppointmentController
         }
 
         $existing = $this->appointmentModel->find($id);
-
         if (!$existing) {
             ResponseHelper::send(false, "Appointment not found.", [], 404);
             return;
@@ -274,13 +250,12 @@ class AppointmentController
         ResponseHelper::send($res, $res ? "Cancelled" : "Failed");
     }
 
-    // PUT /api/appointments/complete/{id} (Tested & Working)
+    // PUT /api/appointments/complete/{id}
     public function complete($id)
     {
         AuthMiddleware::handle();
         RoleMiddleware::handle(['Provider', 'Admin']);
-
-        $currentUser = $_REQUEST['user']; // Define this!
+        $currentUser = $_REQUEST['user'];
 
         if (!$this->connectByTenantId($currentUser['tenant_id'])) {
             ResponseHelper::send(false, "Hospital database not found.", [], 403);
@@ -288,7 +263,6 @@ class AppointmentController
         }
 
         $existing = $this->appointmentModel->find($id);
-
         if (!$existing) {
             ResponseHelper::send(false, "Appointment not found.", [], 404);
             return;
@@ -303,22 +277,18 @@ class AppointmentController
         ResponseHelper::send($res, $res ? "Completed" : "Failed");
     }
 
-    // [RESTORED] GET /api/appointments/show/{id}
+    // GET /api/appointments/show/{id}
     public function show($id)
     {
         AuthMiddleware::handle();
         $currentUser = $_REQUEST['user'];
 
-        // Switch to the Tenant DB!
-        $tenantToConnect = $currentUser['tenant_id'] ?? $_REQUEST['user']['tenant_id'];
-        if (!$this->connectByTenantId($tenantToConnect)) {
+        if (!$this->connectByTenantId($currentUser['tenant_id'])) {
             ResponseHelper::send(false, "Hospital database not found or inactive.", [], 403);
             return;
         }
 
         $appointment = $this->appointmentModel->find($id);
-
-        // Security Check
         if (!$appointment) {
             ResponseHelper::send(false, "Appointment not found.", [], 404);
             return;
@@ -328,6 +298,7 @@ class AppointmentController
             ResponseHelper::send(false, "Access denied", [], 403);
             return;
         }
+
         ResponseHelper::send(true, "Details", $appointment);
     }
 }

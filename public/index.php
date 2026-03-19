@@ -123,7 +123,7 @@ $router->put('/api/staff/{id}', [StaffController::class, 'update']); //
 $router->post('/api/patients', [PatientController::class, 'create']); //
 $router->get('/api/patients/{id}', [PatientController::class, 'show']); //
 $router->get('/api/patients', [PatientController::class, 'index']); //
-$router->delete('/api/patients/{id}', [PatientController::class, 'delete']); //
+$router->delete('/api/patients/{id}', [PatientController::class, 'delete']); // 
 $router->put('/api/patients/{id}', [PatientController::class, 'update']); // 
 
 // Appointment Endpoints (KEPT YOURS - They are better structured)
@@ -133,7 +133,7 @@ $router->get('/api/appointments', [AppointmentController::class, 'index']); //
 $router->get('/api/appointments/show/{id}', [AppointmentController::class, 'show']); //
 $router->put('/api/appointments/cancel/{id}', [AppointmentController::class, 'cancel']); //
 $router->put('/api/appointments/update/{id}', [AppointmentController::class, 'update']); //
-$router->put('/api/appointments/complete/{id}', [AppointmentController::class, 'complete']); //
+$router->put('/api/appointments/complete/{id}', [AppointmentController::class, 'complete']); 
 
 // Calendar Endpoints
 $router->get('/api/calendar', [CalendarController::class, 'index']);      // Default (current month)

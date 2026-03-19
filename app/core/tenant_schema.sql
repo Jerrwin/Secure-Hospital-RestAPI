@@ -138,7 +138,7 @@ CREATE TABLE IF NOT EXISTS `refresh_tokens` (
     `token` text COLLATE utf8mb4_unicode_ci,
     `expiry_date` datetime DEFAULT NULL,
     `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-    `user_type` enum('system_admin','users') COLLATE utf8mb4_unicode_ci NOT NULL,
+    `user_type` enum('system_admin','users','patients') COLLATE utf8mb4_unicode_ci NOT NULL,
     PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 

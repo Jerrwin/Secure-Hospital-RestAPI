@@ -126,20 +126,40 @@ class User
     }
 
     /**
-
-     * Clears specific sessions by ID and Type.
-
+     * Validates a refresh token by searching all sessions in the table.
+     * Used when the Access Token is missing (e.g. after page refresh).
      */
+    public function verifyRefreshTokenGeneric($incomingRawToken)
+    {
+        // 1. Fetch ALL tokens (usually a small table)
+        // Optimization: In large systems, we would use a blind index or hash prefix.
+        $query = "SELECT * FROM refresh_tokens";
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute();
 
+        $allSessions = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        foreach ($allSessions as $row) {
+            if (password_verify($incomingRawToken, $row['token'])) {
+                if (strtotime($row['expiry_date']) < time()) {
+                    return "EXPIRED";
+                }
+                return $row;
+            }
+        }
+
+        return "NO_DATA_FOUND";
+    }
+
+    /**
+     * Clears specific sessions by ID and Type.
+     */
     public function deleteSessionByUserIdAndType($userId, $userType)
     {
         $query = "DELETE FROM refresh_tokens WHERE user_id = :user_id AND user_type = :user_type";
-
         $stmt = $this->conn->prepare($query);
-
         $stmt->bindParam(':user_id', $userId);
         $stmt->bindParam(':user_type', $userType);
-
         return $stmt->execute();
     }
 

@@ -2,3 +2,5 @@
 /vendor
 .DS_Store
 /tool.php
+/debug_db.php
+/debug_login.log

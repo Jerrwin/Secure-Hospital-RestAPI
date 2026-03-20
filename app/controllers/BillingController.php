@@ -91,12 +91,28 @@ class BillingController
         $data['patient_id'] = $appointment['patient_id'];
 
         $invoiceId = $this->billingModel->createInvoice($data);
-
+        
         if ($invoiceId) {
-            ResponseHelper::send(true, "Invoice created successfully.", ['invoice_id' => $invoiceId], 201);
+            // Fetch the FULL invoice details to return to the frontend
+            $fullInvoice = $this->billingModel->getInvoiceById($invoiceId);
+            ResponseHelper::send(true, "Invoice created successfully.", $fullInvoice, 201);
         } else {
             ResponseHelper::send(false, "Failed to create invoice.", [], 500);
         }
+    }
+
+    // GET /api/invoices
+    public function index()
+    {
+        AuthMiddleware::handle();
+        $user = $_REQUEST['user'];
+        if (!$this->connectByTenantId($user['tenant_id'])) {
+            ResponseHelper::send(false, "Hospital database not found.", [], 403);
+            return;
+        }
+        $status = $_GET['status'] ?? null;
+        $invoices = $this->billingModel->getAllInvoices($status);
+        ResponseHelper::send(true, "Invoices retrieved.", $invoices);
     }
 
     // GET /api/invoices?appointment_id={id}

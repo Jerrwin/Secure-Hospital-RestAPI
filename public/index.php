@@ -149,26 +149,10 @@ $router->get('/api/prescriptions', [PrescriptionController::class, 'index']);
 $router->post('/api/communications', [CommunicationController::class, 'create']);
 $router->get('/api/communications', [CommunicationController::class, 'index']);
 
-// [MERGE] Billing Endpoints (New)
-$router->post('/api/invoices', [BillingController::class, 'createInvoice']);
-$router->get('/api/invoices', [BillingController::class, 'getInvoice']);
-$router->get('/api/invoices/{id}', [BillingController::class, 'show']);
-$router->post('/api/payments', [BillingController::class, 'processPayment']);
-
-
-// Prescription Endpoints
-$router->post('/api/prescriptions', [PrescriptionController::class, 'create']); // Provider only
-$router->put('/api/prescriptions/{id}/status', [PrescriptionController::class, 'updateStatus']); // Pharmacist only
-$router->get('/api/prescriptions', [PrescriptionController::class, 'index']);
-
-
-// Communication Endpoints
-$router->post('/api/communications', [CommunicationController::class, 'create']);
-$router->get('/api/communications', [CommunicationController::class, 'index']);
-
 // Billing Endpoints
 $router->post('/api/invoices', [BillingController::class, 'createInvoice']);
-$router->get('/api/invoices', [BillingController::class, 'getInvoice']);
+$router->get('/api/invoices', [BillingController::class, 'index']);
+$router->get('/api/invoices/{id}', [BillingController::class, 'show']);
 $router->put('/api/invoices/{id}', [BillingController::class, 'update']);
 $router->post('/api/payments', [BillingController::class, 'processPayment']);
 

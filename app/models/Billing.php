@@ -38,7 +38,11 @@ class Billing
     // Get Invoice by Appointment ID
     public function getInvoiceByAppointment($appointmentId)
     {
-        $query = "SELECT * FROM " . $this->invoiceTable . " WHERE appointment_id = :appointment_id LIMIT 1";
+        $query = "SELECT i.*, i.id as invoice_id, p.method, p.transaction_id, p.payment_date, CONCAT(pt.first_name, ' ', pt.last_name) as patient_name 
+                  FROM " . $this->invoiceTable . " i 
+                  LEFT JOIN " . $this->paymentTable . " p ON i.id = p.invoice_id
+                  LEFT JOIN patients pt ON i.patient_id = pt.id 
+                  WHERE i.appointment_id = :appointment_id LIMIT 1";
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(':appointment_id', $appointmentId);
         $stmt->execute();
@@ -48,7 +52,11 @@ class Billing
     // Get Invoice by ID
     public function getInvoiceById($id)
     {
-        $query = "SELECT * FROM " . $this->invoiceTable . " WHERE id = :id LIMIT 1";
+        $query = "SELECT i.*, i.id as invoice_id, p.method, p.transaction_id, p.payment_date, CONCAT(pt.first_name, ' ', pt.last_name) as patient_name 
+                  FROM " . $this->invoiceTable . " i 
+                  LEFT JOIN " . $this->paymentTable . " p ON i.id = p.invoice_id
+                  LEFT JOIN patients pt ON i.patient_id = pt.id 
+                  WHERE i.id = :id LIMIT 1";
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(':id', $id);
         $stmt->execute();
@@ -61,7 +69,7 @@ class Billing
 
         // 1. Insert the payment record
         $query = "INSERT INTO payments (invoice_id, amount, method, transaction_id, payment_date, STATUS) 
-                  VALUES (:invoice_id, :amount, :method, :transaction_id, CURDATE(), 'success')";
+                  VALUES (:invoice_id, :amount, :method, :transaction_id, NOW(), 'success')";
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(':invoice_id', $data['invoice_id']);
         $stmt->bindParam(':amount', $data['amount']);
@@ -90,6 +98,26 @@ class Billing
         $stmt->bindParam(':status', $status);
         $stmt->bindParam(':id', $id);
         return $stmt->execute();
+    }
+
+    public function getAllInvoices($status = null)
+    {
+        // We join 'payments' for transaction info and 'patients' for the name
+        $query = "SELECT i.*, i.id as invoice_id, p.method, p.transaction_id, p.payment_date, CONCAT(pt.first_name, ' ', pt.last_name) as patient_name 
+                  FROM " . $this->invoiceTable . " i 
+                  LEFT JOIN " . $this->paymentTable . " p ON i.id = p.invoice_id
+                  LEFT JOIN patients pt ON i.patient_id = pt.id";
+                  
+        if ($status) {
+            $query .= " WHERE i.STATUS = :status";
+        }
+        $query .= " ORDER BY i.id DESC";
+        $stmt = $this->conn->prepare($query);
+        if ($status) {
+            $stmt->bindParam(':status', $status);
+        }
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     public function update($id, $data)

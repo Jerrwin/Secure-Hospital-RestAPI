@@ -135,7 +135,20 @@ CREATE TABLE IF NOT EXISTS `prescriptions` (
     CONSTRAINT `fk_presc_provider` FOREIGN KEY (`provider_id`) REFERENCES `users` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- 10. REFRESH TOKENS
+-- 10. PRESCRIPTION ITEMS (One-to-Many Details)
+CREATE TABLE IF NOT EXISTS `prescription_items` (
+    `id` int NOT NULL AUTO_INCREMENT,
+    `prescription_id` int NOT NULL,
+    `medicine_name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+    `dosage` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+    `frequency` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+    `duration` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+    `instruction` text COLLATE utf8mb4_unicode_ci,
+    PRIMARY KEY (`id`),
+    CONSTRAINT `fk_item_presc` FOREIGN KEY (`prescription_id`) REFERENCES `prescriptions` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 11. REFRESH TOKENS
 CREATE TABLE IF NOT EXISTS `refresh_tokens` (
     `id` int NOT NULL AUTO_INCREMENT,
     `user_id` int NOT NULL,
@@ -146,7 +159,24 @@ CREATE TABLE IF NOT EXISTS `refresh_tokens` (
     PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- 11. INSERT DEFAULT ROLES
+-- 12. NOTIFICATIONS
+CREATE TABLE IF NOT EXISTS `notifications` (
+    `id` int NOT NULL AUTO_INCREMENT,
+    `tenant_id` int NOT NULL DEFAULT 1,
+    `user_id` int DEFAULT NULL,
+    `user_type` enum('staff','patient') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'staff',
+    `type` enum('appointment','payment','prescription','system') COLLATE utf8mb4_unicode_ci NOT NULL,
+    `title` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+    `message` text COLLATE utf8mb4_unicode_ci NOT NULL,
+    `is_read` tinyint(1) DEFAULT 0,
+    `reference_id` int DEFAULT NULL,
+    `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    KEY `idx_notif_user` (`user_id`, `user_type`),
+    KEY `idx_notif_tenant` (`tenant_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 13. INSERT DEFAULT ROLES
 INSERT IGNORE INTO `roles` (`id`, `NAME`) VALUES
 (1, 'Admin'),
 (2, 'Provider'),

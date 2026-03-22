@@ -45,6 +45,28 @@ class Billing
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
+    public function getAllByTenant($tenantId, $filters = [])
+    {
+        $query = "SELECT * FROM " . $this->invoiceTable . " WHERE tenant_id = :tenant_id";
+        $params = [':tenant_id' => $tenantId];
+        
+        if (!empty($filters['status'])) {
+            $query .= " AND STATUS = :status";
+            $params[':status'] = $filters['status'];
+        }
+        
+        if (!empty($filters['patient_id'])) {
+            $query .= " AND patient_id = :patient_id";
+            $params[':patient_id'] = $filters['patient_id'];
+        }
+        
+        $query .= " ORDER BY id DESC";
+        
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute($params);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
     // Get Invoice by ID
     public function getInvoiceById($id)
     {

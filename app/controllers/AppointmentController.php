@@ -128,6 +128,20 @@ class AppointmentController
         $id = $this->appointmentModel->create($appointmentData);
         if ($id) {
             $appointmentData['id'] = (int) $id;
+
+            // ── Notification Trigger ──────────────────────────────────
+            $notifModel = new \App\Models\Notification($this->db);
+            $patientName = ($patient['first_name'] ?? '') . ' ' . ($patient['last_name'] ?? '');
+            $notifModel->create([
+                'tenant_id'    => $tenantId,
+                'user_id'      => $targetProviderId,
+                'user_type'    => 'staff',
+                'type'         => 'appointment',
+                'title'        => 'New Appointment Scheduled',
+                'message'      => trim($patientName) . ' has a new appointment on ' . $data['appointment_date'] . '.',
+                'reference_id' => (int) $id
+            ]);
+
             ResponseHelper::send(true, "Appointment scheduled successfully.", $appointmentData, 201);
         } else {
             ResponseHelper::send(false, "Server Error", [], 500);
@@ -151,6 +165,7 @@ class AppointmentController
         }
         if (!empty($_GET['start_date'])) $filters['start_date'] = $_GET['start_date'];
         if (!empty($_GET['end_date']))   $filters['end_date']   = $_GET['end_date'];
+        if (!empty($_GET['status']))     $filters['status']     = $_GET['status'];
 
         $list = $this->appointmentModel->getAllByTenant($currentUser['tenant_id'], $filters);
         ResponseHelper::send(true, "Appointments retrieved", $list);

@@ -90,6 +90,10 @@ class Appointment
             $query .= " AND a.patient_id = :patient_id";
             $params[':patient_id'] = $filters['patient_id'];
         }
+        if (!empty($filters['status'])) {
+            $query .= " AND a.STATUS = :status";
+            $params[':status'] = $filters['status'];
+        }
 
         $query .= " ORDER BY a.appointment_date ASC, a.start_time ASC";
 

@@ -126,4 +126,41 @@ class TenantRegistrationController
 
         ResponseHelper::send(true, $message, $responseData, 200);
     }
+
+    /**
+     * GET /api/tenant/config
+     * Public metadata endpoint to identify the hospital by subdomain
+     */
+    public function getConfig()
+    {
+        // 1. Identify Tenant from Host Header
+        $host = $_SERVER['HTTP_HOST'] ?? '';
+        $parts = explode('.', $host);
+        
+        // If no dots, we assume it's just 'localhost' or a non-subdomain host
+        if (count($parts) < 2) {
+            ResponseHelper::send(false, "Hospital profile not found", null, 404);
+            return;
+        }
+
+        $subdomain = strtolower($parts[0]);
+
+        // 2. Query Master DB
+        // The spec identifies 'id', 'name' (hospital_name), and 'status'
+        $stmt = $this->db->prepare("SELECT id, hospital_name as name, status FROM tenant_details WHERE tenant_code = ? LIMIT 1");
+        $stmt->execute([$subdomain]);
+        $tenant = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+        if (!$tenant) {
+            ResponseHelper::send(false, "Hospital profile not found", null, 404);
+            return;
+        }
+
+        // 3. Return precisely formatted response per specification
+        ResponseHelper::send(true, null, [
+            "id" => (int) $tenant['id'],
+            "name" => $tenant['name'],
+            "status" => $tenant['status']
+        ]);
+    }
 }

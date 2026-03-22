@@ -17,12 +17,12 @@ class Database
 
     public function __construct()
     {
-        $this->host = $_ENV['DB_HOST'] ?? '127.0.0.1';
-        $this->port = $_ENV['DB_PORT'] ?? '3308'; // Make sure this matches your MySQL port
+        $this->host = $_ENV['DB_HOST'];
+        $this->port = $_ENV['DB_PORT'];
 
-        $this->masterDb = $_ENV['DB_MASTER_NAME'] ?? 'tenant';
-        $this->masterUser = $_ENV['DB_MASTER_USER'] ?? 'root';
-        $this->masterPass = $_ENV['DB_MASTER_PASS'] ?? '200323';
+        $this->masterDb = $_ENV['DB_NAME'];
+        $this->masterUser = $_ENV['DB_USER'];
+        $this->masterPass = $_ENV['DB_PASS'];
     }
 
     /**

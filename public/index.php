@@ -47,6 +47,7 @@ require_once __DIR__ . '/../app/models/Prescription.php';
 require_once __DIR__ . '/../app/models/Communication.php';
 require_once __DIR__ . '/../app/models/Billing.php';
 require_once __DIR__ . '/../app/models/Calendar.php';
+require_once __DIR__ . '/../app/models/Notification.php';
 
 require_once __DIR__ . '/../app/models/MasterTenant.php';
 
@@ -62,6 +63,7 @@ require_once __DIR__ . '/../app/controllers/CommunicationController.php';
 require_once __DIR__ . '/../app/controllers/BillingController.php';
 require_once __DIR__ . '/../app/controllers/DashboardController.php';
 require_once __DIR__ . '/../app/controllers/CalendarController.php';
+require_once __DIR__ . '/../app/controllers/NotificationController.php';
 
 require_once __DIR__ . '/../app/controllers/AdminAuthController.php';
 require_once __DIR__ . '/../app/controllers/TenantRegistrationController.php';
@@ -82,6 +84,7 @@ use App\Controllers\CommunicationController;
 use App\Controllers\BillingController;
 use App\Controllers\DashboardController;
 use App\Controllers\CalendarController;
+use App\Controllers\NotificationController;
 
 use App\Controllers\AdminAuthController;
 use App\Controllers\TenantRegistrationController;
@@ -159,7 +162,10 @@ $router->post('/api/payments', [BillingController::class, 'processPayment']);
 // Prescription Endpoints
 $router->post('/api/prescriptions', [PrescriptionController::class, 'create']); // Provider only
 $router->put('/api/prescriptions/{id}/status', [PrescriptionController::class, 'updateStatus']); // Pharmacist only
-$router->get('/api/prescriptions', [PrescriptionController::class, 'index']);
+$router->get('/api/prescriptions', [PrescriptionController::class, 'index']); // For all roles
+$router->get('/api/prescriptions/{id}', [PrescriptionController::class, 'show']);
+$router->patch('/api/prescriptions/{id}', [PrescriptionController::class, 'update']); // Doctor only
+$router->delete('/api/prescriptions/{id}', [PrescriptionController::class, 'delete']); // Doctor/Admin only
 
 
 // Communication Endpoints
@@ -172,10 +178,16 @@ $router->get('/api/invoices', [BillingController::class, 'getInvoice']);
 $router->put('/api/invoices/{id}', [BillingController::class, 'update']);
 $router->post('/api/payments', [BillingController::class, 'processPayment']);
 
+// Notification Endpoints
+$router->get('/api/notifications', [NotificationController::class, 'index']);
+$router->put('/api/notifications/read-all', [NotificationController::class, 'markAllAsRead']);
+$router->put('/api/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
+
 // Super Admin Auth
 $router->post('/api/superadmin/login', [AdminAuthController::class, 'login']);
 
 // Public Hospital Registration (No Token Required)
+$router->get('/api/tenant/config', [TenantRegistrationController::class, 'getConfig']);
 $router->post('/api/tenant/register', [TenantRegistrationController::class, 'register']);
 $router->post('/api/tenant/status', [TenantRegistrationController::class, 'checkStatus']);
 

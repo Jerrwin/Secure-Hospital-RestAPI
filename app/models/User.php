@@ -32,19 +32,7 @@ class User
             return $res;
         }
 
-        // 2. Check Staff (In the same tenant database)
-        $sqlStaff = "SELECT s.id, 'staff' as type, s.tenant_id, s.name, s.email, 
-                            s.password, 'Staff' as role_name, s.status as status, 6 as role_id
-                     FROM staff s 
-                     WHERE s.email = :e AND s.deleted_at IS NULL LIMIT 1";
-
-        $stmt = $this->conn->prepare($sqlStaff);
-        $stmt->execute([':e' => $email]);
-        if ($res = $stmt->fetch(PDO::FETCH_ASSOC)) {
-            return $res;
-        }
-
-        // 3. Check Patients (In the same tenant database)
+        // 2. Check Patients (In the same tenant database)
         $sqlPatients = "SELECT id, 'patients' as type, tenant_id, first_name as name, email, 
                                password, 'Patient' as role_name, status as status
                         FROM patients 
@@ -68,8 +56,6 @@ class User
         // Removed 'system_admin' check because that table is in the Master DB
         if ($type === 'patients') {
             $query = "SELECT id, first_name as name, email, tenant_id, 'Patient' as role_name, 6 as role_id FROM patients WHERE id = :id AND deleted_at IS NULL LIMIT 1";
-        } elseif ($type === 'staff') {
-            $query = "SELECT id, name, email, tenant_id, 'Staff' as role_name, NULL as role_id FROM staff WHERE id = :id AND deleted_at IS NULL LIMIT 1";
         } else {
             $query = "SELECT u.id, u.name, u.email, u.tenant_id, u.role_id, r.name as role_name 
                       FROM users u 

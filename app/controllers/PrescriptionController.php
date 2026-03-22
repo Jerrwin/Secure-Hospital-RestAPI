@@ -61,12 +61,25 @@ class PrescriptionController
 
         $data = json_decode(file_get_contents("php://input"), true);
 
-        if (empty($data['appointment_id']) || empty($data['notes'])) {
-            ResponseHelper::send(false, "Appointment ID and Notes are required.", [], 400);
+        if (empty($data['appointment_id'])) {
+            ResponseHelper::send(false, "Appointment ID is required.", [], 400);
             return;
         }
 
-        // 1. Verify Appointment matches Tenant and is COMPLETED
+        // 1. Validate Items Structure
+        if (empty($data['items']) || !is_array($data['items'])) {
+            ResponseHelper::send(false, "At least one medication item is required.", [], 400);
+            return;
+        }
+
+        foreach ($data['items'] as $item) {
+            if (empty($item['medicine_name']) || empty($item['dosage']) || empty($item['frequency']) || empty($item['duration'])) {
+                ResponseHelper::send(false, "Each item must have medicine_name, dosage, frequency, and duration.", [], 400);
+                return;
+            }
+        }
+
+        // 2. Verify Appointment matches Tenant and is COMPLETED
         $appointment = $this->prescriptionModel->getAppointmentDetails($data['appointment_id']);
 
         if (!$appointment) {
@@ -86,24 +99,26 @@ class PrescriptionController
             return;
         }
 
-        // 2. Check if prescription already exists
+        // 3. Check if prescription already exists
         if ($this->prescriptionModel->existsForAppointment($data['appointment_id'])) {
             ResponseHelper::send(false, "Prescription already exists for this appointment.", [], 409);
             return;
         }
 
-        // 3. Create
+        // 4. Create
         $prescriptionData = [
             'tenant_id' => $currentUser['tenant_id'],
             'appointment_id' => $data['appointment_id'],
             'provider_id' => $currentUser['user_id'],
-            'notes' => $data['notes']
+            'notes' => $data['notes'] ?? '',
+            'items' => $data['items']
         ];
 
         $id = $this->prescriptionModel->create($prescriptionData);
 
         if ($id) {
-            ResponseHelper::send(true, "Prescription created successfully", ['id' => $id], 201);
+            $prescription = $this->prescriptionModel->getById($id);
+            ResponseHelper::send(true, "Prescription created successfully", $prescription, 201);
         } else {
             ResponseHelper::send(false, "Failed to create prescription", [], 500);
         }
@@ -146,7 +161,8 @@ class PrescriptionController
         }
 
         if ($this->prescriptionModel->updateStatus($id, $status)) {
-            ResponseHelper::send(true, "Prescription status updated to $status");
+            $prescription = $this->prescriptionModel->getById($id);
+            ResponseHelper::send(true, "Prescription status updated to $status", $prescription);
         } else {
             ResponseHelper::send(false, "Failed to update status", [], 500);
         }
@@ -159,7 +175,7 @@ class PrescriptionController
     public function index()
     {
         AuthMiddleware::handle();
-        RoleMiddleware::handle(['Provider', 'Pharmacist', 'Admin']);
+        RoleMiddleware::handle(['Provider', 'Pharmacist', 'Admin', 'Patient']);
 
         $currentUser = $_REQUEST['user'];
 
@@ -168,8 +184,146 @@ class PrescriptionController
             return;
         }
 
-        $prescriptions = $this->prescriptionModel->getAllByTenant($currentUser['tenant_id']);
+        $patientId = ($currentUser['role'] === 'Patient') ? $currentUser['user_id'] : null;
+        $prescriptions = $this->prescriptionModel->getAllByTenant($currentUser['tenant_id'], $patientId);
 
         ResponseHelper::send(true, "Prescriptions retrieved", $prescriptions);
+    }
+
+    /**
+     * Update Prescription (Patch)
+     * Roles: Provider Only
+     * Rule: Can only edit if status is 'created'
+     */
+    public function update($id)
+    {
+        AuthMiddleware::handle();
+        RoleMiddleware::handle(['Provider']);
+
+        $currentUser = $_REQUEST['user'];
+
+        if (!$this->connectByTenantId($currentUser['tenant_id'])) {
+            ResponseHelper::send(false, "Hospital database not found.", [], 403);
+            return;
+        }
+
+        $prescription = $this->prescriptionModel->getById($id);
+        if (!$prescription) {
+            ResponseHelper::send(false, "Prescription not found.", [], 404);
+            return;
+        }
+
+        // Security: Must belong to tenant and MUST be created by a provider in this tenant
+        if ($prescription['tenant_id'] != $currentUser['tenant_id']) {
+            ResponseHelper::send(false, "Access denied.", [], 403);
+            return;
+        }
+
+        // IMPORTANT SAFETY RULE: Only edit if not verified or dispensed yet
+        if ($prescription['STATUS'] !== 'created') {
+            ResponseHelper::send(false, "Cannot edit: This prescription has already been processed by the pharmacy.", [], 400);
+            return;
+        }
+
+        $data = json_decode(file_get_contents("php://input"), true);
+
+        // Optional: Validate items structure if provided
+        if (isset($data['items']) && is_array($data['items'])) {
+            foreach ($data['items'] as $item) {
+                if (empty($item['medicine_name']) || empty($item['dosage'])) {
+                    ResponseHelper::send(false, "Invalid items structure.", [], 400);
+                    return;
+                }
+            }
+        }
+
+        if ($this->prescriptionModel->update($id, $data)) {
+            $prescription = $this->prescriptionModel->getById($id);
+            ResponseHelper::send(true, "Prescription updated successfully", $prescription);
+        } else {
+            ResponseHelper::send(false, "Failed to update prescription", [], 500);
+        }
+    }
+
+    /**
+     * Get Single Prescription Detail
+     * GET /api/prescriptions/{id}
+     */
+    public function show($id)
+    {
+        AuthMiddleware::handle();
+        RoleMiddleware::handle(['Provider', 'Pharmacist', 'Admin', 'Patient']);
+
+        $currentUser = $_REQUEST['user'];
+
+        if (!$this->connectByTenantId($currentUser['tenant_id'])) {
+            ResponseHelper::send(false, "Hospital database not found.", [], 403);
+            return;
+        }
+
+        $prescription = $this->prescriptionModel->getById($id);
+
+        if (!$prescription) {
+            ResponseHelper::send(false, "Prescription not found.", [], 404);
+            return;
+        }
+
+        // Access Control
+        if ($prescription['tenant_id'] != $currentUser['tenant_id']) {
+            ResponseHelper::send(false, "Access denied.", [], 403);
+            return;
+        }
+
+        // If patient, only show if it belongs to them
+        if ($currentUser['role'] === 'Patient') {
+            // Need to verify if the appointment belongs to this patient
+            $appointment = $this->prescriptionModel->getAppointmentDetails($prescription['appointment_id']);
+            if ($appointment['patient_id'] != $currentUser['user_id']) {
+                ResponseHelper::send(false, "Access denied. Not your prescription.", [], 403);
+                return;
+            }
+        }
+
+        ResponseHelper::send(true, "Prescription details retrieved", $prescription);
+    }
+
+    /**
+     * Delete Prescription
+     * DELETE /api/prescriptions/{id}
+     */
+    public function delete($id)
+    {
+        AuthMiddleware::handle();
+        RoleMiddleware::handle(['Provider', 'Admin']);
+
+        $currentUser = $_REQUEST['user'];
+
+        if (!$this->connectByTenantId($currentUser['tenant_id'])) {
+            ResponseHelper::send(false, "Hospital database not found.", [], 403);
+            return;
+        }
+
+        $prescription = $this->prescriptionModel->getById($id);
+        if (!$prescription) {
+            ResponseHelper::send(false, "Prescription not found.", [], 404);
+            return;
+        }
+
+        if ($prescription['tenant_id'] != $currentUser['tenant_id']) {
+            ResponseHelper::send(false, "Access denied.", [], 403);
+            return;
+        }
+
+        // Logic check: only delete if not processed
+        if ($prescription['STATUS'] !== 'created') {
+            ResponseHelper::send(false, "Cannot delete: This prescription has already been processed.", [], 400);
+            return;
+        }
+
+        if ($this->prescriptionModel->delete($id)) {
+            ResponseHelper::send(true, "Prescription deleted successfully");
+        } else {
+            ResponseHelper::send(false, "Deletion failed", [], 500);
+        }
     }
 }

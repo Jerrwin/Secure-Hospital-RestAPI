@@ -158,8 +158,7 @@ class StaffController
     public function index()
     {
         AuthMiddleware::handle();
-        // Removed SuperAdmin - Only Hospital Staff can see other Hospital Staff
-        RoleMiddleware::handle(['Admin']); 
+        RoleMiddleware::handle(['Admin', 'Provider', 'Nurse']);
 
         $currentUser = $_REQUEST['user'];
         $tenantId = $currentUser['tenant_id'];
@@ -184,27 +183,27 @@ class StaffController
         RoleMiddleware::handle(['Admin']);
         $currentUser = $_REQUEST['user'];
         $data = json_decode(file_get_contents("php://input"), true);
-        
+
         // LOG 1: Check if data is coming from React
         error_log("Incoming Update Data: " . json_encode($data));
-        
+
         if (!$this->connectByTenantId($currentUser['tenant_id'])) {
             ResponseHelper::send(false, "Tenant database error.", [], 500);
             return;
         }
-        
+
         $staff = $this->staffModel->getById($id);
         if (!$staff) {
             error_log("Staff ID $id not found in DB");
             ResponseHelper::send(false, "Staff not found.", [], 404);
             return;
         }
-        
+
         if (!empty($data['phone_number']) && !\App\Helpers\Validator::phone($data['phone_number'])) {
             ResponseHelper::send(false, "Invalid phone number format.", [], 400);
             return;
         }
-        
+
         $updateData = [
             'name' => $data['name'] ?? $staff['name'],
             'gender' => $data['gender'] ?? $staff['gender'],
@@ -213,24 +212,24 @@ class StaffController
             'status' => $data['status'] ?? $staff['status'],
             'is_active' => $data['is_active'] ?? $staff['is_active']
         ];
-        
+
         $userData = [
             'name' => $data['name'] ?? $staff['name'],
             'STATUS' => $data['status'] ?? $staff['status']
         ];
-        
+
         try {
             $this->db->beginTransaction();
             // LOG 2: Check IDs before update
             error_log("Updating Staff ID: $id with status: " . $updateData['status']);
             error_log("Updating User ID: " . $staff['user_id'] . " with STATUS: " . $userData['STATUS']);
-            
+
             $sSuccess = $this->staffModel->update($id, $updateData);
             $uSuccess = $this->userModel->update($staff['user_id'], $userData);
-            
+
             error_log("Staff Update Result: " . ($sSuccess !== false ? "TRUE" : "FALSE"));
             error_log("User Update Result: " . ($uSuccess !== false ? "TRUE" : "FALSE"));
-            
+
             // Use !== false to catch SQL errors, but allow 0 rows affected
             if ($sSuccess !== false && $uSuccess !== false) {
                 $this->db->commit();

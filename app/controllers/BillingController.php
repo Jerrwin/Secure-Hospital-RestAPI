@@ -99,7 +99,7 @@ class BillingController
         }
     }
 
-    // GET /api/invoices?appointment_id={id}
+    // GET /api/invoices
     public function getInvoice()
     {
         AuthMiddleware::handle();
@@ -112,35 +112,47 @@ class BillingController
 
         $appointmentId = $_GET['appointment_id'] ?? null;
 
-        if (!$appointmentId) {
-            ResponseHelper::send(false, "Appointment ID required.", [], 400);
+        // If an appointment ID is provided, fetch just that invoice
+        if ($appointmentId) {
+            $appointment = $this->appointmentModel->find($appointmentId);
+            if (!$appointment) {
+                ResponseHelper::send(false, "Appointment not found.", [], 404);
+                return;
+            }
+
+            if ($user['tenant_id'] != $appointment['tenant_id']) {
+                ResponseHelper::send(false, "Unauthorized tenant.", [], 403);
+                return;
+            }
+
+            if ($user['role'] === 'Patient' && $appointment['patient_id'] != $user['user_id']) {
+                ResponseHelper::send(false, "Unauthorized.", [], 403);
+                return;
+            }
+
+            $invoice = $this->billingModel->getInvoiceByAppointment($appointmentId);
+
+            if ($invoice) {
+                ResponseHelper::send(true, "Invoice retrieved.", $invoice);
+            } else {
+                ResponseHelper::send(false, "Invoice not found.", [], 404);
+            }
             return;
         }
 
-        $appointment = $this->appointmentModel->find($appointmentId);
-        if (!$appointment) {
-            ResponseHelper::send(false, "Appointment not found.", [], 404);
-            return;
+        // Otherwise, fetch all invoices for the tenant (with optional filters)
+        $filters = [];
+        if (!empty($_GET['status'])) {
+            $filters['status'] = $_GET['status'];
+        }
+        
+        // For patients, only return their own invoices
+        if ($user['role'] === 'Patient') {
+            $filters['patient_id'] = $user['user_id'];
         }
 
-        // Access Control
-        if ($user['tenant_id'] != $appointment['tenant_id']) {
-            ResponseHelper::send(false, "Unauthorized tenant.", [], 403);
-            return;
-        }
-
-        if ($user['role'] === 'Patient' && $appointment['patient_id'] != $user['user_id']) {
-            ResponseHelper::send(false, "Unauthorized.", [], 403);
-            return;
-        }
-
-        $invoice = $this->billingModel->getInvoiceByAppointment($appointmentId);
-
-        if ($invoice) {
-            ResponseHelper::send(true, "Invoice retrieved.", $invoice);
-        } else {
-            ResponseHelper::send(false, "Invoice not found.", [], 404);
-        }
+        $invoices = $this->billingModel->getAllByTenant($user['tenant_id'], $filters);
+        ResponseHelper::send(true, "Invoices retrieved.", $invoices);
     }
 
     // POST /api/payments
@@ -180,6 +192,18 @@ class BillingController
         }
 
         if ($this->billingModel->createPayment($data)) {
+            // ── Notification Trigger ──────────────────────────────────
+            $notifModel = new \App\Models\Notification($this->db);
+            $notifModel->create([
+                'tenant_id'    => $user['tenant_id'],
+                'user_id'      => $invoice['patient_id'],
+                'user_type'    => 'patient',
+                'type'         => 'payment',
+                'title'        => 'Payment Received',
+                'message'      => 'Your payment of $' . $data['amount'] . ' has been recorded successfully.',
+                'reference_id' => (int) $invoiceId
+            ]);
+
             ResponseHelper::send(true, "Payment recorded successfully.", [], 201);
         } else {
             ResponseHelper::send(false, "Failed to record payment.", [], 500);

@@ -1,52 +1,837 @@
-2026-03-18 18:17:30 - Email: admin@apollo.com - User data: Array
+2026-03-19 18:26:51 - Email: admin@apollo.com - User data: Array
 (
     [id] => 1
     [type] => users
-    [tenant_id] => 8
+    [tenant_id] => 7
     [role_id] => 1
     [name] => Apollo Admin
     [email] => admin@apollo.com
-    [password] => $2y$10$.En.mvZZWETplR98cZ6OxOHTUBdVm.MkBVG2HZNooGA8l8SKOvgya
+    [password] => $2y$10$I5kANvbzU1F1HY8qGf9pM.TZwpm5wFKegzd4JzQXg.OVfwSfEbz0y
     [role_name] => Admin
     [status] => active
 )
 
-2026-03-18 18:17:41 - Email: sutha@gmail.com - User data: Array
+2026-03-19 18:28:12 - Email: alan.adams@apollo.com - User data: Array
+(
+    [id] => 2
+    [type] => users
+    [tenant_id] => 7
+    [role_id] => 2
+    [name] => Dr. Alan Adams
+    [email] => alan.adams@apollo.com
+    [password] => $2y$10$I5kANvbzU1F1HY8qGf9pM.TZwpm5wFKegzd4JzQXg.OVfwSfEbz0y
+    [role_name] => Provider
+    [status] => active
+)
+
+2026-03-19 19:16:51 - Email: alan.adams@apollo.com - User data: Array
+(
+    [id] => 2
+    [type] => users
+    [tenant_id] => 7
+    [role_id] => 2
+    [name] => Dr. Alan Adams
+    [email] => alan.adams@apollo.com
+    [password] => $2y$10$I5kANvbzU1F1HY8qGf9pM.TZwpm5wFKegzd4JzQXg.OVfwSfEbz0y
+    [role_name] => Provider
+    [status] => active
+)
+
+2026-03-19 19:20:58 - Email: alan.adams@apollo.com - User data: Array
+(
+    [id] => 2
+    [type] => users
+    [tenant_id] => 7
+    [role_id] => 2
+    [name] => Dr. Alan Adams
+    [email] => alan.adams@apollo.com
+    [password] => $2y$10$I5kANvbzU1F1HY8qGf9pM.TZwpm5wFKegzd4JzQXg.OVfwSfEbz0y
+    [role_name] => Provider
+    [status] => active
+)
+
+2026-03-19 19:26:37 - Email: chloe.clark@apollo.com - User data: Array
 (
     [id] => 4
     [type] => users
-    [tenant_id] => 8
+    [tenant_id] => 7
     [role_id] => 3
-    [name] => sutha krishnan
-    [email] => sutha@gmail.com
-    [password] => $2y$10$EUe1nl0miV3aaCgY3S7sV.LCrUnxvRw6gMQvr9Ms53EwEBH/fTaiS
+    [name] => Nurse Chloe Clark
+    [email] => chloe.clark@apollo.com
+    [password] => $2y$10$I5kANvbzU1F1HY8qGf9pM.TZwpm5wFKegzd4JzQXg.OVfwSfEbz0y
     [role_name] => Nurse
     [status] => active
 )
 
-2026-03-18 18:20:36 - Email: admin@apollo.com - User data: Array
+2026-03-19 19:27:28 - Email: alan.adams@apollo.com - User data: Array
+(
+    [id] => 2
+    [type] => users
+    [tenant_id] => 7
+    [role_id] => 2
+    [name] => Dr. Alan Adams
+    [email] => alan.adams@apollo.com
+    [password] => $2y$10$I5kANvbzU1F1HY8qGf9pM.TZwpm5wFKegzd4JzQXg.OVfwSfEbz0y
+    [role_name] => Provider
+    [status] => active
+)
+
+2026-03-19 19:39:26 - Email: admin@apollo.com - User data: Array
 (
     [id] => 1
     [type] => users
-    [tenant_id] => 8
+    [tenant_id] => 7
     [role_id] => 1
     [name] => Apollo Admin
     [email] => admin@apollo.com
-    [password] => $2y$10$.En.mvZZWETplR98cZ6OxOHTUBdVm.MkBVG2HZNooGA8l8SKOvgya
+    [password] => $2y$10$I5kANvbzU1F1HY8qGf9pM.TZwpm5wFKegzd4JzQXg.OVfwSfEbz0y
     [role_name] => Admin
     [status] => active
 )
 
-2026-03-18 18:46:42 - Email: sutha@gmail.com - User data: Array
+2026-03-19 19:43:19 - Email: admin@apollo.com - User data: Array
+(
+    [id] => 1
+    [type] => users
+    [tenant_id] => 7
+    [role_id] => 1
+    [name] => Apollo Admin
+    [email] => admin@apollo.com
+    [password] => $2y$10$I5kANvbzU1F1HY8qGf9pM.TZwpm5wFKegzd4JzQXg.OVfwSfEbz0y
+    [role_name] => Admin
+    [status] => active
+)
+
+2026-03-19 19:44:04 - Email: admin@apollo.com - User data: Array
+(
+    [id] => 1
+    [type] => users
+    [tenant_id] => 7
+    [role_id] => 1
+    [name] => Apollo Admin
+    [email] => admin@apollo.com
+    [password] => $2y$10$I5kANvbzU1F1HY8qGf9pM.TZwpm5wFKegzd4JzQXg.OVfwSfEbz0y
+    [role_name] => Admin
+    [status] => active
+)
+
+2026-03-19 19:50:05 - Email: admin@apollo.com - User data: Array
+(
+    [id] => 1
+    [type] => users
+    [tenant_id] => 7
+    [role_id] => 1
+    [name] => Apollo Admin
+    [email] => admin@apollo.com
+    [password] => $2y$10$I5kANvbzU1F1HY8qGf9pM.TZwpm5wFKegzd4JzQXg.OVfwSfEbz0y
+    [role_name] => Admin
+    [status] => active
+)
+
+2026-03-19 20:53:23 - Email: admin@apollo.com - User data: Array
+(
+    [id] => 1
+    [type] => users
+    [tenant_id] => 7
+    [role_id] => 1
+    [name] => Apollo Admin
+    [email] => admin@apollo.com
+    [password] => $2y$10$I5kANvbzU1F1HY8qGf9pM.TZwpm5wFKegzd4JzQXg.OVfwSfEbz0y
+    [role_name] => Admin
+    [status] => active
+)
+
+2026-03-19 20:53:52 - Email: admin@apollo.com - User data: Array
+(
+    [id] => 1
+    [type] => users
+    [tenant_id] => 7
+    [role_id] => 1
+    [name] => Apollo Admin
+    [email] => admin@apollo.com
+    [password] => $2y$10$I5kANvbzU1F1HY8qGf9pM.TZwpm5wFKegzd4JzQXg.OVfwSfEbz0y
+    [role_name] => Admin
+    [status] => active
+)
+
+2026-03-19 21:00:27 - Email: admin@apollo.com - User data: Array
+(
+    [id] => 1
+    [type] => users
+    [tenant_id] => 7
+    [role_id] => 1
+    [name] => Apollo Admin
+    [email] => admin@apollo.com
+    [password] => $2y$10$I5kANvbzU1F1HY8qGf9pM.TZwpm5wFKegzd4JzQXg.OVfwSfEbz0y
+    [role_name] => Admin
+    [status] => active
+)
+
+2026-03-19 23:40:10 - Email: admin@apollo.com - User data: Array
+(
+    [id] => 1
+    [type] => users
+    [tenant_id] => 7
+    [role_id] => 1
+    [name] => Apollo Admin
+    [email] => admin@apollo.com
+    [password] => $2y$10$I5kANvbzU1F1HY8qGf9pM.TZwpm5wFKegzd4JzQXg.OVfwSfEbz0y
+    [role_name] => Admin
+    [status] => active
+)
+
+2026-03-19 23:43:54 - Email: alan.adams@apollo.com - User data: Array
+(
+    [id] => 2
+    [type] => users
+    [tenant_id] => 7
+    [role_id] => 2
+    [name] => Dr. Alan Adams
+    [email] => alan.adams@apollo.com
+    [password] => $2y$10$I5kANvbzU1F1HY8qGf9pM.TZwpm5wFKegzd4JzQXg.OVfwSfEbz0y
+    [role_name] => Provider
+    [status] => active
+)
+
+2026-03-20 00:00:46 - Email: admin@apollo.com - User data: Array
+(
+    [id] => 1
+    [type] => users
+    [tenant_id] => 7
+    [role_id] => 1
+    [name] => Apollo Admin
+    [email] => admin@apollo.com
+    [password] => $2y$10$I5kANvbzU1F1HY8qGf9pM.TZwpm5wFKegzd4JzQXg.OVfwSfEbz0y
+    [role_name] => Admin
+    [status] => active
+)
+
+2026-03-20 08:37:11 - Email: admin@apollo.com - User data: Array
+(
+    [id] => 1
+    [type] => users
+    [tenant_id] => 7
+    [role_id] => 1
+    [name] => Apollo Admin
+    [email] => admin@apollo.com
+    [password] => $2y$10$I5kANvbzU1F1HY8qGf9pM.TZwpm5wFKegzd4JzQXg.OVfwSfEbz0y
+    [role_name] => Admin
+    [status] => active
+)
+
+2026-03-20 10:28:28 - Email: admin@apollo.com - User data: Array
+(
+    [id] => 1
+    [type] => users
+    [tenant_id] => 7
+    [role_id] => 1
+    [name] => Apollo Admin
+    [email] => admin@apollo.com
+    [password] => $2y$10$I5kANvbzU1F1HY8qGf9pM.TZwpm5wFKegzd4JzQXg.OVfwSfEbz0y
+    [role_name] => Admin
+    [status] => active
+)
+
+2026-03-20 13:43:24 - Email: admin@apollo.com - User data: Array
+(
+    [id] => 1
+    [type] => users
+    [tenant_id] => 7
+    [role_id] => 1
+    [name] => Apollo Admin
+    [email] => admin@apollo.com
+    [password] => $2y$10$I5kANvbzU1F1HY8qGf9pM.TZwpm5wFKegzd4JzQXg.OVfwSfEbz0y
+    [role_name] => Admin
+    [status] => active
+)
+
+2026-03-20 13:44:35 - Email: alan.adams@apollo.com - User data: Array
+(
+    [id] => 2
+    [type] => users
+    [tenant_id] => 7
+    [role_id] => 2
+    [name] => Dr. Alan Adams
+    [email] => alan.adams@apollo.com
+    [password] => $2y$10$I5kANvbzU1F1HY8qGf9pM.TZwpm5wFKegzd4JzQXg.OVfwSfEbz0y
+    [role_name] => Provider
+    [status] => active
+)
+
+2026-03-21 20:18:34 - Email: alan.adams@apollo.com - User data: Array
+(
+    [id] => 2
+    [type] => users
+    [tenant_id] => 7
+    [role_id] => 2
+    [name] => Dr. Alan Adams
+    [email] => alan.adams@apollo.com
+    [password] => $2y$10$I5kANvbzU1F1HY8qGf9pM.TZwpm5wFKegzd4JzQXg.OVfwSfEbz0y
+    [role_name] => Provider
+    [status] => active
+)
+
+2026-03-21 20:58:00 - Email: alan.adams@apollo.com - User data: Array
+(
+    [id] => 2
+    [type] => users
+    [tenant_id] => 7
+    [role_id] => 2
+    [name] => Dr. Alan Adams
+    [email] => alan.adams@apollo.com
+    [password] => $2y$10$I5kANvbzU1F1HY8qGf9pM.TZwpm5wFKegzd4JzQXg.OVfwSfEbz0y
+    [role_name] => Provider
+    [status] => active
+)
+
+2026-03-21 21:09:50 - Email: alan.adams@apollo.com - User data: Array
+(
+    [id] => 2
+    [type] => users
+    [tenant_id] => 7
+    [role_id] => 2
+    [name] => Dr. Alan Adams
+    [email] => alan.adams@apollo.com
+    [password] => $2y$10$I5kANvbzU1F1HY8qGf9pM.TZwpm5wFKegzd4JzQXg.OVfwSfEbz0y
+    [role_name] => Provider
+    [status] => active
+)
+
+2026-03-21 21:14:02 - Email: dr@apollo.com - User data: Array
+(
+    [id] => 2
+    [type] => users
+    [tenant_id] => 7
+    [role_id] => 2
+    [name] => Dr. Alan Adams
+    [email] => dr@apollo.com
+    [password] => $2y$10$I5kANvbzU1F1HY8qGf9pM.TZwpm5wFKegzd4JzQXg.OVfwSfEbz0y
+    [role_name] => Provider
+    [status] => active
+)
+
+2026-03-21 21:23:53 - Email: dr@apollo.com - User data: Array
+(
+    [id] => 2
+    [type] => users
+    [tenant_id] => 7
+    [role_id] => 2
+    [name] => Dr. Alan Adams
+    [email] => dr@apollo.com
+    [password] => $2y$10$I5kANvbzU1F1HY8qGf9pM.TZwpm5wFKegzd4JzQXg.OVfwSfEbz0y
+    [role_name] => Provider
+    [status] => active
+)
+
+2026-03-21 21:42:09 - Email: dr@apollo.com - User data: Array
+(
+    [id] => 2
+    [type] => users
+    [tenant_id] => 7
+    [role_id] => 2
+    [name] => Dr. Alan Adams
+    [email] => dr@apollo.com
+    [password] => $2y$10$I5kANvbzU1F1HY8qGf9pM.TZwpm5wFKegzd4JzQXg.OVfwSfEbz0y
+    [role_name] => Provider
+    [status] => active
+)
+
+2026-03-21 22:56:24 - Email: dr@apollo.com - User data: Array
+(
+    [id] => 2
+    [type] => users
+    [tenant_id] => 7
+    [role_id] => 2
+    [name] => Dr. Alan Adams
+    [email] => dr@apollo.com
+    [password] => $2y$10$I5kANvbzU1F1HY8qGf9pM.TZwpm5wFKegzd4JzQXg.OVfwSfEbz0y
+    [role_name] => Provider
+    [status] => active
+)
+
+2026-03-21 23:05:39 - Email: dr@apollo.com - User data: Array
+(
+    [id] => 2
+    [type] => users
+    [tenant_id] => 7
+    [role_id] => 2
+    [name] => Dr. Alan Adams
+    [email] => dr@apollo.com
+    [password] => $2y$10$I5kANvbzU1F1HY8qGf9pM.TZwpm5wFKegzd4JzQXg.OVfwSfEbz0y
+    [role_name] => Provider
+    [status] => active
+)
+
+2026-03-21 23:21:49 - Email: nurse@apollo.com - User data: Array
 (
     [id] => 4
     [type] => users
-    [tenant_id] => 8
+    [tenant_id] => 7
     [role_id] => 3
-    [name] => sutha krishnannnn
-    [email] => sutha@gmail.com
-    [password] => $2y$10$EUe1nl0miV3aaCgY3S7sV.LCrUnxvRw6gMQvr9Ms53EwEBH/fTaiS
+    [name] => Nurse Chloe Clark
+    [email] => nurse@apollo.com
+    [password] => $2y$10$I5kANvbzU1F1HY8qGf9pM.TZwpm5wFKegzd4JzQXg.OVfwSfEbz0y
     [role_name] => Nurse
-    [status] => inactive
+    [status] => active
+)
+
+2026-03-21 23:25:19 - Email: pharm@apollo.com - User data: Array
+(
+    [id] => 6
+    [type] => users
+    [tenant_id] => 7
+    [role_id] => 4
+    [name] => Pharm Ethan Evans
+    [email] => pharm@apollo.com
+    [password] => $2y$10$I5kANvbzU1F1HY8qGf9pM.TZwpm5wFKegzd4JzQXg.OVfwSfEbz0y
+    [role_name] => Pharmacist
+    [status] => active
+)
+
+2026-03-22 00:21:09 - Email: admin@apollo.com - User data: Array
+(
+    [id] => 1
+    [type] => users
+    [tenant_id] => 7
+    [role_id] => 1
+    [name] => Apollo Admin
+    [email] => admin@apollo.com
+    [password] => $2y$10$I5kANvbzU1F1HY8qGf9pM.TZwpm5wFKegzd4JzQXg.OVfwSfEbz0y
+    [role_name] => Admin
+    [status] => active
+)
+
+2026-03-22 00:33:02 - Email: mscott@email.com - User data: Array
+(
+    [id] => 1
+    [type] => patients
+    [tenant_id] => 7
+    [name] => Michael
+    [email] => mscott@email.com
+    [password] => $2y$10$I5kANvbzU1F1HY8qGf9pM.TZwpm5wFKegzd4JzQXg.OVfwSfEbz0y
+    [role_name] => Patient
+    [status] => active
+    [role_id] => 6
+)
+
+2026-03-22 00:33:20 - Email: dr@apollo.com - User data: Array
+(
+    [id] => 2
+    [type] => users
+    [tenant_id] => 7
+    [role_id] => 2
+    [name] => Dr. Alan Adams
+    [email] => dr@apollo.com
+    [password] => $2y$10$I5kANvbzU1F1HY8qGf9pM.TZwpm5wFKegzd4JzQXg.OVfwSfEbz0y
+    [role_name] => Provider
+    [status] => active
+)
+
+2026-03-22 01:04:51 - Email: pharm@apollo.com - User data: Array
+(
+    [id] => 6
+    [type] => users
+    [tenant_id] => 7
+    [role_id] => 4
+    [name] => Pharm Ethan Evans
+    [email] => pharm@apollo.com
+    [password] => $2y$10$I5kANvbzU1F1HY8qGf9pM.TZwpm5wFKegzd4JzQXg.OVfwSfEbz0y
+    [role_name] => Pharmacist
+    [status] => active
+)
+
+2026-03-22 01:11:01 - Email: dr@apollo.com - User data: Array
+(
+    [id] => 2
+    [type] => users
+    [tenant_id] => 7
+    [role_id] => 2
+    [name] => Dr. Alan Adams
+    [email] => dr@apollo.com
+    [password] => $2y$10$I5kANvbzU1F1HY8qGf9pM.TZwpm5wFKegzd4JzQXg.OVfwSfEbz0y
+    [role_name] => Provider
+    [status] => active
+)
+
+2026-03-22 01:12:15 - Email: pharm@apollo.com - User data: Array
+(
+    [id] => 6
+    [type] => users
+    [tenant_id] => 7
+    [role_id] => 4
+    [name] => Pharm Ethan Evans
+    [email] => pharm@apollo.com
+    [password] => $2y$10$I5kANvbzU1F1HY8qGf9pM.TZwpm5wFKegzd4JzQXg.OVfwSfEbz0y
+    [role_name] => Pharmacist
+    [status] => active
+)
+
+2026-03-22 01:12:50 - Email: mscott@email.com - User data: Array
+(
+    [id] => 1
+    [type] => patients
+    [tenant_id] => 7
+    [name] => Michael
+    [email] => mscott@email.com
+    [password] => $2y$10$I5kANvbzU1F1HY8qGf9pM.TZwpm5wFKegzd4JzQXg.OVfwSfEbz0y
+    [role_name] => Patient
+    [status] => active
+    [role_id] => 6
+)
+
+2026-03-22 10:39:50 - Email: dr@apollo.com - User data: Array
+(
+    [id] => 2
+    [type] => users
+    [tenant_id] => 7
+    [role_id] => 2
+    [name] => Dr. Alan Adams
+    [email] => dr@apollo.com
+    [password] => $2y$10$I5kANvbzU1F1HY8qGf9pM.TZwpm5wFKegzd4JzQXg.OVfwSfEbz0y
+    [role_name] => Provider
+    [status] => active
+)
+
+2026-03-22 12:20:32 - Email: admin@apollo.com - User data: Array
+(
+    [id] => 1
+    [type] => users
+    [tenant_id] => 7
+    [role_id] => 1
+    [name] => Apollo Admin
+    [email] => admin@apollo.com
+    [password] => $2y$10$I5kANvbzU1F1HY8qGf9pM.TZwpm5wFKegzd4JzQXg.OVfwSfEbz0y
+    [role_name] => Admin
+    [status] => active
+)
+
+2026-03-22 13:40:26 - Email: admin@apollo.com - User data: Array
+(
+    [id] => 1
+    [type] => users
+    [tenant_id] => 7
+    [role_id] => 1
+    [name] => Apollo Admin
+    [email] => admin@apollo.com
+    [password] => $2y$10$I5kANvbzU1F1HY8qGf9pM.TZwpm5wFKegzd4JzQXg.OVfwSfEbz0y
+    [role_name] => Admin
+    [status] => active
+)
+
+2026-03-22 13:48:13 - Email: admin@apollo.com - User data: Array
+(
+    [id] => 1
+    [type] => users
+    [tenant_id] => 7
+    [role_id] => 1
+    [name] => Apollo Admin
+    [email] => admin@apollo.com
+    [password] => $2y$10$I5kANvbzU1F1HY8qGf9pM.TZwpm5wFKegzd4JzQXg.OVfwSfEbz0y
+    [role_name] => Admin
+    [status] => active
+)
+
+2026-03-22 13:52:45 - Email: dr@apollo.com - User data: Array
+(
+    [id] => 2
+    [type] => users
+    [tenant_id] => 7
+    [role_id] => 2
+    [name] => Dr. Alan Adams
+    [email] => dr@apollo.com
+    [password] => $2y$10$I5kANvbzU1F1HY8qGf9pM.TZwpm5wFKegzd4JzQXg.OVfwSfEbz0y
+    [role_name] => Provider
+    [status] => active
+)
+
+2026-03-22 13:54:19 - Email: dr@apollo.com - User data: Array
+(
+    [id] => 2
+    [type] => users
+    [tenant_id] => 7
+    [role_id] => 2
+    [name] => Dr. Alan Adams
+    [email] => dr@apollo.com
+    [password] => $2y$10$I5kANvbzU1F1HY8qGf9pM.TZwpm5wFKegzd4JzQXg.OVfwSfEbz0y
+    [role_name] => Provider
+    [status] => active
+)
+
+2026-03-22 13:59:50 - Email: rec@apollo.com - User data: Array
+(
+    [id] => 8
+    [type] => users
+    [tenant_id] => 7
+    [role_id] => 5
+    [name] => Rec George Green
+    [email] => rec@apollo.com
+    [password] => $2y$10$I5kANvbzU1F1HY8qGf9pM.TZwpm5wFKegzd4JzQXg.OVfwSfEbz0y
+    [role_name] => Receptionist
+    [status] => active
+)
+
+2026-03-22 14:10:10 - Email: rec@apollo.com - User data: Array
+(
+    [id] => 8
+    [type] => users
+    [tenant_id] => 7
+    [role_id] => 5
+    [name] => Rec George Green
+    [email] => rec@apollo.com
+    [password] => $2y$10$I5kANvbzU1F1HY8qGf9pM.TZwpm5wFKegzd4JzQXg.OVfwSfEbz0y
+    [role_name] => Receptionist
+    [status] => active
+)
+
+2026-03-22 14:20:33 - Email: dr@apollo.com - User data: Array
+(
+    [id] => 2
+    [type] => users
+    [tenant_id] => 7
+    [role_id] => 2
+    [name] => Dr. Alan Adams
+    [email] => dr@apollo.com
+    [password] => $2y$10$I5kANvbzU1F1HY8qGf9pM.TZwpm5wFKegzd4JzQXg.OVfwSfEbz0y
+    [role_name] => Provider
+    [status] => active
+)
+
+2026-03-22 14:21:00 - Email: dr@apollo.com - User data: Array
+(
+    [id] => 2
+    [type] => users
+    [tenant_id] => 7
+    [role_id] => 2
+    [name] => Dr. Alan Adams
+    [email] => dr@apollo.com
+    [password] => $2y$10$I5kANvbzU1F1HY8qGf9pM.TZwpm5wFKegzd4JzQXg.OVfwSfEbz0y
+    [role_name] => Provider
+    [status] => active
+)
+
+2026-03-22 16:14:59 - Email: rec@apollo.com - User data: Array
+(
+    [id] => 8
+    [type] => users
+    [tenant_id] => 7
+    [role_id] => 5
+    [name] => Rec George Green
+    [email] => rec@apollo.com
+    [password] => $2y$10$I5kANvbzU1F1HY8qGf9pM.TZwpm5wFKegzd4JzQXg.OVfwSfEbz0y
+    [role_name] => Receptionist
+    [status] => active
+)
+
+2026-03-22 16:25:12 - Email: dr@apollo.com - User data: Array
+(
+    [id] => 2
+    [type] => users
+    [tenant_id] => 7
+    [role_id] => 2
+    [name] => Dr. Alan Adams
+    [email] => dr@apollo.com
+    [password] => $2y$10$I5kANvbzU1F1HY8qGf9pM.TZwpm5wFKegzd4JzQXg.OVfwSfEbz0y
+    [role_name] => Provider
+    [status] => active
+)
+
+2026-03-22 16:51:10 - Email: dr@apollo.com - User data: Array
+(
+    [id] => 2
+    [type] => users
+    [tenant_id] => 7
+    [role_id] => 2
+    [name] => Dr. Alan Adams
+    [email] => dr@apollo.com
+    [password] => $2y$10$I5kANvbzU1F1HY8qGf9pM.TZwpm5wFKegzd4JzQXg.OVfwSfEbz0y
+    [role_name] => Provider
+    [status] => active
+)
+
+2026-03-22 17:03:10 - Email: admin@apollo.com - User data: Array
+(
+    [id] => 1
+    [type] => users
+    [tenant_id] => 7
+    [role_id] => 1
+    [name] => Apollo Admin
+    [email] => admin@apollo.com
+    [password] => $2y$10$I5kANvbzU1F1HY8qGf9pM.TZwpm5wFKegzd4JzQXg.OVfwSfEbz0y
+    [role_name] => Admin
+    [status] => active
+)
+
+2026-03-22 17:04:22 - Email: dr@apollo.com - User data: Array
+(
+    [id] => 2
+    [type] => users
+    [tenant_id] => 7
+    [role_id] => 2
+    [name] => Dr. Alan Adams
+    [email] => dr@apollo.com
+    [password] => $2y$10$I5kANvbzU1F1HY8qGf9pM.TZwpm5wFKegzd4JzQXg.OVfwSfEbz0y
+    [role_name] => Provider
+    [status] => active
+)
+
+2026-03-22 17:07:51 - Email: dr@apollo.com - User data: Array
+(
+    [id] => 2
+    [type] => users
+    [tenant_id] => 7
+    [role_id] => 2
+    [name] => Dr. Alan Adams
+    [email] => dr@apollo.com
+    [password] => $2y$10$I5kANvbzU1F1HY8qGf9pM.TZwpm5wFKegzd4JzQXg.OVfwSfEbz0y
+    [role_name] => Provider
+    [status] => active
+)
+
+2026-03-22 17:26:34 - Email: admin@apollo.com - User data: Array
+(
+    [id] => 1
+    [type] => users
+    [tenant_id] => 7
+    [role_id] => 1
+    [name] => Apollo Admin
+    [email] => admin@apollo.com
+    [password] => $2y$10$I5kANvbzU1F1HY8qGf9pM.TZwpm5wFKegzd4JzQXg.OVfwSfEbz0y
+    [role_name] => Admin
+    [status] => active
+)
+
+2026-03-22 17:27:07 - Email: nurse@apollo.com - User data: Array
+(
+    [id] => 4
+    [type] => users
+    [tenant_id] => 7
+    [role_id] => 3
+    [name] => Nurse Chloe Clark
+    [email] => nurse@apollo.com
+    [password] => $2y$10$I5kANvbzU1F1HY8qGf9pM.TZwpm5wFKegzd4JzQXg.OVfwSfEbz0y
+    [role_name] => Nurse
+    [status] => active
+)
+
+2026-03-22 17:29:58 - Email: rec@apollo.com - User data: Array
+(
+    [id] => 8
+    [type] => users
+    [tenant_id] => 7
+    [role_id] => 5
+    [name] => Rec George Green
+    [email] => rec@apollo.com
+    [password] => $2y$10$I5kANvbzU1F1HY8qGf9pM.TZwpm5wFKegzd4JzQXg.OVfwSfEbz0y
+    [role_name] => Receptionist
+    [status] => active
+)
+
+2026-03-22 17:31:43 - Email: pat1@apollo.com - User data: 
+2026-03-22 17:35:18 - Email: pat1@apollo.com - User data: 
+2026-03-22 17:35:20 - Email: pat1@apollo.com - User data: 
+2026-03-22 17:35:25 - Email: dr@apollo.com - User data: Array
+(
+    [id] => 2
+    [type] => users
+    [tenant_id] => 7
+    [role_id] => 2
+    [name] => Dr. Alan Adams
+    [email] => dr@apollo.com
+    [password] => $2y$10$I5kANvbzU1F1HY8qGf9pM.TZwpm5wFKegzd4JzQXg.OVfwSfEbz0y
+    [role_name] => Provider
+    [status] => active
+)
+
+2026-03-22 17:35:44 - Email: pbeesly@email.com - User data: Array
+(
+    [id] => 2
+    [type] => patients
+    [tenant_id] => 7
+    [name] => Pam
+    [email] => pbeesly@email.com
+    [password] => $2y$10$I5kANvbzU1F1HY8qGf9pM.TZwpm5wFKegzd4JzQXg.OVfwSfEbz0y
+    [role_name] => Patient
+    [status] => active
+    [role_id] => 6
+)
+
+2026-03-22 17:39:10 - Email: pat1@apollo.com - User data: 
+2026-03-22 17:39:53 - Email: pat1@gmail.com - User data: 
+2026-03-22 17:40:00 - Email: pat1@email.com - User data: Array
+(
+    [id] => 1
+    [type] => patients
+    [tenant_id] => 7
+    [name] => Michael
+    [email] => pat1@email.com
+    [password] => $2y$10$I5kANvbzU1F1HY8qGf9pM.TZwpm5wFKegzd4JzQXg.OVfwSfEbz0y
+    [role_name] => Patient
+    [status] => active
+    [role_id] => 6
+)
+
+2026-03-22 17:44:09 - Email: pat1@email.com - User data: Array
+(
+    [id] => 1
+    [type] => patients
+    [tenant_id] => 7
+    [name] => Michael
+    [email] => pat1@email.com
+    [password] => $2y$10$I5kANvbzU1F1HY8qGf9pM.TZwpm5wFKegzd4JzQXg.OVfwSfEbz0y
+    [role_name] => Patient
+    [status] => active
+    [role_id] => 6
+)
+
+2026-03-22 17:45:06 - Email: pat1@email.com - User data: Array
+(
+    [id] => 1
+    [type] => patients
+    [tenant_id] => 7
+    [name] => Michael
+    [email] => pat1@email.com
+    [password] => $2y$10$I5kANvbzU1F1HY8qGf9pM.TZwpm5wFKegzd4JzQXg.OVfwSfEbz0y
+    [role_name] => Patient
+    [status] => active
+    [role_id] => 6
+)
+
+2026-03-22 17:48:59 - Email: pat1@email.com - User data: Array
+(
+    [id] => 1
+    [type] => patients
+    [tenant_id] => 7
+    [name] => Michael
+    [email] => pat1@email.com
+    [password] => $2y$10$I5kANvbzU1F1HY8qGf9pM.TZwpm5wFKegzd4JzQXg.OVfwSfEbz0y
+    [role_name] => Patient
+    [status] => active
+    [role_id] => 6
+)
+
+2026-03-22 17:49:39 - Email: admin@apollo.com - User data: Array
+(
+    [id] => 1
+    [type] => users
+    [tenant_id] => 7
+    [role_id] => 1
+    [name] => Apollo Admin
+    [email] => admin@apollo.com
+    [password] => $2y$10$I5kANvbzU1F1HY8qGf9pM.TZwpm5wFKegzd4JzQXg.OVfwSfEbz0y
+    [role_name] => Admin
+    [status] => active
+)
+
+2026-03-22 18:18:14 - Email: nurse@apollo.com - User data: Array
+(
+    [id] => 4
+    [type] => users
+    [tenant_id] => 7
+    [role_id] => 3
+    [name] => Nurse Chloe Clark
+    [email] => nurse@apollo.com
+    [password] => $2y$10$I5kANvbzU1F1HY8qGf9pM.TZwpm5wFKegzd4JzQXg.OVfwSfEbz0y
+    [role_name] => Nurse
+    [status] => active
 )
 

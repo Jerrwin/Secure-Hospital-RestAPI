@@ -143,7 +143,7 @@ class PrescriptionController
         $data = json_decode(file_get_contents("php://input"), true);
 
         $status = $data['status'] ?? null;
-        if (!in_array($status, ['verified', 'created'])) { // Add other statuses if needed
+        if (!in_array($status, ['verified', 'created', 'dispensed'])) {
             ResponseHelper::send(false, "Invalid status.", [], 400);
             return;
         }
@@ -198,7 +198,7 @@ class PrescriptionController
     public function update($id)
     {
         AuthMiddleware::handle();
-        RoleMiddleware::handle(['Provider']);
+        RoleMiddleware::handle(['Provider', 'Pharmacist']);
 
         $currentUser = $_REQUEST['user'];
 

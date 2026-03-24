@@ -25,8 +25,8 @@ class TenantRegistrationController
     {
         $data = json_decode(file_get_contents("php://input"), true);
 
-        // 1. Validate Input
-        $requiredFields = ['hospital_name', 'subdomain', 'admin_name', 'admin_email', 'password'];
+        // 1. Validate Input (Added 'theme' here)
+        $requiredFields = ['hospital_name', 'subdomain', 'admin_name', 'admin_email', 'password', 'theme'];
         foreach ($requiredFields as $field) {
             if (empty($data[$field])) {
                 ResponseHelper::send(false, "Missing required field: {$field}", [], 400);
@@ -34,13 +34,19 @@ class TenantRegistrationController
             }
         }
 
+        // 2. Validate Theme strictly
+        $allowedThemes = ['blue', 'dark', 'warm'];
+        if (!in_array($data['theme'], $allowedThemes)) {
+            ResponseHelper::send(false, "Invalid theme selected. Allowed themes: blue, dark, warm.", [], 400);
+            return;
+        }
+
         // Format the subdomain (lowercase, remove spaces and special chars) to be URL-safe
         $subdomain = strtolower(preg_replace('/[^a-zA-Z0-9]/', '', $data['subdomain']));
         $adminEmail = strtolower(trim($data['admin_email']));
         $futureDbName = 'tenant_' . $subdomain . '_db';
 
-        // 2. Check for duplicates (Email, Subdomain, or DB Name)
-        // Note: we still use the 'tenant_code' column in the DB to store the subdomain string
+        // 3. Check for duplicates (Email, Subdomain, or DB Name)
         $stmt = $this->db->prepare("SELECT id FROM tenant_details WHERE admin_email = ? OR tenant_code = ? OR db_name = ?");
         $stmt->execute([$adminEmail, $subdomain, $futureDbName]);
 
@@ -49,22 +55,22 @@ class TenantRegistrationController
             return;
         }
 
-        // 3. Hash the password
+        // 4. Hash the password
         $hashedPassword = password_hash($data['password'], PASSWORD_DEFAULT);
 
-        // 4. Insert into Master DB as 'pending'
-        // Using 'tenant_code' column to store the formatted subdomain
+        // 5. Insert into Master DB as 'pending' (Added 'theme' here)
         $query = "INSERT INTO tenant_details 
-                  (hospital_name, tenant_code, admin_name, admin_email, admin_password, db_name, status) 
-                  VALUES (?, ?, ?, ?, ?, ?, 'pending')";
+                  (hospital_name, tenant_code, admin_email, admin_password, admin_name, theme, db_name, db_user, db_pass, status) 
+                  VALUES (?, ?, ?, ?, ?, ?, ?, 'root', '', 'pending')";
 
         $stmt = $this->db->prepare($query);
         $success = $stmt->execute([
             $data['hospital_name'],
             $subdomain,
-            $data['admin_name'],
             $adminEmail,
             $hashedPassword,
+            $data['admin_name'],
+            $data['theme'], 
             $futureDbName
         ]);
 
@@ -147,7 +153,7 @@ class TenantRegistrationController
 
         // 2. Query Master DB
         // The spec identifies 'id', 'name' (hospital_name), and 'status'
-        $stmt = $this->db->prepare("SELECT id, hospital_name as name, status FROM tenant_details WHERE tenant_code = ? LIMIT 1");
+        $stmt = $this->db->prepare("SELECT id, hospital_name as name, theme, status FROM tenant_details WHERE tenant_code = ? LIMIT 1");
         $stmt->execute([$subdomain]);
         $tenant = $stmt->fetch(\PDO::FETCH_ASSOC);
 
@@ -160,6 +166,7 @@ class TenantRegistrationController
         ResponseHelper::send(true, null, [
             "id" => (int) $tenant['id'],
             "name" => $tenant['name'],
+            "theme" => $tenant['theme'],
             "status" => $tenant['status']
         ]);
     }

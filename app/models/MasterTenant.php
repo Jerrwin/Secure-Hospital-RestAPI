@@ -18,7 +18,7 @@ class MasterTenant
     // Fetch all tenants, optionally filtered by status
     public function getAll($status = null)
     {
-        $query = "SELECT id, hospital_name, tenant_code, admin_name, admin_email, db_name, status, created_at FROM tenant_details";
+        $query = "SELECT id, hospital_name, tenant_code, admin_email, admin_name, theme, db_name, status, created_at FROM tenant_details";
         $params = [];
 
         if ($status) {
@@ -117,7 +117,7 @@ class MasterTenant
      */
     public function getDetailsById($id)
     {
-        $stmt = $this->db->prepare("SELECT id, db_name, status FROM tenant_details WHERE id = ?");
+        $stmt = $this->db->prepare("SELECT id, db_name, db_user, db_pass, theme, status FROM tenant_details WHERE id = ?");
         $stmt->execute([$id]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
@@ -128,9 +128,8 @@ class MasterTenant
     public function getDetailsBySubdomain($subdomain)
     {
         // Currently your DB has `tenant_code`, we will query against it using the subdomain value
-        $stmt = $this->db->prepare("SELECT id, db_name, status FROM tenant_details WHERE LOWER(tenant_code) = ?");
+        $stmt = $this->db->prepare("SELECT id, db_name, db_user, db_pass, theme, status FROM tenant_details WHERE LOWER(tenant_code) = ?");
         $stmt->execute([strtolower(trim($subdomain))]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
-
 }

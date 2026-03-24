@@ -5,6 +5,7 @@ namespace App\Controllers;
 use App\Core\Database;
 use App\Models\MasterTenant;
 use App\Helpers\ResponseHelper;
+use App\Helpers\JWT; // Needed to manually verify the token
 use Exception;
 
 class SystemAdminController
@@ -23,16 +24,42 @@ class SystemAdminController
 
     /**
      * Helper to verify identity and SuperAdmin permission
+     * [UPDATED] Bypasses CSRF and manually validates the JWT payload
      */
     private function requireSuperAdmin()
     {
-        \App\Middleware\AuthMiddleware::handle();
-        $currentUser = $_REQUEST['user'] ?? null;
+        // 1. Manually Extract the JWT from the Header
+        $headers = getallheaders();
+        $authHeader = $headers['Authorization'] ?? $headers['authorization'] ?? '';
 
-        if (!$currentUser || ($currentUser['role'] !== 'SuperAdmin' && $currentUser['user_type'] !== 'system_admin')) {
+        if (!$authHeader || !preg_match('/Bearer\s(\S+)/', $authHeader, $matches)) {
+            ResponseHelper::send(false, "Unauthorized: No token provided.", [], 401);
+            exit;
+        }
+
+        $token = $matches[1];
+        $payload = null;
+
+        // 2. Decode the JWT manually (Using your exact logic from the refresh method)
+        $parts = explode('.', $token);
+        if (count($parts) === 3) {
+            // Fix Base64Url encoding and decode the payload (the middle part of the JWT)
+            $payload = json_decode(base64_decode(str_replace(['-', '_'], ['+', '/'], $parts[1])), true);
+        }
+
+        if (!$payload) {
+            ResponseHelper::send(false, "Unauthorized: Invalid token format.", [], 401);
+            exit;
+        }
+
+        // 3. Verify SuperAdmin Role
+        if (!isset($payload['user_type']) || $payload['user_type'] !== 'system_admin') {
             ResponseHelper::send(false, "Forbidden: Only SuperAdmins can perform this action.", [], 403);
             exit;
         }
+
+        // 4. Set the user globally so the rest of the app can use it if needed
+        $_REQUEST['user'] = $payload;
     }
 
     /**
@@ -86,7 +113,9 @@ class SystemAdminController
     {
         $this->requireSuperAdmin();
 
-        $data = !empty($_POST) ? (object) $_POST : json_decode(file_get_contents("php://input"));
+        // Ensure we read the raw JSON correctly since PATCH often relies on it
+        $rawInput = file_get_contents("php://input");
+        $data = !empty($_POST) ? (object) $_POST : json_decode($rawInput);
 
         if (!isset($data->status) || !in_array($data->status, ['pending', 'active', 'suspended'])) {
             ResponseHelper::send(false, "Invalid status provided.", [], 400);

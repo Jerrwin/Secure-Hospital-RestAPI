@@ -92,22 +92,18 @@ class AuthController
         // 1. Switch to the specific hospital's database
         $this->switchToTenantDatabase($subdomain);
 
-        // 2. Fetch User from that specific DB
+        // 2. Resolve User (Supports both User table and Patient table lookup)
         $user = $this->userModel->findAnyUserByEmail($data->email);
 
-        // 3. Check User Status
-        // Debug: Log to file instead of breaking response
-        file_put_contents(__DIR__ . '/../../debug_login.log', date('Y-m-d H:i:s') . " - Email: " . $data->email . " - User data: " . print_r($user, true) . "\n", FILE_APPEND);
-        $userStatus = strtolower($user['status'] ?? $user['STATUS'] ?? 'active');
-        if ($userStatus !== 'active') {
-            ResponseHelper::send(false, "Your account is inactive. Please contact administrator.", [], 403);
+        if (!$user || !password_verify($data->password, $user['password'] ?? $user['PASSWORD'])) {
+            ResponseHelper::send(false, "Invalid credentials", [], 401);
             return;
         }
 
-        // 4. Security Check
-        // Note: Using password_verify() against your stored hash
-        if (!$user || !password_verify($data->password, $user['password'] ?? $user['PASSWORD'])) {
-            ResponseHelper::send(false, "Invalid credentials", [], 401);
+        // 4. Check User Status
+        $userStatus = strtolower($user['status'] ?? $user['STATUS'] ?? 'active');
+        if ($userStatus !== 'active') {
+            ResponseHelper::send(false, "Your account is inactive. Please contact administrator.", [], 403);
             return;
         }
 

@@ -19,33 +19,45 @@ class User
      */
     public function findAnyUserByEmail($email)
     {
-        // 1. Check Hospital Staff (Admins, Doctors, Nurses)
+        // ... (existing method remains same for now)
+        $users = $this->findAllUsersByEmail($email);
+        return !empty($users) ? $users[0] : false;
+    }
+
+    /**
+     * AUTHENTICATION: Find all possible matches for an email (Staff or Patients).
+     */
+    public function findAllUsersByEmail($email)
+    {
+        $allMatches = [];
+
+        // 1. Check Hospital Staff
         $sqlUsers = "SELECT u.id, 'users' as type, u.tenant_id, u.role_id, u.name, u.email, 
                             u.PASSWORD as password, r.name as role_name, u.STATUS as status
                      FROM users u 
                      LEFT JOIN roles r ON u.role_id = r.id 
-                     WHERE u.email = :e AND u.deleted_at IS NULL LIMIT 1";
-
+                     WHERE u.email = :e AND u.deleted_at IS NULL";
         $stmt = $this->conn->prepare($sqlUsers);
         $stmt->execute([':e' => $email]);
-        if ($res = $stmt->fetch(PDO::FETCH_ASSOC)) {
-            return $res;
-        }
+        $staff = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        if ($staff) $allMatches = array_merge($allMatches, $staff);
 
-        // 2. Check Patients (In the same tenant database)
+        // 2. Check Patients
         $sqlPatients = "SELECT id, 'patients' as type, tenant_id, first_name as name, email, 
                                password, 'Patient' as role_name, status as status
                         FROM patients 
-                        WHERE email = :e AND deleted_at IS NULL LIMIT 1";
-
+                        WHERE email = :e AND deleted_at IS NULL";
         $stmt = $this->conn->prepare($sqlPatients);
         $stmt->execute([':e' => $email]);
-        if ($res = $stmt->fetch(PDO::FETCH_ASSOC)) {
-            $res['role_id'] = 6; // Fixed Role ID for Patients
-            return $res;
+        $patients = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        if ($patients) {
+            foreach ($patients as &$p) {
+                $p['role_id'] = 6;
+            }
+            $allMatches = array_merge($allMatches, $patients);
         }
 
-        return false;
+        return $allMatches;
     }
 
     /**
@@ -197,10 +209,12 @@ class User
     {
         $query = "UPDATE users SET 
                   name = :name,
+                  email = :email,
                   STATUS = :status
                   WHERE id = :id";
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(':name', $data['name']);
+        $stmt->bindParam(':email', $data['email']);
         $stmt->bindParam(':status', $data['STATUS']); // Notice the uppercase STATUS to match your DB
         $stmt->bindParam(':id', $id);
         return $stmt->execute();

@@ -88,9 +88,17 @@ class PatientController
             return;
         }
 
-        // Check for duplicate email
+        // Validate email if updated
+        if (!empty($data['email'])) {
+            if (!Validator::email($data['email'])) {
+                ResponseHelper::send(false, "Invalid email format.", [], 400);
+                return;
+            }
+        }
+
+        // [NEW] Check for duplicate email before proceeding (Reverted)
         if ($this->patientModel->findByEmail($data['email'])) {
-            ResponseHelper::send(false, "Patient already exists with this email.", [], 409);
+            ResponseHelper::send(false, "Email already exists. Please use a unique email for each patient.", [], 409);
             return;
         }
 
@@ -107,7 +115,7 @@ class PatientController
             'dob' => $data['dob'],
             'gender' => $data['gender'],
             'blood_group' => $data['blood_group'], // SAVE BLOOD GROUP
-            'status' => $data['status'] ?? 'Regular', // SAVE STATUS
+            'status' => $data['status'] ?? 'active', // Default to 'active' as per user request
             'address' => $data['address'], // SAVE ADDRESS
             'medical_history' => $encryptedHistory,
             'created_by' => $currentUser['user_id']
@@ -192,11 +200,6 @@ class PatientController
         if (!empty($data['email'])) {
             if (!Validator::email($data['email'])) {
                 ResponseHelper::send(false, "Invalid email format.", [], 400);
-                return;
-            }
-            $existing = $this->patientModel->findByEmail($data['email']);
-            if ($existing && $existing['id'] != $id) {
-                ResponseHelper::send(false, "Email already in use by another patient.", [], 409);
                 return;
             }
         }

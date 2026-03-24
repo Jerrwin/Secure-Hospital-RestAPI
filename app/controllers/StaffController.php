@@ -180,12 +180,11 @@ class StaffController
     public function update($id)
     {
         AuthMiddleware::handle();
-        RoleMiddleware::handle(['Admin']);
+        // 1. Loosen role check - individual users can access this now
+        RoleMiddleware::handle(['Admin', 'Provider', 'Nurse', 'Pharmacist', 'Receptionist']);
+        
         $currentUser = $_REQUEST['user'];
         $data = json_decode(file_get_contents("php://input"), true);
-
-        // LOG 1: Check if data is coming from React
-        error_log("Incoming Update Data: " . json_encode($data));
 
         if (!$this->connectByTenantId($currentUser['tenant_id'])) {
             ResponseHelper::send(false, "Tenant database error.", [], 500);
@@ -194,54 +193,73 @@ class StaffController
 
         $staff = $this->staffModel->getById($id);
         if (!$staff) {
-            error_log("Staff ID $id not found in DB");
             ResponseHelper::send(false, "Staff not found.", [], 404);
             return;
         }
 
-        if (!empty($data['phone_number']) && !\App\Helpers\Validator::phone($data['phone_number'])) {
-            ResponseHelper::send(false, "Invalid phone number format.", [], 400);
+        // 2. CRITICAL Authorization Check
+        // Allow if Admin OR if the current user is the OWNER of this staff record
+        $isOwner = ($currentUser['user_id'] == $staff['user_id']);
+        $isAdmin = ($currentUser['role'] === 'Admin');
+
+        if (!$isAdmin && !$isOwner) {
+            ResponseHelper::send(false, "Forbidden: You cannot edit someone else's profile.", [], 403);
             return;
         }
 
+        // 3. Resolve Name (Support combined 'name' or separate 'first_name/last_name')
+        $inputName = $data['name'] ?? null;
+        if (!$inputName && isset($data['first_name'])) {
+            $inputName = trim($data['first_name'] . ' ' . ($data['last_name'] ?? ''));
+        }
+        $finalName = $inputName ?: $staff['name'];
+
+        // 4. Resolve Email (Critical: Must link to User table)
+        // Fetch current user record to get existing email if not provided
+        $linkedUser = $this->userModel->getById($staff['user_id']);
+        $finalEmail = $data['email'] ?? ($linkedUser['email'] ?? '');
+
+        // 5. Selective Data Protection
+        // Non-admins cannot change their own STATUS or IS_ACTIVE
+        $status = $staff['status'];
+        $isActive = $staff['is_active'];
+
+        if ($isAdmin) {
+            $status = $data['status'] ?? $staff['status'];
+            $isActive = $data['is_active'] ?? $staff['is_active'];
+        }
+
         $updateData = [
-            'name' => $data['name'] ?? $staff['name'],
+            'name' => $finalName,
             'gender' => $data['gender'] ?? $staff['gender'],
             'address' => $data['address'] ?? $staff['address'],
             'phone_number' => $data['phone_number'] ?? $staff['phone_number'],
-            'status' => $data['status'] ?? $staff['status'],
-            'is_active' => $data['is_active'] ?? $staff['is_active']
+            'status' => $status,
+            'is_active' => $isActive
         ];
 
         $userData = [
-            'name' => $data['name'] ?? $staff['name'],
-            'STATUS' => $data['status'] ?? $staff['status']
+            'name' => $finalName,
+            'email' => $finalEmail,
+            'STATUS' => $status
         ];
 
         try {
             $this->db->beginTransaction();
-            // LOG 2: Check IDs before update
-            error_log("Updating Staff ID: $id with status: " . $updateData['status']);
-            error_log("Updating User ID: " . $staff['user_id'] . " with STATUS: " . $userData['STATUS']);
-
+            
             $sSuccess = $this->staffModel->update($id, $updateData);
             $uSuccess = $this->userModel->update($staff['user_id'], $userData);
 
-            error_log("Staff Update Result: " . ($sSuccess !== false ? "TRUE" : "FALSE"));
-            error_log("User Update Result: " . ($uSuccess !== false ? "TRUE" : "FALSE"));
-
-            // Use !== false to catch SQL errors, but allow 0 rows affected
             if ($sSuccess !== false && $uSuccess !== false) {
                 $this->db->commit();
-                ResponseHelper::send(true, "Update successful");
+                ResponseHelper::send(true, "Profile updated successfully");
             } else {
                 $this->db->rollBack();
-                ResponseHelper::send(false, "Update failed", [], 500);
+                ResponseHelper::send(false, "Failed to update profile", [], 500);
             }
         } catch (\Exception $e) {
             $this->db->rollBack();
-            error_log("ERROR: " . $e->getMessage());
-            ResponseHelper::send(false, "Sync Failed: " . $e->getMessage(), [], 500);
+            ResponseHelper::send(false, "Update Failed: " . $e->getMessage(), [], 500);
         }
     }
 

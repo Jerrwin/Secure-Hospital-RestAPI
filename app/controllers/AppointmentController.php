@@ -217,6 +217,15 @@ class AppointmentController
             return;
         }
 
+        // 3. Prevent future completion
+        if (isset($data['STATUS']) && strtolower($data['STATUS']) === 'completed') {
+            $date = $data['appointment_date'] ?? $existing['appointment_date'];
+            if ($date > date('Y-m-d')) {
+                ResponseHelper::send(false, "Cannot complete future appointments.", [], 400);
+                return;
+            }
+        }
+
         $pId   = $data['provider_id']      ?? $existing['provider_id'];
         $date  = $data['appointment_date'] ?? $existing['appointment_date'];
         $start = $data['start_time']       ?? $existing['start_time'];
@@ -285,6 +294,11 @@ class AppointmentController
 
         if ($existing['tenant_id'] != $currentUser['tenant_id']) {
             ResponseHelper::send(false, "Access denied.", [], 403);
+            return;
+        }
+
+        if ($existing['appointment_date'] > date('Y-m-d')) {
+            ResponseHelper::send(false, "Cannot complete an appointment scheduled for the future.", [], 400);
             return;
         }
 

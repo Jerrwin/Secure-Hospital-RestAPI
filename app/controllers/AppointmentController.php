@@ -10,6 +10,7 @@ use App\Models\MasterTenant;
 use App\Helpers\ResponseHelper;
 use App\Middleware\AuthMiddleware;
 use App\Middleware\RoleMiddleware;
+use App\Helpers\FileActivityLogger;
 
 class AppointmentController
 {
@@ -142,6 +143,11 @@ class AppointmentController
                 'reference_id' => (int) $id
             ]);
 
+            FileActivityLogger::logAppointment('APPOINTMENT_CREATE', (int)$id, $data['patient_id'], [
+                'provider_id' => $targetProviderId,
+                'date' => $data['appointment_date']
+            ], __METHOD__);
+
             ResponseHelper::send(true, "Appointment scheduled successfully.", $appointmentData, 201);
         } else {
             ResponseHelper::send(false, "Server Error", [], 500);
@@ -159,6 +165,8 @@ class AppointmentController
             return;
         }
 
+        $tenantId = $currentUser['tenant_id'];
+
         $filters = [];
         if ($currentUser['role'] === 'Patient') {
             $filters['patient_id'] = $currentUser['user_id'];
@@ -167,8 +175,12 @@ class AppointmentController
         if (!empty($_GET['end_date']))   $filters['end_date']   = $_GET['end_date'];
         if (!empty($_GET['status']))     $filters['status']     = $_GET['status'];
 
-        $list = $this->appointmentModel->getAllByTenant($currentUser['tenant_id'], $filters);
-        ResponseHelper::send(true, "Appointments retrieved", $list);
+        $appointments = $this->appointmentModel->getAllByTenant($tenantId, $filters);
+        FileActivityLogger::logAppointment('APPOINTMENT_VIEW_ALL', null, null, [
+            'count' => count($appointments),
+            'filters' => $filters
+        ], __METHOD__);
+        ResponseHelper::send(true, "Appointments retrieved", $appointments);
     }
 
     // GET /api/appointments/upcoming
@@ -176,14 +188,18 @@ class AppointmentController
     {
         AuthMiddleware::handle();
         $currentUser = $_REQUEST['user'];
+        $tenantId    = $currentUser['tenant_id'];
 
-        if (!$this->connectByTenantId($currentUser['tenant_id'])) {
+        if (!$this->connectByTenantId($tenantId)) {
             ResponseHelper::send(false, "Hospital database not found or inactive.", [], 403);
             return;
         }
 
         $patientId = ($currentUser['role'] === 'Patient') ? $currentUser['user_id'] : null;
-        $list = $this->appointmentModel->getUpcomingByTenant($currentUser['tenant_id'], $patientId);
+        $list = $this->appointmentModel->getUpcomingByTenant($tenantId, $patientId);
+        FileActivityLogger::logAppointment('APPOINTMENT_VIEW_UPCOMING', null, $patientId, [
+            'count' => count($list)
+        ], __METHOD__);
         ResponseHelper::send(true, "Upcoming appointments", $list);
     }
 
@@ -237,6 +253,9 @@ class AppointmentController
         }
 
         if ($this->appointmentModel->update($id, $data)) {
+            FileActivityLogger::logAppointment('APPOINTMENT_UPDATE', (int)$id, $existing['patient_id'], [
+                'updated_fields' => array_keys($data)
+            ], __METHOD__);
             ResponseHelper::send(true, "Appointment updated successfully");
         } else {
             ResponseHelper::send(false, "Update failed", [], 500);
@@ -248,8 +267,9 @@ class AppointmentController
     {
         AuthMiddleware::handle();
         $currentUser = $_REQUEST['user'];
+        $tenantId    = $currentUser['tenant_id'];
 
-        if (!$this->connectByTenantId($currentUser['tenant_id'])) {
+        if (!$this->connectByTenantId($tenantId)) {
             ResponseHelper::send(false, "Hospital database not found.", [], 403);
             return;
         }
@@ -260,7 +280,7 @@ class AppointmentController
             return;
         }
 
-        if ($existing['tenant_id'] != $currentUser['tenant_id']) {
+        if ($existing['tenant_id'] != $tenantId) {
             ResponseHelper::send(false, "Access denied.", [], 403);
             return;
         }
@@ -271,6 +291,9 @@ class AppointmentController
         }
 
         $res = $this->appointmentModel->update($id, ['STATUS' => 'cancelled']);
+        if ($res) {
+            FileActivityLogger::logAppointment('APPOINTMENT_CANCEL', (int)$id, $existing['patient_id'], [], __METHOD__);
+        }
         ResponseHelper::send($res, $res ? "Cancelled" : "Failed");
     }
 
@@ -280,8 +303,9 @@ class AppointmentController
         AuthMiddleware::handle();
         RoleMiddleware::handle(['Provider', 'Admin']);
         $currentUser = $_REQUEST['user'];
+        $tenantId    = $currentUser['tenant_id'];
 
-        if (!$this->connectByTenantId($currentUser['tenant_id'])) {
+        if (!$this->connectByTenantId($tenantId)) {
             ResponseHelper::send(false, "Hospital database not found.", [], 403);
             return;
         }
@@ -292,7 +316,7 @@ class AppointmentController
             return;
         }
 
-        if ($existing['tenant_id'] != $currentUser['tenant_id']) {
+        if ($existing['tenant_id'] != $tenantId) {
             ResponseHelper::send(false, "Access denied.", [], 403);
             return;
         }
@@ -303,6 +327,9 @@ class AppointmentController
         }
 
         $res = $this->appointmentModel->update($id, ['STATUS' => 'completed']);
+        if ($res) {
+            FileActivityLogger::logAppointment('APPOINTMENT_COMPLETE', (int)$id, $existing['patient_id'], [], __METHOD__);
+        }
         ResponseHelper::send($res, $res ? "Completed" : "Failed");
     }
 
@@ -311,8 +338,9 @@ class AppointmentController
     {
         AuthMiddleware::handle();
         $currentUser = $_REQUEST['user'];
+        $tenantId    = $currentUser['tenant_id'];
 
-        if (!$this->connectByTenantId($currentUser['tenant_id'])) {
+        if (!$this->connectByTenantId($tenantId)) {
             ResponseHelper::send(false, "Hospital database not found or inactive.", [], 403);
             return;
         }
@@ -324,10 +352,12 @@ class AppointmentController
         }
 
         if ($currentUser['role'] === 'Patient' && $appointment['patient_id'] != $currentUser['user_id']) {
-            ResponseHelper::send(false, "Access denied", [], 403);
+            ResponseHelper::send(false, "Appointment not found.", [], 404);
             return;
         }
 
-        ResponseHelper::send(true, "Details", $appointment);
+        FileActivityLogger::logAppointment('APPOINTMENT_VIEW_SINGLE', (int)$id, $appointment['patient_id'], [], __METHOD__);
+
+        ResponseHelper::send(true, "Appointment details retrieved", $appointment);
     }
 }

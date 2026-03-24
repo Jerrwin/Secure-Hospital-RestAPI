@@ -1,0 +1,281 @@
+{"timestamp":"2026-03-24 23:22:17","date":"2026-03-24","tenant_id":8,"user_id":1,"user_name":"Unknown","user_email":"admin@apollo.com","user_role":"Admin","action":"STAFF_CREATE","method":"POST","endpoint":"\/Secure-Hospital-RestAPI\/public\/api\/staff\/register","ip_address":"::1","user_agent":"Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/146.0.0.0 Safari\/537.36","details":"{\"staff_id\":\"10\",\"user_id\":\"10\",\"name\":\"staff\",\"email\":\"staff@gmail.com\",\"role\":2}","controller_method":"App\\Controllers\\StaffController::register"}
+--------------------------------------------------
+[2026-03-24 23:33:16] APPOINTMENT_VIEW_ALL by Unknown (Provider)
+Method: GET | Endpoint: /Secure-Hospital-RestAPI/public/api/appointments
+Controller: App\Controllers\AppointmentController::index
+JSON: {"timestamp":"2026-03-24 23:33:16","date":"2026-03-24","tenant_id":8,"user_id":2,"user_name":"Unknown","user_email":"tenant1@hospital.com","user_role":"Provider","action":"APPOINTMENT_VIEW_ALL","method":"GET","endpoint":"\/Secure-Hospital-RestAPI\/public\/api\/appointments","ip_address":"::1","user_agent":"Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/146.0.0.0 Safari\/537.36","details":"{\"appointment_id\":null,\"patient_id\":null,\"count\":0,\"filters\":[]}","controller_method":"App\\Controllers\\AppointmentController::index"}
+--------------------------------------------------
+
+--------------------------------------------------
+[2026-03-24 23:33:20] APPOINTMENT_VIEW_ALL by Unknown (Provider)
+Method: GET | Endpoint: /Secure-Hospital-RestAPI/public/api/appointments
+Controller: App\Controllers\AppointmentController::index
+JSON: {"timestamp":"2026-03-24 23:33:20","date":"2026-03-24","tenant_id":8,"user_id":2,"user_name":"Unknown","user_email":"tenant1@hospital.com","user_role":"Provider","action":"APPOINTMENT_VIEW_ALL","method":"GET","endpoint":"\/Secure-Hospital-RestAPI\/public\/api\/appointments","ip_address":"::1","user_agent":"Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/146.0.0.0 Safari\/537.36","details":"{\"appointment_id\":null,\"patient_id\":null,\"count\":0,\"filters\":[]}","controller_method":"App\\Controllers\\AppointmentController::index"}
+--------------------------------------------------
+
+--------------------------------------------------
+[2026-03-24 23:33:20] PATIENT_VIEW_ALL by Unknown (Provider)
+Method: GET | Endpoint: /Secure-Hospital-RestAPI/public/api/patients
+Controller: App\Controllers\PatientController::index
+JSON: {"timestamp":"2026-03-24 23:33:20","date":"2026-03-24","tenant_id":8,"user_id":2,"user_name":"Unknown","user_email":"tenant1@hospital.com","user_role":"Provider","action":"PATIENT_VIEW_ALL","method":"GET","endpoint":"\/Secure-Hospital-RestAPI\/public\/api\/patients","ip_address":"::1","user_agent":"Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/146.0.0.0 Safari\/537.36","details":"{\"resource\":\"patients\",\"resource_id\":null,\"count\":4}","controller_method":"App\\Controllers\\PatientController::index"}
+--------------------------------------------------
+
+--------------------------------------------------
+[2026-03-24 23:33:20] PRESCRIPTION_VIEW_ALL by Unknown (Provider)
+Method: GET | Endpoint: /Secure-Hospital-RestAPI/public/api/prescriptions
+Controller: App\Controllers\PrescriptionController::index
+JSON: {"timestamp":"2026-03-24 23:33:20","date":"2026-03-24","tenant_id":8,"user_id":2,"user_name":"Unknown","user_email":"tenant1@hospital.com","user_role":"Provider","action":"PRESCRIPTION_VIEW_ALL","method":"GET","endpoint":"\/Secure-Hospital-RestAPI\/public\/api\/prescriptions","ip_address":"::1","user_agent":"Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/146.0.0.0 Safari\/537.36","details":"{\"resource\":\"prescriptions\",\"resource_id\":null,\"count\":1,\"patient_id\":null}","controller_method":"App\\Controllers\\PrescriptionController::index"}
+--------------------------------------------------
+
+--------------------------------------------------
+[2026-03-24 23:33:20] APPOINTMENT_VIEW_ALL by Unknown (Provider)
+Method: GET | Endpoint: /Secure-Hospital-RestAPI/public/api/appointments
+Controller: App\Controllers\AppointmentController::index
+JSON: {"timestamp":"2026-03-24 23:33:20","date":"2026-03-24","tenant_id":8,"user_id":2,"user_name":"Unknown","user_email":"tenant1@hospital.com","user_role":"Provider","action":"APPOINTMENT_VIEW_ALL","method":"GET","endpoint":"\/Secure-Hospital-RestAPI\/public\/api\/appointments","ip_address":"::1","user_agent":"Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/146.0.0.0 Safari\/537.36","details":"{\"appointment_id\":null,\"patient_id\":null,\"count\":0,\"filters\":[]}","controller_method":"App\\Controllers\\AppointmentController::index"}
+--------------------------------------------------
+
+--------------------------------------------------
+[2026-03-24 23:33:22] PATIENT_VIEW_ALL by Unknown (Provider)
+Method: GET | Endpoint: /Secure-Hospital-RestAPI/public/api/patients
+Controller: App\Controllers\PatientController::index
+JSON: {"timestamp":"2026-03-24 23:33:22","date":"2026-03-24","tenant_id":8,"user_id":2,"user_name":"Unknown","user_email":"tenant1@hospital.com","user_role":"Provider","action":"PATIENT_VIEW_ALL","method":"GET","endpoint":"\/Secure-Hospital-RestAPI\/public\/api\/patients","ip_address":"::1","user_agent":"Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/146.0.0.0 Safari\/537.36","details":"{\"resource\":\"patients\",\"resource_id\":null,\"count\":4}","controller_method":"App\\Controllers\\PatientController::index"}
+--------------------------------------------------
+
+--------------------------------------------------
+[2026-03-24 23:33:22] APPOINTMENT_VIEW_ALL by Unknown (Provider)
+Method: GET | Endpoint: /Secure-Hospital-RestAPI/public/api/appointments
+Controller: App\Controllers\AppointmentController::index
+JSON: {"timestamp":"2026-03-24 23:33:22","date":"2026-03-24","tenant_id":8,"user_id":2,"user_name":"Unknown","user_email":"tenant1@hospital.com","user_role":"Provider","action":"APPOINTMENT_VIEW_ALL","method":"GET","endpoint":"\/Secure-Hospital-RestAPI\/public\/api\/appointments","ip_address":"::1","user_agent":"Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/146.0.0.0 Safari\/537.36","details":"{\"appointment_id\":null,\"patient_id\":null,\"count\":0,\"filters\":[]}","controller_method":"App\\Controllers\\AppointmentController::index"}
+--------------------------------------------------
+
+--------------------------------------------------
+[2026-03-24 23:33:25] PRESCRIPTION_VIEW_ALL by Unknown (Provider)
+Method: GET | Endpoint: /Secure-Hospital-RestAPI/public/api/prescriptions
+Controller: App\Controllers\PrescriptionController::index
+JSON: {"timestamp":"2026-03-24 23:33:25","date":"2026-03-24","tenant_id":8,"user_id":2,"user_name":"Unknown","user_email":"tenant1@hospital.com","user_role":"Provider","action":"PRESCRIPTION_VIEW_ALL","method":"GET","endpoint":"\/Secure-Hospital-RestAPI\/public\/api\/prescriptions","ip_address":"::1","user_agent":"Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/146.0.0.0 Safari\/537.36","details":"{\"resource\":\"prescriptions\",\"resource_id\":null,\"count\":1,\"patient_id\":null}","controller_method":"App\\Controllers\\PrescriptionController::index"}
+--------------------------------------------------
+
+--------------------------------------------------
+[2026-03-24 23:33:25] PATIENT_VIEW_ALL by Unknown (Provider)
+Method: GET | Endpoint: /Secure-Hospital-RestAPI/public/api/patients
+Controller: App\Controllers\PatientController::index
+JSON: {"timestamp":"2026-03-24 23:33:25","date":"2026-03-24","tenant_id":8,"user_id":2,"user_name":"Unknown","user_email":"tenant1@hospital.com","user_role":"Provider","action":"PATIENT_VIEW_ALL","method":"GET","endpoint":"\/Secure-Hospital-RestAPI\/public\/api\/patients","ip_address":"::1","user_agent":"Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/146.0.0.0 Safari\/537.36","details":"{\"resource\":\"patients\",\"resource_id\":null,\"count\":4}","controller_method":"App\\Controllers\\PatientController::index"}
+--------------------------------------------------
+
+--------------------------------------------------
+[2026-03-24 23:33:25] APPOINTMENT_VIEW_ALL by Unknown (Provider)
+Method: GET | Endpoint: /Secure-Hospital-RestAPI/public/api/appointments?status=completed
+Controller: App\Controllers\AppointmentController::index
+JSON: {"timestamp":"2026-03-24 23:33:25","date":"2026-03-24","tenant_id":8,"user_id":2,"user_name":"Unknown","user_email":"tenant1@hospital.com","user_role":"Provider","action":"APPOINTMENT_VIEW_ALL","method":"GET","endpoint":"\/Secure-Hospital-RestAPI\/public\/api\/appointments?status=completed","ip_address":"::1","user_agent":"Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/146.0.0.0 Safari\/537.36","details":"{\"appointment_id\":null,\"patient_id\":null,\"count\":0,\"filters\":{\"status\":\"completed\"}}","controller_method":"App\\Controllers\\AppointmentController::index"}
+--------------------------------------------------
+
+--------------------------------------------------
+[2026-03-24 23:33:26] APPOINTMENT_VIEW_ALL by Unknown (Provider)
+Method: GET | Endpoint: /Secure-Hospital-RestAPI/public/api/appointments
+Controller: App\Controllers\AppointmentController::index
+JSON: {"timestamp":"2026-03-24 23:33:26","date":"2026-03-24","tenant_id":8,"user_id":2,"user_name":"Unknown","user_email":"tenant1@hospital.com","user_role":"Provider","action":"APPOINTMENT_VIEW_ALL","method":"GET","endpoint":"\/Secure-Hospital-RestAPI\/public\/api\/appointments","ip_address":"::1","user_agent":"Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/146.0.0.0 Safari\/537.36","details":"{\"appointment_id\":null,\"patient_id\":null,\"count\":0,\"filters\":[]}","controller_method":"App\\Controllers\\AppointmentController::index"}
+--------------------------------------------------
+
+--------------------------------------------------
+[2026-03-24 23:33:26] PATIENT_VIEW_ALL by Unknown (Provider)
+Method: GET | Endpoint: /Secure-Hospital-RestAPI/public/api/patients
+Controller: App\Controllers\PatientController::index
+JSON: {"timestamp":"2026-03-24 23:33:26","date":"2026-03-24","tenant_id":8,"user_id":2,"user_name":"Unknown","user_email":"tenant1@hospital.com","user_role":"Provider","action":"PATIENT_VIEW_ALL","method":"GET","endpoint":"\/Secure-Hospital-RestAPI\/public\/api\/patients","ip_address":"::1","user_agent":"Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/146.0.0.0 Safari\/537.36","details":"{\"resource\":\"patients\",\"resource_id\":null,\"count\":4}","controller_method":"App\\Controllers\\PatientController::index"}
+--------------------------------------------------
+
+--------------------------------------------------
+[2026-03-24 23:33:42] APPOINTMENT_VIEW_ALL by Unknown (Provider)
+Method: GET | Endpoint: /Secure-Hospital-RestAPI/public/api/appointments
+Controller: App\Controllers\AppointmentController::index
+JSON: {"timestamp":"2026-03-24 23:33:42","date":"2026-03-24","tenant_id":8,"user_id":2,"user_name":"Unknown","user_email":"tenant1@hospital.com","user_role":"Provider","action":"APPOINTMENT_VIEW_ALL","method":"GET","endpoint":"\/Secure-Hospital-RestAPI\/public\/api\/appointments","ip_address":"::1","user_agent":"Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/146.0.0.0 Safari\/537.36","details":"{\"appointment_id\":null,\"patient_id\":null,\"count\":0,\"filters\":[]}","controller_method":"App\\Controllers\\AppointmentController::index"}
+--------------------------------------------------
+
+--------------------------------------------------
+[2026-03-24 23:35:53] APPOINTMENT_VIEW_ALL by Unknown (Admin)
+Method: GET | Endpoint: /Secure-Hospital-RestAPI/public/api/appointments
+Controller: App\Controllers\AppointmentController::index
+JSON: {"timestamp":"2026-03-24 23:35:53","date":"2026-03-24","tenant_id":8,"user_id":1,"user_name":"Unknown","user_email":"admin@apollo.com","user_role":"Admin","action":"APPOINTMENT_VIEW_ALL","method":"GET","endpoint":"\/Secure-Hospital-RestAPI\/public\/api\/appointments","ip_address":"::1","user_agent":"Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/146.0.0.0 Safari\/537.36","details":"{\"appointment_id\":null,\"patient_id\":null,\"count\":11,\"filters\":[]}","controller_method":"App\\Controllers\\AppointmentController::index"}
+--------------------------------------------------
+
+--------------------------------------------------
+[2026-03-24 23:35:53] PRESCRIPTION_VIEW_ALL by Unknown (Admin)
+Method: GET | Endpoint: /Secure-Hospital-RestAPI/public/api/prescriptions
+Controller: App\Controllers\PrescriptionController::index
+JSON: {"timestamp":"2026-03-24 23:35:53","date":"2026-03-24","tenant_id":8,"user_id":1,"user_name":"Unknown","user_email":"admin@apollo.com","user_role":"Admin","action":"PRESCRIPTION_VIEW_ALL","method":"GET","endpoint":"\/Secure-Hospital-RestAPI\/public\/api\/prescriptions","ip_address":"::1","user_agent":"Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/146.0.0.0 Safari\/537.36","details":"{\"resource\":\"prescriptions\",\"resource_id\":null,\"count\":1,\"patient_id\":null}","controller_method":"App\\Controllers\\PrescriptionController::index"}
+--------------------------------------------------
+
+--------------------------------------------------
+[2026-03-24 23:35:54] STAFF_VIEW_ALL by Unknown (Admin)
+Method: GET | Endpoint: /Secure-Hospital-RestAPI/public/api/staff
+Controller: App\Controllers\StaffController::index
+JSON: {"timestamp":"2026-03-24 23:35:54","date":"2026-03-24","tenant_id":8,"user_id":1,"user_name":"Unknown","user_email":"admin@apollo.com","user_role":"Admin","action":"STAFF_VIEW_ALL","method":"GET","endpoint":"\/Secure-Hospital-RestAPI\/public\/api\/staff","ip_address":"::1","user_agent":"Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/146.0.0.0 Safari\/537.36","details":"{\"staff_id\":null,\"count\":6}","controller_method":"App\\Controllers\\StaffController::index"}
+--------------------------------------------------
+
+--------------------------------------------------
+[2026-03-24 23:36:09] APPOINTMENT_VIEW_ALL by Unknown (Admin)
+Method: GET | Endpoint: /Secure-Hospital-RestAPI/public/api/appointments
+Controller: App\Controllers\AppointmentController::index
+JSON: {"timestamp":"2026-03-24 23:36:09","date":"2026-03-24","tenant_id":8,"user_id":1,"user_name":"Unknown","user_email":"admin@apollo.com","user_role":"Admin","action":"APPOINTMENT_VIEW_ALL","method":"GET","endpoint":"\/Secure-Hospital-RestAPI\/public\/api\/appointments","ip_address":"::1","user_agent":"Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/146.0.0.0 Safari\/537.36","details":"{\"appointment_id\":null,\"patient_id\":null,\"count\":11,\"filters\":[]}","controller_method":"App\\Controllers\\AppointmentController::index"}
+--------------------------------------------------
+
+--------------------------------------------------
+[2026-03-24 23:37:02] APPOINTMENT_VIEW_ALL by Unknown (Provider)
+Method: GET | Endpoint: /Secure-Hospital-RestAPI/public/api/appointments
+Controller: App\Controllers\AppointmentController::index
+JSON: {"timestamp":"2026-03-24 23:37:02","date":"2026-03-24","tenant_id":8,"user_id":2,"user_name":"Unknown","user_email":"tenant1@hospital.com","user_role":"Provider","action":"APPOINTMENT_VIEW_ALL","method":"GET","endpoint":"\/Secure-Hospital-RestAPI\/public\/api\/appointments","ip_address":"::1","user_agent":"Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/146.0.0.0 Safari\/537.36","details":"{\"appointment_id\":null,\"patient_id\":null,\"count\":11,\"filters\":[]}","controller_method":"App\\Controllers\\AppointmentController::index"}
+--------------------------------------------------
+
+--------------------------------------------------
+[2026-03-24 23:37:02] PATIENT_VIEW_ALL by Unknown (Provider)
+Method: GET | Endpoint: /Secure-Hospital-RestAPI/public/api/patients
+Controller: App\Controllers\PatientController::index
+JSON: {"timestamp":"2026-03-24 23:37:02","date":"2026-03-24","tenant_id":8,"user_id":2,"user_name":"Unknown","user_email":"tenant1@hospital.com","user_role":"Provider","action":"PATIENT_VIEW_ALL","method":"GET","endpoint":"\/Secure-Hospital-RestAPI\/public\/api\/patients","ip_address":"::1","user_agent":"Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/146.0.0.0 Safari\/537.36","details":"{\"resource\":\"patients\",\"resource_id\":null,\"count\":4}","controller_method":"App\\Controllers\\PatientController::index"}
+--------------------------------------------------
+
+--------------------------------------------------
+[2026-03-24 23:37:02] PRESCRIPTION_VIEW_ALL by Unknown (Provider)
+Method: GET | Endpoint: /Secure-Hospital-RestAPI/public/api/prescriptions
+Controller: App\Controllers\PrescriptionController::index
+JSON: {"timestamp":"2026-03-24 23:37:02","date":"2026-03-24","tenant_id":8,"user_id":2,"user_name":"Unknown","user_email":"tenant1@hospital.com","user_role":"Provider","action":"PRESCRIPTION_VIEW_ALL","method":"GET","endpoint":"\/Secure-Hospital-RestAPI\/public\/api\/prescriptions","ip_address":"::1","user_agent":"Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/146.0.0.0 Safari\/537.36","details":"{\"resource\":\"prescriptions\",\"resource_id\":null,\"count\":1,\"patient_id\":null}","controller_method":"App\\Controllers\\PrescriptionController::index"}
+--------------------------------------------------
+
+--------------------------------------------------
+[2026-03-24 23:37:02] APPOINTMENT_VIEW_ALL by Unknown (Provider)
+Method: GET | Endpoint: /Secure-Hospital-RestAPI/public/api/appointments
+Controller: App\Controllers\AppointmentController::index
+JSON: {"timestamp":"2026-03-24 23:37:02","date":"2026-03-24","tenant_id":8,"user_id":2,"user_name":"Unknown","user_email":"tenant1@hospital.com","user_role":"Provider","action":"APPOINTMENT_VIEW_ALL","method":"GET","endpoint":"\/Secure-Hospital-RestAPI\/public\/api\/appointments","ip_address":"::1","user_agent":"Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/146.0.0.0 Safari\/537.36","details":"{\"appointment_id\":null,\"patient_id\":null,\"count\":11,\"filters\":[]}","controller_method":"App\\Controllers\\AppointmentController::index"}
+--------------------------------------------------
+
+--------------------------------------------------
+[2026-03-24 23:37:06] PRESCRIPTION_VIEW_ALL by Unknown (Provider)
+Method: GET | Endpoint: /Secure-Hospital-RestAPI/public/api/prescriptions
+Controller: App\Controllers\PrescriptionController::index
+JSON: {"timestamp":"2026-03-24 23:37:06","date":"2026-03-24","tenant_id":8,"user_id":2,"user_name":"Unknown","user_email":"tenant1@hospital.com","user_role":"Provider","action":"PRESCRIPTION_VIEW_ALL","method":"GET","endpoint":"\/Secure-Hospital-RestAPI\/public\/api\/prescriptions","ip_address":"::1","user_agent":"Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/146.0.0.0 Safari\/537.36","details":"{\"resource\":\"prescriptions\",\"resource_id\":null,\"count\":1,\"patient_id\":null}","controller_method":"App\\Controllers\\PrescriptionController::index"}
+--------------------------------------------------
+
+--------------------------------------------------
+[2026-03-24 23:37:06] PATIENT_VIEW_ALL by Unknown (Provider)
+Method: GET | Endpoint: /Secure-Hospital-RestAPI/public/api/patients
+Controller: App\Controllers\PatientController::index
+JSON: {"timestamp":"2026-03-24 23:37:06","date":"2026-03-24","tenant_id":8,"user_id":2,"user_name":"Unknown","user_email":"tenant1@hospital.com","user_role":"Provider","action":"PATIENT_VIEW_ALL","method":"GET","endpoint":"\/Secure-Hospital-RestAPI\/public\/api\/patients","ip_address":"::1","user_agent":"Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/146.0.0.0 Safari\/537.36","details":"{\"resource\":\"patients\",\"resource_id\":null,\"count\":4}","controller_method":"App\\Controllers\\PatientController::index"}
+--------------------------------------------------
+
+--------------------------------------------------
+[2026-03-24 23:37:06] APPOINTMENT_VIEW_ALL by Unknown (Provider)
+Method: GET | Endpoint: /Secure-Hospital-RestAPI/public/api/appointments?status=completed
+Controller: App\Controllers\AppointmentController::index
+JSON: {"timestamp":"2026-03-24 23:37:06","date":"2026-03-24","tenant_id":8,"user_id":2,"user_name":"Unknown","user_email":"tenant1@hospital.com","user_role":"Provider","action":"APPOINTMENT_VIEW_ALL","method":"GET","endpoint":"\/Secure-Hospital-RestAPI\/public\/api\/appointments?status=completed","ip_address":"::1","user_agent":"Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/146.0.0.0 Safari\/537.36","details":"{\"appointment_id\":null,\"patient_id\":null,\"count\":2,\"filters\":{\"status\":\"completed\"}}","controller_method":"App\\Controllers\\AppointmentController::index"}
+--------------------------------------------------
+
+--------------------------------------------------
+[2026-03-24 23:38:00] APPOINTMENT_VIEW_ALL by Unknown (Patient)
+Method: GET | Endpoint: /Secure-Hospital-RestAPI/public/api/appointments
+Controller: App\Controllers\AppointmentController::index
+JSON: {"timestamp":"2026-03-24 23:38:00","date":"2026-03-24","tenant_id":8,"user_id":4,"user_name":"Unknown","user_email":"praveen@gmail.com","user_role":"Patient","action":"APPOINTMENT_VIEW_ALL","method":"GET","endpoint":"\/Secure-Hospital-RestAPI\/public\/api\/appointments","ip_address":"::1","user_agent":"Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/146.0.0.0 Safari\/537.36","details":"{\"appointment_id\":null,\"patient_id\":null,\"count\":3,\"filters\":{\"patient_id\":4}}","controller_method":"App\\Controllers\\AppointmentController::index"}
+--------------------------------------------------
+
+--------------------------------------------------
+[2026-03-24 23:38:00] APPOINTMENT_VIEW_UPCOMING by Unknown (Patient)
+Method: GET | Endpoint: /Secure-Hospital-RestAPI/public/api/appointments/upcoming
+Controller: App\Controllers\AppointmentController::getUpcoming
+JSON: {"timestamp":"2026-03-24 23:38:00","date":"2026-03-24","tenant_id":8,"user_id":4,"user_name":"Unknown","user_email":"praveen@gmail.com","user_role":"Patient","action":"APPOINTMENT_VIEW_UPCOMING","method":"GET","endpoint":"\/Secure-Hospital-RestAPI\/public\/api\/appointments\/upcoming","ip_address":"::1","user_agent":"Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/146.0.0.0 Safari\/537.36","details":"{\"appointment_id\":null,\"patient_id\":4,\"count\":2}","controller_method":"App\\Controllers\\AppointmentController::getUpcoming"}
+--------------------------------------------------
+
+--------------------------------------------------
+[2026-03-24 23:40:43] APPOINTMENT_VIEW_ALL by Unknown (Patient)
+Method: GET | Endpoint: /Secure-Hospital-RestAPI/public/api/appointments
+Controller: App\Controllers\AppointmentController::index
+JSON: {"timestamp":"2026-03-24 23:40:43","date":"2026-03-24","tenant_id":8,"user_id":4,"user_name":"Unknown","user_email":"praveen@gmail.com","user_role":"Patient","action":"APPOINTMENT_VIEW_ALL","method":"GET","endpoint":"\/Secure-Hospital-RestAPI\/public\/api\/appointments","ip_address":"::1","user_agent":"Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/146.0.0.0 Safari\/537.36","details":"{\"appointment_id\":null,\"patient_id\":null,\"count\":3,\"filters\":{\"patient_id\":4}}","controller_method":"App\\Controllers\\AppointmentController::index"}
+--------------------------------------------------
+
+--------------------------------------------------
+[2026-03-24 23:43:34] BILLING_VIEW_ALL by Unknown (Patient)
+Method: GET | Endpoint: /Secure-Hospital-RestAPI/public/api/invoices
+Controller: App\Controllers\BillingController::index
+JSON: {"timestamp":"2026-03-24 23:43:34","date":"2026-03-24","tenant_id":8,"user_id":4,"user_name":"Unknown","user_email":"praveen@gmail.com","user_role":"Patient","action":"BILLING_VIEW_ALL","method":"GET","endpoint":"\/Secure-Hospital-RestAPI\/public\/api\/invoices","ip_address":"::1","user_agent":"Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/146.0.0.0 Safari\/537.36","details":"{\"invoice_id\":null,\"amount\":null,\"count\":1,\"status_filter\":null}","controller_method":"App\\Controllers\\BillingController::index"}
+--------------------------------------------------
+
+--------------------------------------------------
+[2026-03-24 23:46:35] APPOINTMENT_VIEW_ALL by Unknown (Nurse)
+Method: GET | Endpoint: /Secure-Hospital-RestAPI/public/api/appointments
+Controller: App\Controllers\AppointmentController::index
+JSON: {"timestamp":"2026-03-24 23:46:35","date":"2026-03-24","tenant_id":8,"user_id":4,"user_name":"Unknown","user_email":"suthakrisshan@gmail.com","user_role":"Nurse","action":"APPOINTMENT_VIEW_ALL","method":"GET","endpoint":"\/Secure-Hospital-RestAPI\/public\/api\/appointments","ip_address":"::1","user_agent":"Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/146.0.0.0 Safari\/537.36","details":"{\"appointment_id\":null,\"patient_id\":null,\"count\":11,\"filters\":[]}","controller_method":"App\\Controllers\\AppointmentController::index"}
+--------------------------------------------------
+
+--------------------------------------------------
+[2026-03-24 23:46:35] PATIENT_VIEW_ALL by Unknown (Nurse)
+Method: GET | Endpoint: /Secure-Hospital-RestAPI/public/api/patients
+Controller: App\Controllers\PatientController::index
+JSON: {"timestamp":"2026-03-24 23:46:35","date":"2026-03-24","tenant_id":8,"user_id":4,"user_name":"Unknown","user_email":"suthakrisshan@gmail.com","user_role":"Nurse","action":"PATIENT_VIEW_ALL","method":"GET","endpoint":"\/Secure-Hospital-RestAPI\/public\/api\/patients","ip_address":"::1","user_agent":"Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/146.0.0.0 Safari\/537.36","details":"{\"resource\":\"patients\",\"resource_id\":null,\"count\":4}","controller_method":"App\\Controllers\\PatientController::index"}
+--------------------------------------------------
+
+--------------------------------------------------
+[2026-03-24 23:46:36] APPOINTMENT_VIEW_ALL by Unknown (Nurse)
+Method: GET | Endpoint: /Secure-Hospital-RestAPI/public/api/appointments
+Controller: App\Controllers\AppointmentController::index
+JSON: {"timestamp":"2026-03-24 23:46:36","date":"2026-03-24","tenant_id":8,"user_id":4,"user_name":"Unknown","user_email":"suthakrisshan@gmail.com","user_role":"Nurse","action":"APPOINTMENT_VIEW_ALL","method":"GET","endpoint":"\/Secure-Hospital-RestAPI\/public\/api\/appointments","ip_address":"::1","user_agent":"Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/146.0.0.0 Safari\/537.36","details":"{\"appointment_id\":null,\"patient_id\":null,\"count\":11,\"filters\":[]}","controller_method":"App\\Controllers\\AppointmentController::index"}
+--------------------------------------------------
+
+--------------------------------------------------
+[2026-03-24 23:48:28] APPOINTMENT_VIEW_ALL by Unknown (Nurse)
+Method: GET | Endpoint: /Secure-Hospital-RestAPI/public/api/appointments
+Controller: App\Controllers\AppointmentController::index
+JSON: {"timestamp":"2026-03-24 23:48:28","date":"2026-03-24","tenant_id":8,"user_id":4,"user_name":"Unknown","user_email":"suthakrisshan@gmail.com","user_role":"Nurse","action":"APPOINTMENT_VIEW_ALL","method":"GET","endpoint":"\/Secure-Hospital-RestAPI\/public\/api\/appointments","ip_address":"::1","user_agent":"Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/146.0.0.0 Safari\/537.36","details":"{\"appointment_id\":null,\"patient_id\":null,\"count\":11,\"filters\":[]}","controller_method":"App\\Controllers\\AppointmentController::index"}
+--------------------------------------------------
+
+--------------------------------------------------
+[2026-03-24 23:48:54] APPOINTMENT_VIEW_ALL by Apollo Admin (Admin)
+Method: GET | Endpoint: /Secure-Hospital-RestAPI/public/api/appointments
+Controller: App\Controllers\AppointmentController::index
+JSON: {"timestamp":"2026-03-24 23:48:54","date":"2026-03-24","tenant_id":8,"user_id":1,"user_name":"Apollo Admin","user_email":"admin@apollo.com","user_role":"Admin","action":"APPOINTMENT_VIEW_ALL","method":"GET","endpoint":"\/Secure-Hospital-RestAPI\/public\/api\/appointments","ip_address":"::1","user_agent":"Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/146.0.0.0 Safari\/537.36","details":"{\"appointment_id\":null,\"patient_id\":null,\"count\":11,\"filters\":[]}","controller_method":"App\\Controllers\\AppointmentController::index"}
+--------------------------------------------------
+
+--------------------------------------------------
+[2026-03-24 23:48:54] PRESCRIPTION_VIEW_ALL by Apollo Admin (Admin)
+Method: GET | Endpoint: /Secure-Hospital-RestAPI/public/api/prescriptions
+Controller: App\Controllers\PrescriptionController::index
+JSON: {"timestamp":"2026-03-24 23:48:54","date":"2026-03-24","tenant_id":8,"user_id":1,"user_name":"Apollo Admin","user_email":"admin@apollo.com","user_role":"Admin","action":"PRESCRIPTION_VIEW_ALL","method":"GET","endpoint":"\/Secure-Hospital-RestAPI\/public\/api\/prescriptions","ip_address":"::1","user_agent":"Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/146.0.0.0 Safari\/537.36","details":"{\"resource\":\"prescriptions\",\"resource_id\":null,\"count\":1,\"patient_id\":null}","controller_method":"App\\Controllers\\PrescriptionController::index"}
+--------------------------------------------------
+
+--------------------------------------------------
+[2026-03-24 23:48:56] STAFF_VIEW_ALL by Apollo Admin (Admin)
+Method: GET | Endpoint: /Secure-Hospital-RestAPI/public/api/staff
+Controller: App\Controllers\StaffController::index
+JSON: {"timestamp":"2026-03-24 23:48:56","date":"2026-03-24","tenant_id":8,"user_id":1,"user_name":"Apollo Admin","user_email":"admin@apollo.com","user_role":"Admin","action":"STAFF_VIEW_ALL","method":"GET","endpoint":"\/Secure-Hospital-RestAPI\/public\/api\/staff","ip_address":"::1","user_agent":"Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/146.0.0.0 Safari\/537.36","details":"{\"staff_id\":null,\"count\":6}","controller_method":"App\\Controllers\\StaffController::index"}
+--------------------------------------------------
+
+--------------------------------------------------
+[2026-03-24 23:50:21] APPOINTMENT_VIEW_ALL by Apollo Admin
+Method: GET | Endpoint: /Secure-Hospital-RestAPI/public/api/appointments
+Controller: App\Controllers\AppointmentController::index
+JSON: {"timestamp":"2026-03-24 23:50:21","date":"2026-03-24","tenant_id":8,"user_id":1,"user_name":"Apollo Admin","user_email":"admin@apollo.com","user_role":"Admin","action":"APPOINTMENT_VIEW_ALL","method":"GET","endpoint":"\/Secure-Hospital-RestAPI\/public\/api\/appointments","ip_address":"::1","user_agent":"Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/146.0.0.0 Safari\/537.36","details":"{\"appointment_id\":null,\"patient_id\":null,\"count\":11,\"filters\":[]}","controller_method":"App\\Controllers\\AppointmentController::index"}
+--------------------------------------------------
+
+--------------------------------------------------
+[2026-03-24 23:50:32] APPOINTMENT_VIEW_ALL by Tenant1
+Method: GET | Endpoint: /Secure-Hospital-RestAPI/public/api/appointments
+Controller: App\Controllers\AppointmentController::index
+JSON: {"timestamp":"2026-03-24 23:50:32","date":"2026-03-24","tenant_id":8,"user_id":2,"user_name":"Tenant1","user_email":"tenant1@hospital.com","user_role":"Provider","action":"APPOINTMENT_VIEW_ALL","method":"GET","endpoint":"\/Secure-Hospital-RestAPI\/public\/api\/appointments","ip_address":"::1","user_agent":"Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/146.0.0.0 Safari\/537.36","details":"{\"appointment_id\":null,\"patient_id\":null,\"count\":11,\"filters\":[]}","controller_method":"App\\Controllers\\AppointmentController::index"}
+--------------------------------------------------
+
+--------------------------------------------------
+[2026-03-24 23:50:32] PATIENT_VIEW_ALL by Tenant1
+Method: GET | Endpoint: /Secure-Hospital-RestAPI/public/api/patients
+Controller: App\Controllers\PatientController::index
+JSON: {"timestamp":"2026-03-24 23:50:32","date":"2026-03-24","tenant_id":8,"user_id":2,"user_name":"Tenant1","user_email":"tenant1@hospital.com","user_role":"Provider","action":"PATIENT_VIEW_ALL","method":"GET","endpoint":"\/Secure-Hospital-RestAPI\/public\/api\/patients","ip_address":"::1","user_agent":"Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/146.0.0.0 Safari\/537.36","details":"{\"resource\":\"patients\",\"resource_id\":null,\"count\":4}","controller_method":"App\\Controllers\\PatientController::index"}
+--------------------------------------------------
+
+--------------------------------------------------
+[2026-03-24 23:50:32] PRESCRIPTION_VIEW_ALL by Tenant1
+Method: GET | Endpoint: /Secure-Hospital-RestAPI/public/api/prescriptions
+Controller: App\Controllers\PrescriptionController::index
+JSON: {"timestamp":"2026-03-24 23:50:32","date":"2026-03-24","tenant_id":8,"user_id":2,"user_name":"Tenant1","user_email":"tenant1@hospital.com","user_role":"Provider","action":"PRESCRIPTION_VIEW_ALL","method":"GET","endpoint":"\/Secure-Hospital-RestAPI\/public\/api\/prescriptions","ip_address":"::1","user_agent":"Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/146.0.0.0 Safari\/537.36","details":"{\"resource\":\"prescriptions\",\"resource_id\":null,\"count\":1,\"patient_id\":null}","controller_method":"App\\Controllers\\PrescriptionController::index"}
+--------------------------------------------------
+
+--------------------------------------------------
+[2026-03-24 23:50:32] APPOINTMENT_VIEW_ALL by Tenant1
+Method: GET | Endpoint: /Secure-Hospital-RestAPI/public/api/appointments
+Controller: App\Controllers\AppointmentController::index
+JSON: {"timestamp":"2026-03-24 23:50:32","date":"2026-03-24","tenant_id":8,"user_id":2,"user_name":"Tenant1","user_email":"tenant1@hospital.com","user_role":"Provider","action":"APPOINTMENT_VIEW_ALL","method":"GET","endpoint":"\/Secure-Hospital-RestAPI\/public\/api\/appointments","ip_address":"::1","user_agent":"Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/146.0.0.0 Safari\/537.36","details":"{\"appointment_id\":null,\"patient_id\":null,\"count\":11,\"filters\":[]}","controller_method":"App\\Controllers\\AppointmentController::index"}
+--------------------------------------------------
+

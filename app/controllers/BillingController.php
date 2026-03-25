@@ -7,6 +7,7 @@ use App\Models\Appointment;
 use App\Middleware\AuthMiddleware;
 use App\Middleware\RoleMiddleware;
 use App\Helpers\ResponseHelper;
+use App\Helpers\FileActivityLogger;
 use App\Core\Database;
 
 class BillingController
@@ -41,6 +42,9 @@ class BillingController
         // RE-INITIALIZE Models with the Tenant Connection
         $this->billingModel = new Billing($this->db);
         $this->appointmentModel = new Appointment($this->db);
+        
+        // FileActivityLogger doesn't need database connection update
+        
         return true;
     }
 
@@ -95,6 +99,13 @@ class BillingController
         if ($invoiceId) {
             // Fetch the FULL invoice details to return to the frontend
             $fullInvoice = $this->billingModel->getInvoiceById($invoiceId);
+            
+            // Log invoice creation
+            FileActivityLogger::logBilling('BILLING_INVOICE_CREATE', $invoiceId, $data['amount'], [
+                'appointment_id' => $data['appointment_id'],
+                'patient_id' => $data['patient_id']
+            ], __METHOD__);
+            
             ResponseHelper::send(true, "Invoice created successfully.", $fullInvoice, 201);
         } else {
             ResponseHelper::send(false, "Failed to create invoice.", [], 500);
@@ -110,8 +121,11 @@ class BillingController
             ResponseHelper::send(false, "Hospital database not found.", [], 403);
             return;
         }
-        $status = $_GET['status'] ?? null;
         $invoices = $this->billingModel->getAllInvoices($status);
+        FileActivityLogger::logBilling('BILLING_VIEW_ALL', null, null, [
+            'count' => count($invoices),
+            'status_filter' => $status
+        ], __METHOD__);
         ResponseHelper::send(true, "Invoices retrieved.", $invoices);
     }
 
@@ -149,6 +163,9 @@ class BillingController
             $invoice = $this->billingModel->getInvoiceByAppointment($appointmentId);
 
             if ($invoice) {
+                FileActivityLogger::logBilling('BILLING_VIEW_SINGLE', $invoice['id'], $invoice['amount'], [
+                    'appointment_id' => $appointmentId
+                ], __METHOD__);
                 ResponseHelper::send(true, "Invoice retrieved.", $invoice);
             } else {
                 ResponseHelper::send(false, "Invoice not found.", [], 404);
@@ -168,6 +185,10 @@ class BillingController
         }
 
         $invoices = $this->billingModel->getAllByTenant($user['tenant_id'], $filters);
+        FileActivityLogger::logBilling('BILLING_VIEW_ALL', null, null, [
+            'count' => count($invoices),
+            'filters' => $filters
+        ], __METHOD__);
         ResponseHelper::send(true, "Invoices retrieved.", $invoices);
     }
 
@@ -208,6 +229,12 @@ class BillingController
         }
 
         if ($this->billingModel->createPayment($data)) {
+            // Log payment processing
+            FileActivityLogger::logPayment('PAYMENT_PROCESS', $data['amount'], $data['method'], [
+                'invoice_id' => $data['invoice_id'],
+                'transaction_id' => $data['transaction_id']
+            ], __METHOD__);
+            
             // ── Notification Trigger ──────────────────────────────────
             $notifModel = new \App\Models\Notification($this->db);
             $notifModel->create([
@@ -257,6 +284,7 @@ class BillingController
             return;
         }
 
+        FileActivityLogger::logBilling('BILLING_VIEW_SINGLE', (int)$id, $invoice['amount'], [], __METHOD__);
         ResponseHelper::send(true, "Invoice retrieved.", $invoice);
     }
 

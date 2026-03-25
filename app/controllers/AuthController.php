@@ -10,6 +10,7 @@ use App\Helpers\JWT;
 use App\Helpers\RefreshToken;
 use App\Helpers\CSRF;
 use App\Helpers\Validator;
+use App\Helpers\FileActivityLogger;
 
 class AuthController
 {
@@ -96,6 +97,15 @@ class AuthController
         $user = $this->userModel->findAnyUserByEmail($data->email);
 
         if (!$user || !password_verify($data->password, $user['password'] ?? $user['PASSWORD'])) {
+            // Log failed login attempt
+            $tempUser = [
+                'tenant_id' => $user['tenant_id'] ?? 1,
+                'user_id' => $user['id'] ?? 0,
+                'name' => $user['name'] ?? 'Unknown',
+                'email' => $data->email,
+                'role' => 'Unknown'
+            ];
+            FileActivityLogger::logAuth('AUTH_LOGIN_FAILED', $data->email, false, 'Invalid credentials', $tempUser, __METHOD__);
             ResponseHelper::send(false, "Invalid credentials", [], 401);
             return;
         }
@@ -103,6 +113,15 @@ class AuthController
         // 4. Check User Status
         $userStatus = strtolower($user['status'] ?? $user['STATUS'] ?? 'active');
         if ($userStatus !== 'active') {
+            // Log failed login due to inactive account
+            $tempUser = [
+                'tenant_id' => $user['tenant_id'] ?? 1,
+                'user_id' => $user['id'] ?? 0,
+                'name' => $user['name'] ?? 'Unknown',
+                'email' => $data->email,
+                'role' => $user['role_name'] ?? 'Unknown'
+            ];
+            FileActivityLogger::logAuth('AUTH_LOGIN_FAILED', $data->email, false, 'Account inactive', $tempUser, __METHOD__);
             ResponseHelper::send(false, "Your account is inactive. Please contact administrator.", [], 403);
             return;
         }
@@ -115,6 +134,7 @@ class AuthController
 
         $accessToken = JWT::encode([
             'user_id' => $user['id'],
+            'name' => $user['name'] ?? ($user['first_name'] . ' ' . $user['last_name']) ?? 'Unknown',
             'email' => $user['email'],
             'user_type' => $userType,
             'role' => $user['role_name'],
@@ -129,6 +149,13 @@ class AuthController
         $this->userModel->storeRefreshToken($user['id'], $userType, $refreshData['token'], $refreshData['expiry']);
 
         setcookie('refresh_token', $refreshData['token'], time() + 604800, '/', '', false, true);
+
+        // Log successful login
+        FileActivityLogger::logAuth('AUTH_LOGIN_SUCCESS', $user['email'], true, [
+            'user_id' => $user['id'],
+            'role' => $user['role_name'],
+            'tenant_id' => $user['tenant_id']
+        ], null, __METHOD__);
 
         ResponseHelper::send(true, "Login successful", [
             'access_token' => $accessToken,

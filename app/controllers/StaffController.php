@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Models\Staff;
 use App\Models\MasterTenant;
 use App\Helpers\ResponseHelper;
+use App\Helpers\FileActivityLogger;
 use App\Middleware\AuthMiddleware;
 use App\Middleware\RoleMiddleware;
 
@@ -46,6 +47,9 @@ class StaffController
         // Re-initialize models with the actual Tenant Connection
         $this->staffModel = new Staff($this->db);
         $this->userModel = new User($this->db);
+        
+        // FileActivityLogger doesn't need database connection update
+        
         return true;
     }
 
@@ -144,6 +148,15 @@ class StaffController
             }
 
             $this->db->commit();
+            
+            // Log staff registration
+            FileActivityLogger::logStaff('STAFF_CREATE', $staffId, [
+                'user_id' => $userId,
+                'name' => $data['name'],
+                'email' => $data['email'],
+                'role' => $data['role_id']
+            ], __METHOD__);
+            
             ResponseHelper::send(true, "Staff registered successfully", ['user_id' => $userId, 'staff_id' => $staffId], 201);
         } catch (\Exception $e) {
             $this->db->rollBack();
@@ -168,6 +181,9 @@ class StaffController
         }
 
         $staffMembers = $this->staffModel->getAllByTenant($tenantId);
+        FileActivityLogger::logStaff('STAFF_VIEW_ALL', null, [
+            'count' => count($staffMembers)
+        ], __METHOD__);
         ResponseHelper::send(true, "Staff list retrieved", $staffMembers);
     }
 
@@ -251,6 +267,14 @@ class StaffController
 
             if ($sSuccess !== false && $uSuccess !== false) {
                 $this->db->commit();
+                
+                // Log staff profile update
+                FileActivityLogger::logStaff('STAFF_UPDATE', $id, [
+                    'updated_fields' => array_keys($updateData),
+                    'is_admin' => $isAdmin,
+                    'is_owner' => $isOwner
+                ], __METHOD__);
+                
                 ResponseHelper::send(true, "Profile updated successfully");
             } else {
                 $this->db->rollBack();

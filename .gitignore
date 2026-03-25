@@ -3,3 +3,12 @@
 .DS_Store
 /tool.php
 /debug_login.log
+/logs
+/logs/
+/logs/*/
+logs/activities/
+logs/activities/*/
+logs/activities/*/*.log
+*.log
+test_logging.php
+check_logs.php

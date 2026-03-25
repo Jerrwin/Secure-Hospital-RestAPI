@@ -1,4 +1,5 @@
 <?php
+define('APP_START_TIME', microtime(true));
 
 // Ensure session is started for CSRF check
 if (session_status() === PHP_SESSION_NONE) {
@@ -32,6 +33,7 @@ require_once __DIR__ . '/../app/helpers/JWT.php';
 require_once __DIR__ . '/../app/helpers/CSRF.php';
 require_once __DIR__ . '/../app/helpers/RefreshToken.php';
 require_once __DIR__ . '/../app/helpers/Encryption.php';
+require_once __DIR__ . '/../app/helpers/FileActivityLogger.php';
 require_once __DIR__ . '/../app/middleware/JsonMiddleware.php';
 require_once __DIR__ . '/../app/middleware/AuthMiddleware.php';
 require_once __DIR__ . '/../app/middleware/RoleMiddleware.php';
@@ -68,6 +70,7 @@ require_once __DIR__ . '/../app/controllers/NotificationController.php';
 require_once __DIR__ . '/../app/controllers/AdminAuthController.php';
 require_once __DIR__ . '/../app/controllers/TenantRegistrationController.php';
 require_once __DIR__ . '/../app/controllers/SystemAdminController.php';
+require_once __DIR__ . '/../app/controllers/FileActivityLogController.php';
 
 
 // 6. Use Classes
@@ -89,6 +92,7 @@ use App\Controllers\NotificationController;
 use App\Controllers\AdminAuthController;
 use App\Controllers\TenantRegistrationController;
 use App\Controllers\SystemAdminController;
+use App\Controllers\FileActivityLogController;
 
 
 // 7. Run Global Middleware (YOUR LOGIC IS SAFER HERE)
@@ -190,6 +194,16 @@ $router->post('/api/superadmin/login', [AdminAuthController::class, 'login']);
 $router->get('/api/tenant/config', [TenantRegistrationController::class, 'getConfig']);
 $router->post('/api/tenant/register', [TenantRegistrationController::class, 'register']);
 $router->post('/api/tenant/status', [TenantRegistrationController::class, 'checkStatus']);
+
+// Activity Log Routes (Admin Only)
+$router->get('/api/activity-logs', [FileActivityLogController::class, 'index']); // Get all logs
+$router->get('/api/activity-logs/recent', [FileActivityLogController::class, 'recent']); // Get recent activities
+$router->get('/api/activity-logs/user/{id}', [FileActivityLogController::class, 'userActivities']); // Get user activities
+$router->get('/api/activity-logs/search', [FileActivityLogController::class, 'search']); // Search logs
+$router->get('/api/activity-logs/statistics', [FileActivityLogController::class, 'statistics']); // Get statistics
+$router->get('/api/activity-logs/files', [FileActivityLogController::class, 'logFiles']); // Get log files
+$router->get('/api/activity-logs/download/{date}', [FileActivityLogController::class, 'download']); // Download log file
+$router->delete('/api/activity-logs/cleanup', [FileActivityLogController::class, 'cleanup']); // Clean up old logs
 
 // Super Admin Dashboard (Managing Tenants)
 $router->get('/api/admin/tenants', [SystemAdminController::class, 'index']); // List all (pending, active)

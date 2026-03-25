@@ -10,6 +10,7 @@ use App\Helpers\Encryption;
 use App\Middleware\AuthMiddleware;
 use App\Middleware\RoleMiddleware;
 use App\Helpers\Validator;
+use App\Helpers\FileActivityLogger;
 
 class PatientController
 {
@@ -124,6 +125,10 @@ class PatientController
         $id = $this->patientModel->create($patientData);
 
         if ($id) {
+            FileActivityLogger::logCRUD('PATIENT_CREATE', 'patients', (int)$id, [
+                'name' => $data['first_name'] . ' ' . ($data['last_name'] ?? ''),
+                'email' => $data['email']
+            ], __METHOD__);
             ResponseHelper::send(true, "Patient created successfully", ['id' => (int) $id], 201);
         } else {
             ResponseHelper::send(false, "Failed to create patient", [], 500);
@@ -147,6 +152,9 @@ class PatientController
         }
 
         $patients = $this->patientModel->getAllByTenant($currentUser['tenant_id']);
+        FileActivityLogger::logCRUD('PATIENT_VIEW_ALL', 'patients', null, [
+            'count' => count($patients)
+        ], __METHOD__);
 
         // [SECURE] Decrypt history so staff can actually read it
         foreach ($patients as &$patient) {
@@ -210,6 +218,9 @@ class PatientController
         }
 
         if ($this->patientModel->update($id, $data, $currentUser['tenant_id'])) {
+            FileActivityLogger::logCRUD('PATIENT_UPDATE', 'patients', (int)$id, [
+                'updated_fields' => array_keys($data)
+            ], __METHOD__);
             ResponseHelper::send(true, "Patient updated successfully.");
         } else {
             ResponseHelper::send(false, "Failed to update patient.", [], 500);
@@ -245,6 +256,7 @@ class PatientController
         }
 
         if ($this->patientModel->softDelete($id, $currentUser['tenant_id'])) {
+            FileActivityLogger::logCRUD('PATIENT_DELETE', 'patients', (int)$id, [], __METHOD__);
             ResponseHelper::send(true, "Patient deleted successfully");
         } else {
             ResponseHelper::send(false, "Failed to delete patient", [], 500);
@@ -289,9 +301,9 @@ class PatientController
             }
         }
 
-        if (!empty($patient['medical_history'])) {
-            $patient['medical_history'] = Encryption::decrypt($patient['medical_history']);
-        }
+        FileActivityLogger::logCRUD('PATIENT_VIEW_SINGLE', 'patients', (int)$id, [
+            'name' => ($patient['first_name'] ?? '') . ' ' . ($patient['last_name'] ?? '')
+        ], __METHOD__);
 
         ResponseHelper::send(true, "Patient details retrieved", $patient);
     }

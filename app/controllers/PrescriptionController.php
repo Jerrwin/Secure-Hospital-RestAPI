@@ -8,6 +8,7 @@ use App\Models\MasterTenant;
 use App\Helpers\ResponseHelper;
 use App\Middleware\AuthMiddleware;
 use App\Middleware\RoleMiddleware;
+use App\Helpers\FileActivityLogger;
 
 class PrescriptionController
 {
@@ -118,6 +119,10 @@ class PrescriptionController
 
         if ($id) {
             $prescription = $this->prescriptionModel->getById($id);
+            FileActivityLogger::logCRUD('PRESCRIPTION_CREATE', 'prescriptions', (int)$id, [
+                'appointment_id' => $data['appointment_id'],
+                'items_count' => count($data['items'])
+            ], __METHOD__);
             ResponseHelper::send(true, "Prescription created successfully", $prescription, 201);
         } else {
             ResponseHelper::send(false, "Failed to create prescription", [], 500);
@@ -162,6 +167,9 @@ class PrescriptionController
 
         if ($this->prescriptionModel->updateStatus($id, $status)) {
             $prescription = $this->prescriptionModel->getById($id);
+            FileActivityLogger::logCRUD('PRESCRIPTION_STATUS_CHANGE', 'prescriptions', (int)$id, [
+                'status' => $status
+            ], __METHOD__);
             ResponseHelper::send(true, "Prescription status updated to $status", $prescription);
         } else {
             ResponseHelper::send(false, "Failed to update status", [], 500);
@@ -186,7 +194,10 @@ class PrescriptionController
 
         $patientId = ($currentUser['role'] === 'Patient') ? $currentUser['user_id'] : null;
         $prescriptions = $this->prescriptionModel->getAllByTenant($currentUser['tenant_id'], $patientId);
-
+        FileActivityLogger::logCRUD('PRESCRIPTION_VIEW_ALL', 'prescriptions', null, [
+            'count' => count($prescriptions),
+            'patient_id' => $patientId
+        ], __METHOD__);
         ResponseHelper::send(true, "Prescriptions retrieved", $prescriptions);
     }
 
@@ -239,6 +250,9 @@ class PrescriptionController
 
         if ($this->prescriptionModel->update($id, $data)) {
             $prescription = $this->prescriptionModel->getById($id);
+            FileActivityLogger::logCRUD('PRESCRIPTION_UPDATE', 'prescriptions', (int)$id, [
+                'updated_fields' => array_keys($data)
+            ], __METHOD__);
             ResponseHelper::send(true, "Prescription updated successfully", $prescription);
         } else {
             ResponseHelper::send(false, "Failed to update prescription", [], 500);
@@ -284,6 +298,8 @@ class PrescriptionController
             }
         }
 
+        FileActivityLogger::logCRUD('PRESCRIPTION_VIEW_SINGLE', 'prescriptions', (int)$id, [], __METHOD__);
+
         ResponseHelper::send(true, "Prescription details retrieved", $prescription);
     }
 
@@ -321,6 +337,7 @@ class PrescriptionController
         }
 
         if ($this->prescriptionModel->delete($id)) {
+            FileActivityLogger::logCRUD('PRESCRIPTION_DELETE', 'prescriptions', (int)$id, [], __METHOD__);
             ResponseHelper::send(true, "Prescription deleted successfully");
         } else {
             ResponseHelper::send(false, "Deletion failed", [], 500);

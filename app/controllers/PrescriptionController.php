@@ -175,7 +175,7 @@ class PrescriptionController
     public function index()
     {
         AuthMiddleware::handle();
-        RoleMiddleware::handle(['Provider', 'Pharmacist', 'Admin', 'Patient']);
+        RoleMiddleware::handle(['Provider', 'Pharmacist', 'Admin', 'Patient', 'Receptionist', 'Nurse', 'Patient']);
 
         $currentUser = $_REQUEST['user'];
 

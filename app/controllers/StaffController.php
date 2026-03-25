@@ -153,12 +153,11 @@ class StaffController
 
     /**
      * GET /api/staff
-     * Check: Admin Only
      */
     public function index()
     {
         AuthMiddleware::handle();
-        RoleMiddleware::handle(['Admin', 'Provider', 'Nurse', 'Pharmacist', 'Receptionist']);
+        RoleMiddleware::handle(['Admin', 'Provider', 'Nurse', 'Pharmacist', 'Receptionist', 'Patient']);
 
         $currentUser = $_REQUEST['user'];
         $tenantId = $currentUser['tenant_id'];

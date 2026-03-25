@@ -136,7 +136,7 @@ class PatientController
     public function index()
     {
         AuthMiddleware::handle();
-        RoleMiddleware::handle(['Provider', 'Nurse', 'Pharmacist', 'Receptionist']);
+        RoleMiddleware::handle(['Admin', 'Provider', 'Nurse', 'Pharmacist', 'Receptionist', 'Patient']);
 
         $currentUser = $_REQUEST['user'];
 

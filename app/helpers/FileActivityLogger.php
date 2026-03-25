@@ -175,6 +175,18 @@ class FileActivityLogger
     }
 
     /**
+     * Log patient activities
+     */
+    public static function logPatient($action, $patientId = null, $details = '', $controllerMethod = '')
+    {
+        $details = array_merge([
+            'patient_id' => $patientId
+        ], is_array($details) ? $details : []);
+
+        return self::log($action, $details, '', '', null, $controllerMethod);
+    }
+
+    /**
      * Get logs for a specific date range
      */
     public static function getLogs($tenantId, $startDate = null, $endDate = null, $limit = 100)

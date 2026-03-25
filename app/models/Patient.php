@@ -2,17 +2,14 @@
 
 namespace App\Models;
 
+use App\Core\BaseModel;
 use PDO;
 
-class Patient
+class Patient extends BaseModel
 {
-    private $conn;
-    private $table = 'patients';
+    protected $table = 'patients';
 
-    public function __construct($db)
-    {
-        $this->conn = $db;
-    }
+    // No constructor or $conn property needed, inherited from BaseModel
 
     /**
      * Create Patient
@@ -24,7 +21,7 @@ class Patient
                   (tenant_id, first_name, last_name, email, phone_number, password, dob, gender, blood_group, status, address, medical_history, created_by, created_at) 
                   VALUES (:tenant_id, :first_name, :last_name, :email, :phone_number, :password, :dob, :gender, :blood_group, :status, :address, :medical_history, :created_by, NOW())";
 
-        $stmt = $this->conn->prepare($query);
+        $stmt = $this->db->prepare($query);
 
         $stmt->bindParam(':tenant_id', $data['tenant_id']);
         $stmt->bindParam(':first_name', $data['first_name']);
@@ -41,19 +38,53 @@ class Patient
         $stmt->bindParam(':created_by', $data['created_by']);
 
         if ($stmt->execute()) {
-            return $this->conn->lastInsertId();
+            return $this->db->lastInsertId();
         }
         return false;
     }
 
     /**
-     * Get All by Tenant
+     * Get Light-weight Patient List for Lookup (Dropdowns)
+     */
+    public function lookupActive($tenantId)
+    {
+        $query = "SELECT id, CONCAT(first_name, ' ', last_name) as name 
+                  FROM " . $this->table . " 
+                  WHERE tenant_id = :tenant_id AND status = 'active' AND deleted_at IS NULL
+                  ORDER BY first_name ASC";
+        
+        $stmt = $this->db->prepare($query);
+        $stmt->bindParam(':tenant_id', $tenantId);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Get Paginated Patients with Search
+     */
+
+    public function getAllByTenantPaginated($tenantId, $filters = [])
+    {
+        $sql = "SELECT id, tenant_id, first_name, last_name, email, phone_number, dob, gender, blood_group, status, address, medical_history, created_by, created_at, updated_at 
+                FROM " . $this->table . " 
+                WHERE tenant_id = :tenant_id AND deleted_at IS NULL";
+
+        $params = [':tenant_id' => $tenantId];
+
+        $searchColumns = ['first_name', 'last_name', 'email', 'phone_number'];
+
+        return $this->fetchPaginated($sql, $params, $filters, $searchColumns, "created_at DESC", "id");
+
+    }
+
+    /**
+     * Get All by Tenant (Legacy)
      * Automatically decrypts history for display.
      */
     public function getAllByTenant($tenantId)
     {
         $query = "SELECT id, tenant_id, first_name, last_name, email, phone_number, dob, gender, blood_group, status, address, medical_history, created_by, created_at, updated_at FROM " . $this->table . " WHERE tenant_id = :tenant_id AND deleted_at IS NULL";
-        $stmt = $this->conn->prepare($query);
+        $stmt = $this->db->prepare($query);
         $stmt->bindParam(':tenant_id', $tenantId);
         $stmt->execute();
 
@@ -68,7 +99,7 @@ class Patient
     public function getById($id)
     {
         $query = "SELECT id, tenant_id, first_name, last_name, email, phone_number, dob, gender, blood_group, status, address, medical_history, created_by, created_at, updated_at FROM " . $this->table . " WHERE id = :id AND deleted_at IS NULL LIMIT 1";
-        $stmt = $this->conn->prepare($query);
+        $stmt = $this->db->prepare($query);
         $stmt->bindParam(':id', $id);
         $stmt->execute();
 
@@ -87,7 +118,7 @@ class Patient
             $query .= " AND tenant_id = :tenant_id";
         }
 
-        $stmt = $this->conn->prepare($query);
+        $stmt = $this->db->prepare($query);
         $stmt->bindParam(':id', $id);
         if ($tenantId) {
             $stmt->bindParam(':tenant_id', $tenantId);
@@ -134,7 +165,7 @@ class Patient
             $query .= " AND tenant_id = :tenant_id";
         }
 
-        $stmt = $this->conn->prepare($query);
+        $stmt = $this->db->prepare($query);
 
         if (isset($data['first_name']))
             $stmt->bindParam(':first_name', $data['first_name']);
@@ -174,7 +205,7 @@ class Patient
     public function countByTenant($tenantId)
     {
         $query = "SELECT COUNT(*) as total FROM " . $this->table . " WHERE tenant_id = :tenant_id AND deleted_at IS NULL";
-        $stmt = $this->conn->prepare($query);
+        $stmt = $this->db->prepare($query);
         $stmt->bindParam(':tenant_id', $tenantId);
         $stmt->execute();
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -184,7 +215,7 @@ class Patient
     public function findByEmail($email)
     {
         $query = "SELECT * FROM " . $this->table . " WHERE email = :email AND deleted_at IS NULL LIMIT 1";
-        $stmt = $this->conn->prepare($query);
+        $stmt = $this->db->prepare($query);
         $stmt->bindParam(':email', $email);
         $stmt->execute();
         return $stmt->fetch(PDO::FETCH_ASSOC);

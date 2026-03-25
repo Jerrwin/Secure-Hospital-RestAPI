@@ -177,13 +177,12 @@ class PrescriptionController
     }
 
     /**
-     * Get All Prescriptions
-     * Roles: Provider, Pharmacist, Admin
+     * Get All Prescriptions (Paginated)
      */
     public function index()
     {
         AuthMiddleware::handle();
-        RoleMiddleware::handle(['Provider', 'Pharmacist', 'Admin', 'Patient', 'Receptionist', 'Nurse', 'Patient']);
+        RoleMiddleware::handle(['Provider', 'Pharmacist', 'Admin', 'Patient', 'Receptionist', 'Nurse']);
 
         $currentUser = $_REQUEST['user'];
 
@@ -192,14 +191,30 @@ class PrescriptionController
             return;
         }
 
-        $patientId = ($currentUser['role'] === 'Patient') ? $currentUser['user_id'] : null;
-        $prescriptions = $this->prescriptionModel->getAllByTenant($currentUser['tenant_id'], $patientId);
+        $filters = $_GET;
+        if ($currentUser['role'] === 'Patient') {
+            $filters['patient_id'] = $currentUser['user_id'];
+        }
+        if ($currentUser['role'] === 'Provider') {
+            $filters['provider_id'] = $currentUser['user_id'];
+        }
+
+
+        $result = $this->prescriptionModel->getAllByTenantPaginated($currentUser['tenant_id'], $filters);
+        
+        // Fetch items for each prescription in the paginated set
+        foreach ($result['data'] as &$p) {
+            $p['items'] = $this->prescriptionModel->getItems($p['id']);
+        }
+
         FileActivityLogger::logCRUD('PRESCRIPTION_VIEW_ALL', 'prescriptions', null, [
-            'count' => count($prescriptions),
-            'patient_id' => $patientId
+            'count' => count($result['data']),
+            'filters' => $filters
         ], __METHOD__);
-        ResponseHelper::send(true, "Prescriptions retrieved", $prescriptions);
+
+        ResponseHelper::sendPaginated(true, "Prescriptions retrieved", $result['data'], $result['pagination']);
     }
+
 
     /**
      * Update Prescription (Patch)

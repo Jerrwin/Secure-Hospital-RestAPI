@@ -165,7 +165,7 @@ class StaffController
     }
 
     /**
-     * GET /api/staff
+     * GET /api/staff (Paginated)
      */
     public function index()
     {
@@ -180,11 +180,32 @@ class StaffController
             return;
         }
 
-        $staffMembers = $this->staffModel->getAllByTenant($tenantId);
+        $filters = $_GET;
+        $result = $this->staffModel->getAllByTenantPaginated($tenantId, $filters);
+        
         FileActivityLogger::logStaff('STAFF_VIEW_ALL', null, [
-            'count' => count($staffMembers)
+            'count' => count($result['data'])
         ], __METHOD__);
-        ResponseHelper::send(true, "Staff list retrieved", $staffMembers);
+
+        ResponseHelper::sendPaginated(true, "Staff list retrieved", $result['data'], $result['pagination']);
+    }
+
+
+    /**
+     * GET /api/staff/lookup
+     */
+    public function lookupProviders()
+    {
+        AuthMiddleware::handle();
+        $currentUser = $_REQUEST['user'];
+
+        if (!$this->connectByTenantId($currentUser['tenant_id'])) {
+            ResponseHelper::send(false, "Hospital database not found.", [], 403);
+            return;
+        }
+
+        $providers = $this->staffModel->lookupProviders($currentUser['tenant_id']);
+        ResponseHelper::send(true, "Provider lookup list retrieved", $providers);
     }
 
     /**

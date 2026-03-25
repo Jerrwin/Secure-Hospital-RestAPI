@@ -20,7 +20,7 @@ class BillingController
     public function __construct()
     {
         $database = new Database();
-        $masterDb = $database->connectMaster(); 
+        $masterDb = $database->connectMaster();
         $this->db = $masterDb;
 
         $this->masterTenantModel = new \App\Models\MasterTenant($masterDb);
@@ -42,9 +42,9 @@ class BillingController
         // RE-INITIALIZE Models with the Tenant Connection
         $this->billingModel = new Billing($this->db);
         $this->appointmentModel = new Appointment($this->db);
-        
+
         // FileActivityLogger doesn't need database connection update
-        
+
         return true;
     }
 
@@ -95,24 +95,24 @@ class BillingController
         $data['patient_id'] = $appointment['patient_id'];
 
         $invoiceId = $this->billingModel->createInvoice($data);
-        
+
         if ($invoiceId) {
             // Fetch the FULL invoice details to return to the frontend
             $fullInvoice = $this->billingModel->getInvoiceById($invoiceId);
-            
+
             // Log invoice creation
             FileActivityLogger::logBilling('BILLING_INVOICE_CREATE', $invoiceId, $data['amount'], [
                 'appointment_id' => $data['appointment_id'],
                 'patient_id' => $data['patient_id']
             ], __METHOD__);
-            
+
             ResponseHelper::send(true, "Invoice created successfully.", $fullInvoice, 201);
         } else {
             ResponseHelper::send(false, "Failed to create invoice.", [], 500);
         }
     }
 
-    // GET /api/invoices
+    // GET /api/invoices (Paginated)
     public function index()
     {
         AuthMiddleware::handle();
@@ -121,13 +121,18 @@ class BillingController
             ResponseHelper::send(false, "Hospital database not found.", [], 403);
             return;
         }
-        $invoices = $this->billingModel->getAllInvoices($status);
+
+        $filters = $_GET;
+        $result = $this->billingModel->getAllByTenantPaginated($user['tenant_id'], $filters);
+        
         FileActivityLogger::logBilling('BILLING_VIEW_ALL', null, null, [
-            'count' => count($invoices),
-            'status_filter' => $status
+            'count' => count($result['data']),
+            'filters' => $filters
         ], __METHOD__);
-        ResponseHelper::send(true, "Invoices retrieved.", $invoices);
+
+        ResponseHelper::sendPaginated(true, "Invoices retrieved.", $result['data'], $result['pagination']);
     }
+
 
     // GET /api/invoices?appointment_id={id}
     public function getInvoice()
@@ -178,7 +183,7 @@ class BillingController
         if (!empty($_GET['status'])) {
             $filters['status'] = $_GET['status'];
         }
-        
+
         // For patients, only return their own invoices
         if ($user['role'] === 'Patient') {
             $filters['patient_id'] = $user['user_id'];
@@ -234,7 +239,7 @@ class BillingController
                 'invoice_id' => $data['invoice_id'],
                 'transaction_id' => $data['transaction_id']
             ], __METHOD__);
-            
+
             // ── Notification Trigger ──────────────────────────────────
             $notifModel = new \App\Models\Notification($this->db);
             $notifModel->create([

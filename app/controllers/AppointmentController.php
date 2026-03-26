@@ -225,7 +225,7 @@ class AppointmentController
     public function getUnbilled()
     {
         AuthMiddleware::handle();
-        RoleMiddleware::handle(['Provider', 'Admin', 'Receptionist', 'Patient']);
+        RoleMiddleware::handle(['Provider', 'Admin', 'Receptionist', 'Patient', 'Nurse']);
         $currentUser = $_REQUEST['user'];
         $tenantId    = $currentUser['tenant_id'];
 
@@ -311,6 +311,20 @@ class AppointmentController
                 ]);
             }
 
+            // Trigger Notification if status changed to 'cancelled'
+            if (isset($data['STATUS']) && strtolower($data['STATUS']) === 'cancelled' && strtolower($existing['STATUS']) !== 'cancelled') {
+                $notifModel = new Notification($this->db);
+                $notifModel->create([
+                    'tenant_id'    => $tenantId,
+                    'user_id'      => $existing['patient_id'],
+                    'user_type'    => 'patient',
+                    'type'         => 'appointment',
+                    'title'        => 'Appointment Cancelled',
+                    'message'      => 'Your appointment for ' . $existing['appointment_date'] . ' at ' . $existing['start_time'] . ' has been cancelled.',
+                    'reference_id' => (int) $id
+                ]);
+            }
+
             ResponseHelper::send(true, "Appointment updated successfully");
         } else {
             ResponseHelper::send(false, "Update failed", [], 500);
@@ -348,6 +362,18 @@ class AppointmentController
         $res = $this->appointmentModel->update($id, ['STATUS' => 'cancelled']);
         if ($res) {
             FileActivityLogger::logAppointment('APPOINTMENT_CANCEL', (int)$id, $existing['patient_id'], [], __METHOD__);
+
+            // Trigger Notification for Patient
+            $notifModel = new Notification($this->db);
+            $notifModel->create([
+                'tenant_id'    => $tenantId,
+                'user_id'      => $existing['patient_id'],
+                'user_type'    => 'patient',
+                'type'         => 'appointment',
+                'title'        => 'Appointment Cancelled',
+                'message'      => 'Your appointment for ' . $existing['appointment_date'] . ' at ' . $existing['start_time'] . ' has been cancelled.',
+                'reference_id' => (int) $id
+            ]);
         }
         ResponseHelper::send($res, $res ? "Cancelled" : "Failed");
     }

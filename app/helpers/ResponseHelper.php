@@ -35,4 +35,35 @@ class ResponseHelper {
         
         exit;
     }
+
+    /**
+     * Send a paginated JSON response.
+     */
+    public static function sendPaginated($success, $message, $data, $pagination, $statusCode = 200) {
+        http_response_code($statusCode);
+
+        $response = json_encode([
+            'success'    => $success,
+            'message'    => $message,
+            'data'       => $data,
+            'pagination' => $pagination
+        ]);
+
+        $headers = function_exists('getallheaders') ? getallheaders() : [];
+        $isEncrypted = false;
+        foreach ($headers as $key => $value) {
+            if (strtolower($key) === 'x-response-encrypted' && $value === 'true') {
+                $isEncrypted = true;
+                break;
+            }
+        }
+
+        if ($isEncrypted) {
+            echo \App\Helpers\Encryption::encrypt($response);
+        } else {
+            echo $response;
+        }
+
+        exit;
+    }
 }

@@ -166,13 +166,12 @@ class StaffController
     }
 
     /**
-     * GET /api/staff
-     * Check: Admin Only
+     * GET /api/staff (Paginated)
      */
     public function index()
     {
         AuthMiddleware::handle();
-        RoleMiddleware::handle(['Admin', 'Provider', 'Nurse', 'Pharmacist', 'Receptionist']);
+        RoleMiddleware::handle(['Admin', 'Provider', 'Nurse', 'Pharmacist', 'Receptionist', 'Patient']);
 
         $currentUser = $_REQUEST['user'];
         $tenantId = $currentUser['tenant_id'];
@@ -182,11 +181,32 @@ class StaffController
             return;
         }
 
-        $staffMembers = $this->staffModel->getAllByTenant($tenantId);
+        $filters = $_GET;
+        $result = $this->staffModel->getAllByTenantPaginated($tenantId, $filters);
+        
         FileActivityLogger::logStaff('STAFF_VIEW_ALL', null, [
-            'count' => count($staffMembers)
+            'count' => count($result['data'])
         ], __METHOD__);
-        ResponseHelper::send(true, "Staff list retrieved", $staffMembers);
+
+        ResponseHelper::sendPaginated(true, "Staff list retrieved", $result['data'], $result['pagination']);
+    }
+
+
+    /**
+     * GET /api/staff/lookup
+     */
+    public function lookupProviders()
+    {
+        AuthMiddleware::handle();
+        $currentUser = $_REQUEST['user'];
+
+        if (!$this->connectByTenantId($currentUser['tenant_id'])) {
+            ResponseHelper::send(false, "Hospital database not found.", [], 403);
+            return;
+        }
+
+        $providers = $this->staffModel->lookupProviders($currentUser['tenant_id']);
+        ResponseHelper::send(true, "Provider lookup list retrieved", $providers);
     }
 
     /**
@@ -235,6 +255,22 @@ class StaffController
         // Fetch current user record to get existing email if not provided
         $linkedUser = $this->userModel->getById($staff['user_id']);
         $finalEmail = $data['email'] ?? ($linkedUser['email'] ?? '');
+
+        // 6. Phone Number & Email Uniqueness Check (for updates)
+        $newPhone = isset($data['phone_number']) ? trim($data['phone_number']) : $staff['phone_number'];
+        if ($newPhone !== $staff['phone_number']) {
+            if ($this->staffModel->findByPhoneExcludingId($newPhone, $id)) {
+                ResponseHelper::send(false, "Phone number already exists for another staff member.", [], 409);
+                return;
+            }
+        }
+
+        if ($finalEmail !== $linkedUser['email']) {
+            if ($this->userModel->findUserByEmailExcludingId($finalEmail, $staff['user_id'])) {
+                ResponseHelper::send(false, "Email address already exists for another user.", [], 409);
+                return;
+            }
+        }
 
         // 5. Selective Data Protection
         // Non-admins cannot change their own STATUS or IS_ACTIVE

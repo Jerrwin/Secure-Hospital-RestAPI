@@ -57,7 +57,7 @@ class CalendarController
     {
 
         AuthMiddleware::handle();
-        RoleMiddleware::handle(['Admin', 'Receptionist', 'Nurse', 'Provider']);
+        RoleMiddleware::handle(['Admin', 'Receptionist', 'Nurse', 'Provider', 'Patient']);
 
         $user = $_REQUEST['user'];
 
@@ -122,7 +122,7 @@ class CalendarController
     {
 
         AuthMiddleware::handle();
-        RoleMiddleware::handle(['Admin', 'Receptionist', 'Nurse', 'Provider']);
+        RoleMiddleware::handle(['Admin', 'Receptionist', 'Nurse', 'Provider', 'Patient']);
 
         $user = $_REQUEST['user'];
 

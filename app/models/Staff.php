@@ -2,17 +2,12 @@
 
 namespace App\Models;
 
+use App\Core\BaseModel;
 use PDO;
 
-class Staff
+class Staff extends BaseModel
 {
-    private $conn;
-    private $table = 'staff';
-
-    public function __construct($db)
-    {
-        $this->conn = $db;
-    }
+    protected $table = 'staff';
 
     /**
      * Create new Staff
@@ -23,7 +18,7 @@ class Staff
                   (tenant_id, user_id, name, gender, address, phone_number, status) 
                   VALUES (:tenant_id, :user_id, :name, :gender, :address, :phone_number, :status)";
 
-        $stmt = $this->conn->prepare($query);
+        $stmt = $this->db->prepare($query);
 
         $status = $data['status'] ?? 'active';
 
@@ -36,7 +31,7 @@ class Staff
         $stmt->bindParam(':status', $status);
 
         if ($stmt->execute()) {
-            return $this->conn->lastInsertId();
+            return $this->db->lastInsertId();
         }
         return false;
     }
@@ -55,7 +50,8 @@ class Staff
                   updated_at = NOW()
                   WHERE id = :id";
 
-        $stmt = $this->conn->prepare($query);
+        $stmt = $this->db->prepare($query);
+        $stmt = $this->db->prepare($query);
 
         $stmt->bindParam(':name', $data['name']);
         $stmt->bindParam(':gender', $data['gender']);
@@ -71,6 +67,47 @@ class Staff
     }
 
     /**
+     * Get Light-weight Provider List for Lookup (Dropdowns)
+     */
+    public function lookupProviders($tenantId)
+    {
+        $query = "SELECT s.id, s.name 
+                  FROM " . $this->table . " s
+                  JOIN users u ON s.user_id = u.id
+                  JOIN roles r ON u.role_id = r.id
+                  WHERE s.tenant_id = :tenant_id 
+                  AND s.status = 'active' 
+                  AND s.deleted_at IS NULL 
+                  AND r.name IN ('Provider', 'Doctor')
+                  ORDER BY s.name ASC";
+        
+        $stmt = $this->db->prepare($query);
+        $stmt->bindParam(':tenant_id', $tenantId);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Get Paginated Staff with Search
+     */
+
+    public function getAllByTenantPaginated($tenantId, $filters = [])
+    {
+        $sql = "SELECT s.*, u.email, r.name as role_name 
+                FROM " . $this->table . " s
+                JOIN users u ON s.user_id = u.id
+                JOIN roles r ON u.role_id = r.id
+                WHERE s.tenant_id = :tenant_id AND s.deleted_at IS NULL AND u.deleted_at IS NULL";
+
+        $params = [':tenant_id' => $tenantId];
+
+        $searchColumns = ['s.name', 'u.email', 'r.name'];
+
+        return $this->fetchPaginated($sql, $params, $filters, $searchColumns, "s.name ASC", "s.id");
+
+    }
+
+    /**
      * Get All Staff (Admin View - By Tenant)
      */
     public function getAllByTenant($tenantId)
@@ -81,7 +118,7 @@ class Staff
                   JOIN roles r ON u.role_id = r.id
                   WHERE s.tenant_id = :tenant_id AND s.deleted_at IS NULL AND u.deleted_at IS NULL";
 
-        $stmt = $this->conn->prepare($query);
+        $stmt = $this->db->prepare($query);
         $stmt->bindParam(':tenant_id', $tenantId);
         $stmt->execute();
 
@@ -96,7 +133,7 @@ class Staff
         $query = "SELECT * FROM " . $this->table . " 
                   WHERE id = :id AND deleted_at IS NULL LIMIT 1";
 
-        $stmt = $this->conn->prepare($query);
+        $stmt = $this->db->prepare($query);
         $stmt->bindParam(':id', $id);
         $stmt->execute();
 
@@ -109,18 +146,15 @@ class Staff
     public function delete($id)
     {
         $query = "UPDATE " . $this->table . " SET deleted_at = NOW() WHERE id = :id";
-        $stmt = $this->conn->prepare($query);
+        $stmt = $this->db->prepare($query);
         $stmt->bindParam(':id', $id);
         return $stmt->execute();
     }
 
-    /**
-     * Find staff by phone number (Duplicate check)
-     */
     public function findByPhone($phone)
     {
         $query = "SELECT id FROM " . $this->table . " WHERE phone_number = :phone AND deleted_at IS NULL LIMIT 1";
-        $stmt = $this->conn->prepare($query);
+        $stmt = $this->db->prepare($query);
         $stmt->bindParam(':phone', $phone);
         $stmt->execute();
         return $stmt->fetch(PDO::FETCH_ASSOC);
@@ -133,7 +167,7 @@ class Staff
     {
         $query = "SELECT id FROM " . $this->table . " 
                   WHERE phone_number = :phone AND id != :id AND deleted_at IS NULL LIMIT 1";
-        $stmt = $this->conn->prepare($query);
+        $stmt = $this->db->prepare($query);
         $stmt->bindParam(':phone', $phone);
         $stmt->bindParam(':id', $id);
         $stmt->execute();
@@ -143,7 +177,7 @@ class Staff
     public function countByTenant($tenantId)
     {
         $query = "SELECT COUNT(*) as total FROM " . $this->table . " WHERE tenant_id = :tenant_id AND deleted_at IS NULL";
-        $stmt = $this->conn->prepare($query);
+        $stmt = $this->db->prepare($query);
         $stmt->bindParam(':tenant_id', $tenantId);
         $stmt->execute();
         $row = $stmt->fetch(PDO::FETCH_ASSOC);

@@ -11,6 +11,7 @@ require_once __DIR__ . '/../config/config.php';
 
 // 2. Load Core Files
 require_once __DIR__ . '/../app/core/Database.php';
+require_once __DIR__ . '/../app/core/BaseModel.php';
 require_once __DIR__ . '/../app/core/Router.php';
 
 // 3. Setup CORS (Essential for React Frontend on Port 3000 with Cookies)
@@ -102,7 +103,6 @@ JsonMiddleware::handle();
 $router = new Router();
 
 // --- 9. DEFINE ROUTES ---
-
 // Auth Endpoints
 $router->post('/api/auth/login', [AuthController::class, 'login']); //
 $router->post('/api/auth/register', [AuthController::class, 'register']); //
@@ -110,49 +110,45 @@ $router->post('/api/auth/refresh', [AuthController::class, 'refresh']); //
 $router->post('/api/auth/logout', [AuthController::class, 'logout']); //
 $router->post('/api/auth/change-password', [AuthController::class, 'changePassword']); //
 
-// [MERGE] Dashboard Endpoints (New)
+// Dashboard Endpoints
 $router->get('/api/dashboard/stats', [DashboardController::class, 'getStats']);
 
-// Tenant Endpoints
-// $router->post('/api/tenants', [TenantController::class, 'create']);//
-// $router->get('/api/tenants', [TenantController::class, 'index']);//
-// $router->get('/api/tenants/{id}', [TenantController::class, 'show']); //
-// $router->put('/api/tenants/{id}', [TenantController::class, 'update']);// 
-// $router->delete('/api/tenants/{id}', [TenantController::class, 'delete']);//
-
-// Staff Endpoints (Merged)
+// Staff Endpoints
 $router->post('/api/staff/register', [StaffController::class, 'register']); //
+$router->get('/api/staff/lookup', [StaffController::class, 'lookupProviders']); //
 $router->get('/api/staff', [StaffController::class, 'index']); //
 $router->delete('/api/staff/{id}', [StaffController::class, 'delete']); //
 $router->put('/api/staff/{id}', [StaffController::class, 'update']); //
 
-// Patient Endpoints (Merged)
+// Patient Endpoints
 $router->post('/api/patients', [PatientController::class, 'create']); //
+$router->get('/api/patients/lookup', [PatientController::class, 'lookup']); //
 $router->get('/api/patients/{id}', [PatientController::class, 'show']); //
 $router->get('/api/patients', [PatientController::class, 'index']); //
 $router->delete('/api/patients/{id}', [PatientController::class, 'delete']); // 
 $router->put('/api/patients/{id}', [PatientController::class, 'update']); // 
 
-// Appointment Endpoints (KEPT YOURS - They are better structured)
+// Appointment Endpoints
 $router->post('/api/appointments', [AppointmentController::class, 'create']); //
 $router->get('/api/appointments/upcoming', [AppointmentController::class, 'getUpcoming']); //
 $router->get('/api/appointments', [AppointmentController::class, 'index']); //
 $router->get('/api/appointments/show/{id}', [AppointmentController::class, 'show']); //
 $router->put('/api/appointments/cancel/{id}', [AppointmentController::class, 'cancel']); //
 $router->put('/api/appointments/update/{id}', [AppointmentController::class, 'update']); //
-$router->put('/api/appointments/complete/{id}', [AppointmentController::class, 'complete']); 
+$router->get('/api/appointments/unbilled', [AppointmentController::class, 'getUnbilled']); //
+$router->put('/api/appointments/complete/{id}', [AppointmentController::class, 'complete']);
 
 // Calendar Endpoints
 $router->get('/api/calendar', [CalendarController::class, 'index']);      // Default (current month)
 $router->get('/api/calendar/range', [CalendarController::class, 'range']);  // Custom range
 $router->get('/api/calendar/date', [CalendarController::class, 'getByDate']); // Tooltip
 
-// Prescription Endpoints (New)
+// Prescription Endpoints 
 $router->post('/api/prescriptions', [PrescriptionController::class, 'create']);
 $router->put('/api/prescriptions/{id}/status', [PrescriptionController::class, 'updateStatus']);
 $router->get('/api/prescriptions', [PrescriptionController::class, 'index']);
 
-// Communication Endpoints (New)
+// Communication Endpoints
 $router->post('/api/communications', [CommunicationController::class, 'create']);
 $router->get('/api/communications', [CommunicationController::class, 'index']);
 

@@ -171,16 +171,26 @@ class AppointmentController
         if ($currentUser['role'] === 'Patient') {
             $filters['patient_id'] = $currentUser['user_id'];
         }
+        if ($currentUser['role'] === 'Provider') {
+            $filters['provider_id'] = $currentUser['user_id'];
+        }
+
         if (!empty($_GET['start_date'])) $filters['start_date'] = $_GET['start_date'];
         if (!empty($_GET['end_date']))   $filters['end_date']   = $_GET['end_date'];
         if (!empty($_GET['status']))     $filters['status']     = $_GET['status'];
+        if (!empty($_GET['search']))     $filters['search']     = $_GET['search'];
+        if (!empty($_GET['page']))       $filters['page']       = $_GET['page'];
+        if (!empty($_GET['per_page']))   $filters['per_page']   = $_GET['per_page'];
+        if (!empty($_GET['order']))      $filters['order']      = $_GET['order'];
 
-        $appointments = $this->appointmentModel->getAllByTenant($tenantId, $filters);
+        $result = $this->appointmentModel->getAllByTenantPaginated($tenantId, $filters);
+
         FileActivityLogger::logAppointment('APPOINTMENT_VIEW_ALL', null, null, [
-            'count' => count($appointments),
+            'count' => count($result['data']),
             'filters' => $filters
         ], __METHOD__);
-        ResponseHelper::send(true, "Appointments retrieved", $appointments);
+
+        ResponseHelper::sendPaginated(true, "Appointments retrieved", $result['data'], $result['pagination']);
     }
 
     // GET /api/appointments/upcoming
@@ -201,6 +211,28 @@ class AppointmentController
             'count' => count($list)
         ], __METHOD__);
         ResponseHelper::send(true, "Upcoming appointments", $list);
+    }
+
+    // GET /api/appointments/unbilled
+    public function getUnbilled()
+    {
+        AuthMiddleware::handle();
+        RoleMiddleware::handle(['Provider', 'Admin', 'Receptionist', 'Patient']);
+        $currentUser = $_REQUEST['user'];
+        $tenantId    = $currentUser['tenant_id'];
+
+        if (!$this->connectByTenantId($tenantId)) {
+            ResponseHelper::send(false, "Hospital database not found or inactive.", [], 403);
+            return;
+        }
+
+        $list = $this->appointmentModel->getUnbilledByTenant($tenantId);
+
+        FileActivityLogger::logAppointment('APPOINTMENT_VIEW_UNBILLED', null, null, [
+            'count' => count($list)
+        ], __METHOD__);
+
+        ResponseHelper::send(true, "Unbilled completed appointments retrieved successfully.", $list);
     }
 
     // PUT /api/appointments/update/{id}

@@ -136,22 +136,24 @@ class PatientController
     }
 
     /**
-     * Get All Patients
+     * Get All Patients (Paginated)
      */
     public function index()
     {
         AuthMiddleware::handle();
-        RoleMiddleware::handle(['Provider', 'Nurse', 'Pharmacist', 'Receptionist']);
+        RoleMiddleware::handle(['Admin', 'Provider', 'Nurse', 'Pharmacist', 'Receptionist', 'Patient']);
 
         $currentUser = $_REQUEST['user'];
 
-        // Switch to the Tenant DB before doing any queries!
         if (!$this->connectByTenantId($currentUser['tenant_id'])) {
             ResponseHelper::send(false, "Hospital database not found or inactive.", [], 403);
             return;
         }
 
-        $patients = $this->patientModel->getAllByTenant($currentUser['tenant_id']);
+        $filters = $_GET;
+        $result = $this->patientModel->getAllByTenantPaginated($currentUser['tenant_id'], $filters);
+        
+        $patients = &$result['data'];
         FileActivityLogger::logCRUD('PATIENT_VIEW_ALL', 'patients', null, [
             'count' => count($patients)
         ], __METHOD__);
@@ -163,7 +165,25 @@ class PatientController
             }
         }
 
-        ResponseHelper::send(true, "Patients retrieved", $patients);
+        ResponseHelper::sendPaginated(true, "Patients retrieved", $result['data'], $result['pagination']);
+    }
+
+
+    /**
+     * GET /api/patients/lookup
+     */
+    public function lookup()
+    {
+        AuthMiddleware::handle();
+        $currentUser = $_REQUEST['user'];
+
+        if (!$this->connectByTenantId($currentUser['tenant_id'])) {
+            ResponseHelper::send(false, "Hospital database not found.", [], 403);
+            return;
+        }
+
+        $patients = $this->patientModel->lookupActive($currentUser['tenant_id']);
+        ResponseHelper::send(true, "Patient lookup list retrieved", $patients);
     }
 
     /**
@@ -172,7 +192,7 @@ class PatientController
     public function update($id)
     {
         AuthMiddleware::handle();
-        RoleMiddleware::handle(['Provider', 'Nurse']);
+        RoleMiddleware::handle(['Provider', 'Nurse', 'Patient']);
 
         $currentUser = $_REQUEST['user'];
 

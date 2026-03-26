@@ -151,14 +151,25 @@ class Staff extends BaseModel
         return $stmt->execute();
     }
 
-    /**
-     * Find staff by phone number (Duplicate check)
-     */
     public function findByPhone($phone)
     {
         $query = "SELECT id FROM " . $this->table . " WHERE phone_number = :phone AND deleted_at IS NULL LIMIT 1";
         $stmt = $this->db->prepare($query);
         $stmt->bindParam(':phone', $phone);
+        $stmt->execute();
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Find staff by phone number excluding a specific ID (Duplicate check for updates)
+     */
+    public function findByPhoneExcludingId($phone, $id)
+    {
+        $query = "SELECT id FROM " . $this->table . " 
+                  WHERE phone_number = :phone AND id != :id AND deleted_at IS NULL LIMIT 1";
+        $stmt = $this->db->prepare($query);
+        $stmt->bindParam(':phone', $phone);
+        $stmt->bindParam(':id', $id);
         $stmt->execute();
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }

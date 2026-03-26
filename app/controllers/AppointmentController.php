@@ -217,7 +217,7 @@ class AppointmentController
     public function getUnbilled()
     {
         AuthMiddleware::handle();
-        RoleMiddleware::handle(['Provider', 'Admin', 'Receptionist']);
+        RoleMiddleware::handle(['Provider', 'Admin', 'Receptionist', 'Patient']);
         $currentUser = $_REQUEST['user'];
         $tenantId    = $currentUser['tenant_id'];
 

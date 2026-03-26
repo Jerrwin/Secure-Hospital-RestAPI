@@ -229,6 +229,20 @@ class User
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
+    /**
+     * Find user by email excluding a specific ID (Duplicate check for updates)
+     */
+    public function findUserByEmailExcludingId($email, $id)
+    {
+        $query = "SELECT id FROM " . $this->table . " 
+                  WHERE email = :email AND id != :id AND deleted_at IS NULL LIMIT 1";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':email', $email);
+        $stmt->bindParam(':id', $id);
+        $stmt->execute();
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
     public function updatePassword($id, $newPasswordHash)
     {
         $query = "UPDATE " . $this->table . " SET PASSWORD = :password WHERE id = :id";

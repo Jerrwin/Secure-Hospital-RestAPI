@@ -255,6 +255,22 @@ class StaffController
         $linkedUser = $this->userModel->getById($staff['user_id']);
         $finalEmail = $data['email'] ?? ($linkedUser['email'] ?? '');
 
+        // 6. Phone Number & Email Uniqueness Check (for updates)
+        $newPhone = isset($data['phone_number']) ? trim($data['phone_number']) : $staff['phone_number'];
+        if ($newPhone !== $staff['phone_number']) {
+            if ($this->staffModel->findByPhoneExcludingId($newPhone, $id)) {
+                ResponseHelper::send(false, "Phone number already exists for another staff member.", [], 409);
+                return;
+            }
+        }
+
+        if ($finalEmail !== $linkedUser['email']) {
+            if ($this->userModel->findUserByEmailExcludingId($finalEmail, $staff['user_id'])) {
+                ResponseHelper::send(false, "Email address already exists for another user.", [], 409);
+                return;
+            }
+        }
+
         // 5. Selective Data Protection
         // Non-admins cannot change their own STATUS or IS_ACTIVE
         $status = $staff['status'];

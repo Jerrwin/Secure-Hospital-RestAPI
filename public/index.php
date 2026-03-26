@@ -135,6 +135,7 @@ $router->get('/api/appointments', [AppointmentController::class, 'index']); //
 $router->get('/api/appointments/show/{id}', [AppointmentController::class, 'show']); //
 $router->put('/api/appointments/cancel/{id}', [AppointmentController::class, 'cancel']); //
 $router->put('/api/appointments/update/{id}', [AppointmentController::class, 'update']); //
+$router->put('/api/appointments/accept/{id}', [AppointmentController::class, 'accept']); //
 $router->get('/api/appointments/unbilled', [AppointmentController::class, 'getUnbilled']); //
 $router->put('/api/appointments/complete/{id}', [AppointmentController::class, 'complete']);
 
@@ -179,9 +180,10 @@ $router->put('/api/invoices/{id}', [BillingController::class, 'update']);
 $router->post('/api/payments', [BillingController::class, 'processPayment']);
 
 // Notification Endpoints
-$router->get('/api/notifications', [NotificationController::class, 'index']);
-$router->put('/api/notifications/read-all', [NotificationController::class, 'markAllAsRead']);
-$router->put('/api/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
+$router->get('/api/notifications', [NotificationController::class, 'index']); //
+$router->put('/api/notifications/read-all', [NotificationController::class, 'markAllAsRead']); //
+$router->put('/api/notifications/{id}/read', [NotificationController::class, 'markAsRead']); //
+$router->delete('/api/notifications/{id}', [NotificationController::class, 'delete']); //
 
 // Super Admin Auth
 $router->post('/api/superadmin/login', [AdminAuthController::class, 'login']);

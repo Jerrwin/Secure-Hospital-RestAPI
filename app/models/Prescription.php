@@ -263,7 +263,7 @@ class Prescription extends BaseModel
      */
     public function getById($id)
     {
-        $query = "SELECT p.*, 
+        $query = "SELECT p.*, a.patient_id, a.appointment_date,
                          CONCAT(pt.first_name, ' ', pt.last_name) as patient_name, 
                          u.name as provider_name 
                    FROM " . $this->table . " p

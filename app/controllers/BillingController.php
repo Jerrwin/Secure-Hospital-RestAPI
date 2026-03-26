@@ -201,7 +201,7 @@ class BillingController
     public function processPayment()
     {
         AuthMiddleware::handle();
-        RoleMiddleware::handle(['Admin', 'Receptionist','Patient']);
+        RoleMiddleware::handle(['Admin', 'Receptionist', 'Patient']);
 
         $user = $_REQUEST['user'];
 

@@ -5,6 +5,7 @@ namespace App\Controllers;
 use App\Core\Database;
 use App\Models\Prescription;
 use App\Models\MasterTenant;
+use App\Models\Notification;
 use App\Helpers\ResponseHelper;
 use App\Middleware\AuthMiddleware;
 use App\Middleware\RoleMiddleware;
@@ -170,6 +171,21 @@ class PrescriptionController
             FileActivityLogger::logCRUD('PRESCRIPTION_STATUS_CHANGE', 'prescriptions', (int)$id, [
                 'status' => $status
             ], __METHOD__);
+
+            // Trigger Patient Notification if dispensed
+            if ($status === 'dispensed') {
+                $notifModel = new Notification($this->db);
+                $notifModel->create([
+                    'tenant_id'    => $currentUser['tenant_id'],
+                    'user_id'      => $prescription['patient_id'],
+                    'user_type'    => 'patient',
+                    'type'         => 'prescription',
+                    'title'        => 'Prescription Ready',
+                    'message'      => 'Your prescription from your appointment on ' . ($prescription['appointment_date'] ?? 'N/A') . ' is now ready for collection.',
+                    'reference_id' => (int) $id
+                ]);
+            }
+
             ResponseHelper::send(true, "Prescription status updated to $status", $prescription);
         } else {
             ResponseHelper::send(false, "Failed to update status", [], 500);

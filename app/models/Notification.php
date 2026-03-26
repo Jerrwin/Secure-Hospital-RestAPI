@@ -105,4 +105,18 @@ class Notification
         $stmt->bindParam(':tenant_id', $tenantId);
         return $stmt->execute();
     }
+
+    /**
+     * Delete a single notification.
+     */
+    public function delete($id, $userId, $userType)
+    {
+        $query = "DELETE FROM {$this->table} 
+                  WHERE id = :id AND user_id = :user_id AND user_type = :user_type";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':id', $id);
+        $stmt->bindParam(':user_id', $userId);
+        $stmt->bindParam(':user_type', $userType);
+        return $stmt->execute();
+    }
 }

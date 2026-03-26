@@ -112,4 +112,23 @@ class NotificationController
 
         ResponseHelper::send(true, "All notifications marked as read.");
     }
+
+    // DELETE /api/notifications/{id}
+    public function delete($id)
+    {
+        AuthMiddleware::handle();
+        $user = $_REQUEST['user'];
+
+        if (!$this->connectByTenantId($user['tenant_id'])) {
+            ResponseHelper::send(false, "Hospital database not found.", [], 403);
+            return;
+        }
+
+        $userType = $this->getUserType($user['role']);
+        if ($this->notificationModel->delete($id, $user['user_id'], $userType)) {
+            ResponseHelper::send(true, "Notification deleted.");
+        } else {
+            ResponseHelper::send(false, "Failed to delete notification.", [], 500);
+        }
+    }
 }

@@ -7,6 +7,7 @@ use App\Models\Appointment;
 use App\Models\Patient;
 use App\Models\User;
 use App\Models\MasterTenant;
+use App\Models\Notification;
 use App\Helpers\ResponseHelper;
 use App\Middleware\AuthMiddleware;
 use App\Middleware\RoleMiddleware;
@@ -52,7 +53,7 @@ class AppointmentController
     public function create()
     {
         AuthMiddleware::handle();
-        RoleMiddleware::handle(['Provider', 'Nurse', 'Admin', 'Receptionist']);
+        RoleMiddleware::handle(['Provider', 'Nurse', 'Admin', 'Receptionist', 'Patient']);
 
         $data        = !empty($_POST) ? $_POST : json_decode(file_get_contents("php://input"), true);
         $currentUser = $_REQUEST['user'];
@@ -78,13 +79,14 @@ class AppointmentController
             return;
         }
 
-        if (in_array($currentUser['role'], ['Nurse', 'Receptionist', 'Admin'])) {
+        if (in_array($currentUser['role'], ['Nurse', 'Receptionist', 'Admin', 'Patient'])) {
             if (empty($data['provider_id'])) {
                 ResponseHelper::send(false, "A provider_id (Doctor) must be specified.", [], 400);
                 return;
             }
             $targetProviderId = $data['provider_id'];
         } else {
+            // Role is Provider
             $targetProviderId = $currentUser['user_id'];
         }
 
@@ -137,7 +139,7 @@ class AppointmentController
             $createdAppointment = $this->appointmentModel->find($id);
             
             // ── Notification Trigger ──────────────────────────────────
-            $notifModel = new \App\Models\Notification($this->db);
+            $notifModel = new Notification($this->db);
             $patientName = ($patient['first_name'] ?? '') . ' ' . ($patient['last_name'] ?? '');
             $notifModel->create([
                 'tenant_id'    => $tenantId,
@@ -294,6 +296,21 @@ class AppointmentController
             FileActivityLogger::logAppointment('APPOINTMENT_UPDATE', (int)$id, $existing['patient_id'], [
                 'updated_fields' => array_keys($data)
             ], __METHOD__);
+
+            // Trigger Notification if status changed to 'accepted'
+            if (isset($data['STATUS']) && strtolower($data['STATUS']) === 'accepted' && strtolower($existing['STATUS']) !== 'accepted') {
+                $notifModel = new Notification($this->db);
+                $notifModel->create([
+                    'tenant_id'    => $tenantId,
+                    'user_id'      => $existing['patient_id'],
+                    'user_type'    => 'patient',
+                    'type'         => 'appointment',
+                    'title'        => 'Appointment Accepted',
+                    'message'      => 'Your appointment for ' . $existing['appointment_date'] . ' at ' . $existing['start_time'] . ' has been accepted.',
+                    'reference_id' => (int) $id
+                ]);
+            }
+
             ResponseHelper::send(true, "Appointment updated successfully");
         } else {
             ResponseHelper::send(false, "Update failed", [], 500);
@@ -333,6 +350,54 @@ class AppointmentController
             FileActivityLogger::logAppointment('APPOINTMENT_CANCEL', (int)$id, $existing['patient_id'], [], __METHOD__);
         }
         ResponseHelper::send($res, $res ? "Cancelled" : "Failed");
+    }
+
+    // PUT /api/appointments/accept/{id}
+    public function accept($id)
+    {
+        AuthMiddleware::handle();
+        RoleMiddleware::handle(['Provider', 'Admin', 'Nurse', 'Receptionist']);
+        $currentUser = $_REQUEST['user'];
+        $tenantId    = $currentUser['tenant_id'];
+
+        if (!$this->connectByTenantId($tenantId)) {
+            ResponseHelper::send(false, "Hospital database not found.", [], 403);
+            return;
+        }
+
+        $existing = $this->appointmentModel->find($id);
+        if (!$existing) {
+            ResponseHelper::send(false, "Appointment not found.", [], 404);
+            return;
+        }
+
+        if ($existing['tenant_id'] != $tenantId) {
+            ResponseHelper::send(false, "Access denied.", [], 403);
+            return;
+        }
+
+        if (strtolower($existing['STATUS']) !== 'scheduled') {
+            ResponseHelper::send(false, "Only scheduled appointments can be accepted.", [], 400);
+            return;
+        }
+
+        $res = $this->appointmentModel->update($id, ['STATUS' => 'accepted']);
+        if ($res) {
+            FileActivityLogger::logAppointment('APPOINTMENT_ACCEPT', (int)$id, $existing['patient_id'], [], __METHOD__);
+
+            // Trigger Notification for Patient
+            $notifModel = new Notification($this->db);
+            $notifModel->create([
+                'tenant_id'    => $tenantId,
+                'user_id'      => $existing['patient_id'],
+                'user_type'    => 'patient',
+                'type'         => 'appointment',
+                'title'        => 'Appointment Accepted',
+                'message'      => 'Your appointment for ' . $existing['appointment_date'] . ' at ' . $existing['start_time'] . ' has been accepted.',
+                'reference_id' => (int) $id
+            ]);
+        }
+        ResponseHelper::send($res, $res ? "Accepted" : "Failed");
     }
 
     // PUT /api/appointments/complete/{id}

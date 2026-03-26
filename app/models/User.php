@@ -27,16 +27,6 @@ class User
     /**
      * Find any user by email excluding a specific ID (Duplicate check for updates)
      */
-    public function findUserByEmailExcludingId($email, $id)
-    {
-        $users = $this->findAllUsersByEmail($email);
-        foreach ($users as $user) {
-            if ((string)$user['id'] !== (string)$id) {
-                return $user;
-            }
-        }
-        return false;
-    }
 
     /**
      * AUTHENTICATION: Find all possible matches for an email (Staff or Patients).

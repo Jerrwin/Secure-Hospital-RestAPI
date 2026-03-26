@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Core\BaseModel;
+use App\Helpers\Encryption;
 use PDO;
 
 class Appointment extends BaseModel
@@ -12,26 +13,35 @@ class Appointment extends BaseModel
 
     public function create($data)
     {
+        // Encrypt reason if provided
+        $encryptedReason = null;
+        if (!empty($data['reason'])) {
+            $encryptedReason = Encryption::encrypt($data['reason']);
+        }
+
         $query = "INSERT INTO " . $this->table . " 
-                  (tenant_id, patient_id, provider_id, appointment_date, start_time, end_time, STATUS, created_by) 
-                  VALUES (:tenant_id, :patient_id, :provider_id, :appointment_date, :start_time, :end_time, 'scheduled', :created_by)";
+                  (tenant_id, patient_id, provider_id, appointment_date, start_time, end_time, STATUS, created_by, reason) 
+                  VALUES (:tenant_id, :patient_id, :provider_id, :appointment_date, :start_time, :end_time, 'scheduled', :created_by, :reason)";
 
         $stmt = $this->db->prepare($query);
 
-        return $stmt->execute([
+        $params = [
             ':tenant_id'        => $data['tenant_id'],
             ':patient_id'       => $data['patient_id'],
             ':provider_id'      => $data['provider_id'],
             ':appointment_date' => $data['appointment_date'],
             ':start_time'       => $data['start_time'],
             ':end_time'         => $data['end_time'],
-            ':created_by'       => $data['created_by']
-        ]) ? $this->db->lastInsertId() : false;
+            ':created_by'       => $data['created_by'],
+            ':reason'           => $encryptedReason
+        ];
+
+        return $stmt->execute($params) ? $this->db->lastInsertId() : false;
     }
 
     public function update($id, $data)
     {
-        $allowedColumns = ['patient_id', 'provider_id', 'appointment_date', 'start_time', 'end_time', 'STATUS'];
+        $allowedColumns = ['patient_id', 'provider_id', 'appointment_date', 'start_time', 'end_time', 'STATUS', 'reason'];
 
         // Normalize any case variation of 'status' to 'STATUS'
         $normalizedData = [];
@@ -41,6 +51,11 @@ class Appointment extends BaseModel
             } else {
                 $normalizedData[$key] = $value;
             }
+        }
+
+        // Encrypt reason if provided
+        if (isset($normalizedData['reason']) && !empty($normalizedData['reason'])) {
+            $normalizedData['reason'] = Encryption::encrypt($normalizedData['reason']);
         }
 
         // Filter only allowed columns
@@ -95,12 +110,16 @@ class Appointment extends BaseModel
 
         $stmt = $this->db->prepare($query);
         $stmt->execute($params);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $appointments = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        // Decrypt reasons for all appointments
+        foreach ($appointments as &$appointment) {
+            $appointment = $this->decryptReason($appointment);
+        }
+        
+        return $appointments;
     }
 
-    /**
-     * Paginated fetch with optional search (patient/provider name) and status filter.
-     */
     /**
      * Paginated fetch with optional search (patient/provider name) and status filter.
      */
@@ -143,8 +162,14 @@ class Appointment extends BaseModel
             "u.name"
         ];
 
-        return $this->fetchPaginated($sql, $params, $filters, $searchColumns, "a.appointment_date DESC, a.start_time DESC", "a.id");
-
+        $appointments = $this->fetchPaginated($sql, $params, $filters, $searchColumns, "a.appointment_date DESC, a.start_time DESC", "a.id");
+        
+        // Decrypt reasons for all appointments
+        foreach ($appointments['data'] as &$appointment) {
+            $appointment = $this->decryptReason($appointment);
+        }
+        
+        return $appointments;
     }
 
 
@@ -170,7 +195,14 @@ class Appointment extends BaseModel
 
         $stmt = $this->db->prepare($query);
         $stmt->execute($params);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $appointments = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        // Decrypt reasons for all appointments
+        foreach ($appointments as &$appointment) {
+            $appointment = $this->decryptReason($appointment);
+        }
+        
+        return $appointments;
     }
 
     public function isSlotBooked($providerId, $date, $startTime, $endTime, $excludeId = null)
@@ -199,12 +231,34 @@ class Appointment extends BaseModel
         return $stmt->rowCount() > 0;
     }
 
+    /**
+     * Decrypt reason field for appointment data
+     */
+    private function decryptReason($appointment)
+    {
+        if (!empty($appointment['reason'])) {
+            try {
+                $appointment['reason'] = Encryption::decrypt($appointment['reason']);
+            } catch (\Exception $e) {
+                // If decryption fails, set to null or handle appropriately
+                $appointment['reason'] = null;
+            }
+        }
+        return $appointment;
+    }
+
     public function find($id)
     {
         $query = "SELECT * FROM " . $this->table . " WHERE id = :id LIMIT 1";
         $stmt = $this->db->prepare($query);
         $stmt->execute([':id' => $id]);
-        return $stmt->fetch(PDO::FETCH_ASSOC);
+        $appointment = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if ($appointment) {
+            $appointment = $this->decryptReason($appointment);
+        }
+        
+        return $appointment;
     }
 
     public function countTodayByTenant($tenantId)
@@ -248,6 +302,13 @@ class Appointment extends BaseModel
 
         $stmt = $this->db->prepare($query);
         $stmt->execute([':tenant_id' => $tenantId]);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $appointments = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        // Decrypt reasons for all appointments
+        foreach ($appointments as &$appointment) {
+            $appointment = $this->decryptReason($appointment);
+        }
+        
+        return $appointments;
     }
 }

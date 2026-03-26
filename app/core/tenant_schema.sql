@@ -75,6 +75,7 @@ CREATE TABLE IF NOT EXISTS `appointments` (
     `start_time` time DEFAULT NULL,
     `end_time` time DEFAULT NULL,
     `STATUS` enum('scheduled','completed','cancelled') COLLATE utf8mb4_unicode_ci DEFAULT 'scheduled',
+    `reason` text NULL COMMENT 'Encrypted appointment reason using AES-256-CBC',
     `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (`id`),
     CONSTRAINT `fk_app_creator` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`),

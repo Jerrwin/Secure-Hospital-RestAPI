@@ -126,10 +126,16 @@ class AppointmentController
             'STATUS'           => 'scheduled'
         ];
 
+        // Add reason if provided
+        if (!empty($data['reason'])) {
+            $appointmentData['reason'] = $data['reason'];
+        }
+
         $id = $this->appointmentModel->create($appointmentData);
         if ($id) {
-            $appointmentData['id'] = (int) $id;
-
+            // Retrieve the created appointment with decrypted data
+            $createdAppointment = $this->appointmentModel->find($id);
+            
             // ── Notification Trigger ──────────────────────────────────
             $notifModel = new \App\Models\Notification($this->db);
             $patientName = ($patient['first_name'] ?? '') . ' ' . ($patient['last_name'] ?? '');
@@ -148,7 +154,7 @@ class AppointmentController
                 'date' => $data['appointment_date']
             ], __METHOD__);
 
-            ResponseHelper::send(true, "Appointment scheduled successfully.", $appointmentData, 201);
+            ResponseHelper::send(true, "Appointment scheduled successfully.", $createdAppointment, 201);
         } else {
             ResponseHelper::send(false, "Server Error", [], 500);
         }

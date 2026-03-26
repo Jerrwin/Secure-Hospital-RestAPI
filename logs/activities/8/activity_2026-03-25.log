@@ -731,3 +731,685 @@ JSON: {
 }
 --------------------------------------------------
 
+--------------------------------------------------
+[2026-03-25 12:04:16] APPOINTMENT_VIEW_ALL by Apollo Admin
+Method: GET | Endpoint: /Secure-Hospital-RestAPI/public/api/appointments
+JSON: {
+    "status": "SUCCESS",
+    "response_time_ms": 213,
+    "record_count": 11,
+    "ip": "::1"
+}
+--------------------------------------------------
+
+--------------------------------------------------
+[2026-03-25 12:04:17] PRESCRIPTION_VIEW_ALL by Apollo Admin
+Method: GET | Endpoint: /Secure-Hospital-RestAPI/public/api/prescriptions
+JSON: {
+    "status": "SUCCESS",
+    "response_time_ms": 140,
+    "record_count": 1,
+    "ip": "::1"
+}
+--------------------------------------------------
+
+--------------------------------------------------
+[2026-03-25 12:04:21] STAFF_VIEW_ALL by Apollo Admin
+Method: GET | Endpoint: /Secure-Hospital-RestAPI/public/api/staff
+JSON: {
+    "status": "SUCCESS",
+    "response_time_ms": 58,
+    "record_count": 6,
+    "ip": "::1"
+}
+--------------------------------------------------
+
+--------------------------------------------------
+[2026-03-25 12:05:47] STAFF_CREATE by Apollo Admin
+Method: POST | Endpoint: /Secure-Hospital-RestAPI/public/api/staff/register
+JSON: {
+    "status": "SUCCESS",
+    "response_time_ms": 141,
+    "record_count": 0,
+    "ip": "::1"
+}
+--------------------------------------------------
+
+--------------------------------------------------
+[2026-03-25 12:05:48] STAFF_VIEW_ALL by Apollo Admin
+Method: GET | Endpoint: /Secure-Hospital-RestAPI/public/api/staff
+JSON: {
+    "status": "SUCCESS",
+    "response_time_ms": 75,
+    "record_count": 7,
+    "ip": "::1"
+}
+--------------------------------------------------
+
+--------------------------------------------------
+[2026-03-25 12:06:05] STAFF_UPDATE by Apollo Admin
+Method: PUT | Endpoint: /Secure-Hospital-RestAPI/public/api/staff/11
+JSON: {
+    "status": "SUCCESS",
+    "response_time_ms": 75,
+    "record_count": 0,
+    "ip": "::1"
+}
+--------------------------------------------------
+
+--------------------------------------------------
+[2026-03-25 12:06:05] STAFF_VIEW_ALL by Apollo Admin
+Method: GET | Endpoint: /Secure-Hospital-RestAPI/public/api/staff
+JSON: {
+    "status": "SUCCESS",
+    "response_time_ms": 55,
+    "record_count": 7,
+    "ip": "::1"
+}
+--------------------------------------------------
+
+--------------------------------------------------
+[2026-03-25 12:18:06] STAFF_VIEW_ALL by Unknown
+Method: GET | Endpoint: /Secure-Hospital-RestAPI/public/api/staff
+JSON: {
+    "status": "SUCCESS",
+    "response_time_ms": 38,
+    "record_count": 6,
+    "ip": "::1"
+}
+--------------------------------------------------
+
+--------------------------------------------------
+[2026-03-25 12:26:01] APPOINTMENT_VIEW_ALL by Tenant1
+Method: GET | Endpoint: /Secure-Hospital-RestAPI/public/api/appointments
+JSON: {
+    "status": "SUCCESS",
+    "response_time_ms": 94,
+    "record_count": 11,
+    "ip": "::1"
+}
+--------------------------------------------------
+
+--------------------------------------------------
+[2026-03-25 12:26:01] PATIENT_VIEW_ALL by Tenant1
+Method: GET | Endpoint: /Secure-Hospital-RestAPI/public/api/patients
+JSON: {
+    "status": "SUCCESS",
+    "response_time_ms": 157,
+    "record_count": 4,
+    "ip": "::1"
+}
+--------------------------------------------------
+
+--------------------------------------------------
+[2026-03-25 12:26:01] PRESCRIPTION_VIEW_ALL by Tenant1
+Method: GET | Endpoint: /Secure-Hospital-RestAPI/public/api/prescriptions
+JSON: {
+    "status": "SUCCESS",
+    "response_time_ms": 164,
+    "record_count": 1,
+    "ip": "::1"
+}
+--------------------------------------------------
+
+--------------------------------------------------
+[2026-03-25 12:26:02] APPOINTMENT_VIEW_ALL by Tenant1
+Method: GET | Endpoint: /Secure-Hospital-RestAPI/public/api/appointments
+JSON: {
+    "status": "SUCCESS",
+    "response_time_ms": 90,
+    "record_count": 11,
+    "ip": "::1"
+}
+--------------------------------------------------
+
+--------------------------------------------------
+[2026-03-25 12:26:06] PATIENT_UPDATE by Tenant1
+Method: PUT | Endpoint: /Secure-Hospital-RestAPI/public/api/patients/4
+JSON: {
+    "status": "SUCCESS",
+    "response_time_ms": 76,
+    "record_count": 0,
+    "ip": "::1"
+}
+--------------------------------------------------
+
+--------------------------------------------------
+[2026-03-25 12:26:07] PATIENT_VIEW_ALL by Tenant1
+Method: GET | Endpoint: /Secure-Hospital-RestAPI/public/api/patients
+JSON: {
+    "status": "SUCCESS",
+    "response_time_ms": 55,
+    "record_count": 4,
+    "ip": "::1"
+}
+--------------------------------------------------
+
+--------------------------------------------------
+[2026-03-25 12:26:10] PATIENT_VIEW_ALL by Tenant1
+Method: GET | Endpoint: /Secure-Hospital-RestAPI/public/api/patients
+JSON: {
+    "status": "SUCCESS",
+    "response_time_ms": 57,
+    "record_count": 4,
+    "ip": "::1"
+}
+--------------------------------------------------
+
+--------------------------------------------------
+[2026-03-25 12:26:19] PATIENT_VIEW_ALL by Tenant1
+Method: GET | Endpoint: /Secure-Hospital-RestAPI/public/api/patients
+JSON: {
+    "status": "SUCCESS",
+    "response_time_ms": 38,
+    "record_count": 4,
+    "ip": "::1"
+}
+--------------------------------------------------
+
+--------------------------------------------------
+[2026-03-25 12:26:19] PRESCRIPTION_VIEW_ALL by Tenant1
+Method: GET | Endpoint: /Secure-Hospital-RestAPI/public/api/prescriptions
+JSON: {
+    "status": "SUCCESS",
+    "response_time_ms": 105,
+    "record_count": 1,
+    "ip": "::1"
+}
+--------------------------------------------------
+
+--------------------------------------------------
+[2026-03-25 12:26:19] APPOINTMENT_VIEW_ALL by Tenant1
+Method: GET | Endpoint: /Secure-Hospital-RestAPI/public/api/appointments?status=completed
+JSON: {
+    "status": "SUCCESS",
+    "response_time_ms": 55,
+    "record_count": 2,
+    "ip": "::1"
+}
+--------------------------------------------------
+
+--------------------------------------------------
+[2026-03-25 12:26:22] PATIENT_UPDATE by Tenant1
+Method: PUT | Endpoint: /Secure-Hospital-RestAPI/public/api/patients/4
+JSON: {
+    "status": "SUCCESS",
+    "response_time_ms": 59,
+    "record_count": 0,
+    "ip": "::1"
+}
+--------------------------------------------------
+
+--------------------------------------------------
+[2026-03-25 12:26:22] PATIENT_VIEW_ALL by Tenant1
+Method: GET | Endpoint: /Secure-Hospital-RestAPI/public/api/patients
+JSON: {
+    "status": "SUCCESS",
+    "response_time_ms": 49,
+    "record_count": 4,
+    "ip": "::1"
+}
+--------------------------------------------------
+
+--------------------------------------------------
+[2026-03-25 12:26:25] PATIENT_VIEW_ALL by Tenant1
+Method: GET | Endpoint: /Secure-Hospital-RestAPI/public/api/patients
+JSON: {
+    "status": "SUCCESS",
+    "response_time_ms": 52,
+    "record_count": 4,
+    "ip": "::1"
+}
+--------------------------------------------------
+
+--------------------------------------------------
+[2026-03-25 12:26:42] APPOINTMENT_VIEW_ALL by Apollo Admin
+Method: GET | Endpoint: /Secure-Hospital-RestAPI/public/api/appointments
+JSON: {
+    "status": "SUCCESS",
+    "response_time_ms": 131,
+    "record_count": 11,
+    "ip": "::1"
+}
+--------------------------------------------------
+
+--------------------------------------------------
+[2026-03-25 12:26:42] PRESCRIPTION_VIEW_ALL by Apollo Admin
+Method: GET | Endpoint: /Secure-Hospital-RestAPI/public/api/prescriptions
+JSON: {
+    "status": "SUCCESS",
+    "response_time_ms": 111,
+    "record_count": 1,
+    "ip": "::1"
+}
+--------------------------------------------------
+
+--------------------------------------------------
+[2026-03-25 12:26:44] STAFF_VIEW_ALL by Apollo Admin
+Method: GET | Endpoint: /Secure-Hospital-RestAPI/public/api/staff
+JSON: {
+    "status": "SUCCESS",
+    "response_time_ms": 59,
+    "record_count": 6,
+    "ip": "::1"
+}
+--------------------------------------------------
+
+--------------------------------------------------
+[2026-03-25 12:33:53] PATIENT_VIEW_ALL by Tenant1
+Method: GET | Endpoint: /Secure-Hospital-RestAPI/public/api/patients
+JSON: {
+    "status": "SUCCESS",
+    "response_time_ms": 101,
+    "record_count": 4,
+    "ip": "::1"
+}
+--------------------------------------------------
+
+--------------------------------------------------
+[2026-03-25 12:33:53] APPOINTMENT_VIEW_ALL by Tenant1
+Method: GET | Endpoint: /Secure-Hospital-RestAPI/public/api/appointments
+JSON: {
+    "status": "SUCCESS",
+    "response_time_ms": 181,
+    "record_count": 11,
+    "ip": "::1"
+}
+--------------------------------------------------
+
+--------------------------------------------------
+[2026-03-25 12:33:53] PRESCRIPTION_VIEW_ALL by Tenant1
+Method: GET | Endpoint: /Secure-Hospital-RestAPI/public/api/prescriptions
+JSON: {
+    "status": "SUCCESS",
+    "response_time_ms": 90,
+    "record_count": 1,
+    "ip": "::1"
+}
+--------------------------------------------------
+
+--------------------------------------------------
+[2026-03-25 12:33:53] APPOINTMENT_VIEW_ALL by Tenant1
+Method: GET | Endpoint: /Secure-Hospital-RestAPI/public/api/appointments
+JSON: {
+    "status": "SUCCESS",
+    "response_time_ms": 118,
+    "record_count": 11,
+    "ip": "::1"
+}
+--------------------------------------------------
+
+--------------------------------------------------
+[2026-03-25 12:34:04] PRESCRIPTION_VIEW_ALL by Tenant1
+Method: GET | Endpoint: /Secure-Hospital-RestAPI/public/api/prescriptions
+JSON: {
+    "status": "SUCCESS",
+    "response_time_ms": 55,
+    "record_count": 1,
+    "ip": "::1"
+}
+--------------------------------------------------
+
+--------------------------------------------------
+[2026-03-25 12:34:04] PATIENT_VIEW_ALL by Tenant1
+Method: GET | Endpoint: /Secure-Hospital-RestAPI/public/api/patients
+JSON: {
+    "status": "SUCCESS",
+    "response_time_ms": 111,
+    "record_count": 4,
+    "ip": "::1"
+}
+--------------------------------------------------
+
+--------------------------------------------------
+[2026-03-25 12:34:05] APPOINTMENT_VIEW_ALL by Tenant1
+Method: GET | Endpoint: /Secure-Hospital-RestAPI/public/api/appointments?status=completed
+JSON: {
+    "status": "SUCCESS",
+    "response_time_ms": 103,
+    "record_count": 2,
+    "ip": "::1"
+}
+--------------------------------------------------
+
+--------------------------------------------------
+[2026-03-25 12:34:07] PRESCRIPTION_VIEW_ALL by Tenant1
+Method: GET | Endpoint: /Secure-Hospital-RestAPI/public/api/prescriptions
+JSON: {
+    "status": "SUCCESS",
+    "response_time_ms": 13,
+    "record_count": 1,
+    "ip": "::1"
+}
+--------------------------------------------------
+
+--------------------------------------------------
+[2026-03-25 12:34:07] PATIENT_VIEW_ALL by Tenant1
+Method: GET | Endpoint: /Secure-Hospital-RestAPI/public/api/patients
+JSON: {
+    "status": "SUCCESS",
+    "response_time_ms": 63,
+    "record_count": 4,
+    "ip": "::1"
+}
+--------------------------------------------------
+
+--------------------------------------------------
+[2026-03-25 12:34:07] APPOINTMENT_VIEW_ALL by Tenant1
+Method: GET | Endpoint: /Secure-Hospital-RestAPI/public/api/appointments?status=completed
+JSON: {
+    "status": "SUCCESS",
+    "response_time_ms": 104,
+    "record_count": 2,
+    "ip": "::1"
+}
+--------------------------------------------------
+
+--------------------------------------------------
+[2026-03-25 12:34:10] PATIENT_VIEW_ALL by Tenant1
+Method: GET | Endpoint: /Secure-Hospital-RestAPI/public/api/patients
+JSON: {
+    "status": "SUCCESS",
+    "response_time_ms": 54,
+    "record_count": 4,
+    "ip": "::1"
+}
+--------------------------------------------------
+
+--------------------------------------------------
+[2026-03-25 12:34:10] PRESCRIPTION_VIEW_ALL by Tenant1
+Method: GET | Endpoint: /Secure-Hospital-RestAPI/public/api/prescriptions
+JSON: {
+    "status": "SUCCESS",
+    "response_time_ms": 118,
+    "record_count": 1,
+    "ip": "::1"
+}
+--------------------------------------------------
+
+--------------------------------------------------
+[2026-03-25 12:34:10] APPOINTMENT_VIEW_ALL by Tenant1
+Method: GET | Endpoint: /Secure-Hospital-RestAPI/public/api/appointments?status=completed
+JSON: {
+    "status": "SUCCESS",
+    "response_time_ms": 60,
+    "record_count": 2,
+    "ip": "::1"
+}
+--------------------------------------------------
+
+--------------------------------------------------
+[2026-03-25 12:34:14] APPOINTMENT_VIEW_ALL by Tenant1
+Method: GET | Endpoint: /Secure-Hospital-RestAPI/public/api/appointments
+JSON: {
+    "status": "SUCCESS",
+    "response_time_ms": 60,
+    "record_count": 11,
+    "ip": "::1"
+}
+--------------------------------------------------
+
+--------------------------------------------------
+[2026-03-25 12:48:19] PATIENT_VIEW_ALL by Unknown
+Method: GET | Endpoint: /Secure-Hospital-RestAPI/public/api/patients
+JSON: {
+    "status": "SUCCESS",
+    "response_time_ms": 81,
+    "record_count": 4,
+    "ip": "::1"
+}
+--------------------------------------------------
+
+--------------------------------------------------
+[2026-03-25 12:48:19] APPOINTMENT_VIEW_ALL by Unknown
+Method: GET | Endpoint: /Secure-Hospital-RestAPI/public/api/appointments
+JSON: {
+    "status": "SUCCESS",
+    "response_time_ms": 123,
+    "record_count": 11,
+    "ip": "::1"
+}
+--------------------------------------------------
+
+--------------------------------------------------
+[2026-03-25 12:48:19] APPOINTMENT_VIEW_ALL by Unknown
+Method: GET | Endpoint: /Secure-Hospital-RestAPI/public/api/appointments
+JSON: {
+    "status": "SUCCESS",
+    "response_time_ms": 79,
+    "record_count": 11,
+    "ip": "::1"
+}
+--------------------------------------------------
+
+--------------------------------------------------
+[2026-03-25 12:48:19] PRESCRIPTION_VIEW_ALL by Unknown
+Method: GET | Endpoint: /Secure-Hospital-RestAPI/public/api/prescriptions
+JSON: {
+    "status": "SUCCESS",
+    "response_time_ms": 51,
+    "record_count": 1,
+    "ip": "::1"
+}
+--------------------------------------------------
+
+--------------------------------------------------
+[2026-03-25 12:53:04] APPOINTMENT_VIEW_ALL by Apollo Admin
+Method: GET | Endpoint: /Secure-Hospital-RestAPI/public/api/appointments
+JSON: {
+    "status": "SUCCESS",
+    "response_time_ms": 81,
+    "record_count": 11,
+    "ip": "::1"
+}
+--------------------------------------------------
+
+--------------------------------------------------
+[2026-03-25 12:53:04] PRESCRIPTION_VIEW_ALL by Apollo Admin
+Method: GET | Endpoint: /Secure-Hospital-RestAPI/public/api/prescriptions
+JSON: {
+    "status": "SUCCESS",
+    "response_time_ms": 81,
+    "record_count": 1,
+    "ip": "::1"
+}
+--------------------------------------------------
+
+--------------------------------------------------
+[2026-03-25 12:53:06] STAFF_VIEW_ALL by Apollo Admin
+Method: GET | Endpoint: /Secure-Hospital-RestAPI/public/api/staff
+JSON: {
+    "status": "SUCCESS",
+    "response_time_ms": 50,
+    "record_count": 6,
+    "ip": "::1"
+}
+--------------------------------------------------
+
+--------------------------------------------------
+[2026-03-25 13:09:59] STAFF_VIEW_ALL by Unknown
+Method: GET | Endpoint: /Secure-Hospital-RestAPI/public/api/staff
+JSON: {
+    "status": "SUCCESS",
+    "response_time_ms": 48,
+    "record_count": 6,
+    "ip": "::1"
+}
+--------------------------------------------------
+
+--------------------------------------------------
+[2026-03-25 15:09:22] APPOINTMENT_VIEW_ALL by Apollo Admin
+Method: GET | Endpoint: /Secure-Hospital-RestAPI/public/api/appointments
+JSON: {
+    "status": "SUCCESS",
+    "response_time_ms": 189,
+    "record_count": 11,
+    "ip": "::1"
+}
+--------------------------------------------------
+
+--------------------------------------------------
+[2026-03-25 15:09:22] PRESCRIPTION_VIEW_ALL by Apollo Admin
+Method: GET | Endpoint: /Secure-Hospital-RestAPI/public/api/prescriptions
+JSON: {
+    "status": "SUCCESS",
+    "response_time_ms": 156,
+    "record_count": 1,
+    "ip": "::1"
+}
+--------------------------------------------------
+
+--------------------------------------------------
+[2026-03-25 15:09:26] STAFF_VIEW_ALL by Apollo Admin
+Method: GET | Endpoint: /Secure-Hospital-RestAPI/public/api/staff
+JSON: {
+    "status": "SUCCESS",
+    "response_time_ms": 42,
+    "record_count": 6,
+    "ip": "::1"
+}
+--------------------------------------------------
+
+--------------------------------------------------
+[2026-03-25 15:09:30] APPOINTMENT_VIEW_ALL by Apollo Admin
+Method: GET | Endpoint: /Secure-Hospital-RestAPI/public/api/appointments
+JSON: {
+    "status": "SUCCESS",
+    "response_time_ms": 41,
+    "record_count": 11,
+    "ip": "::1"
+}
+--------------------------------------------------
+
+--------------------------------------------------
+[2026-03-25 15:13:23] STAFF_CREATE by Apollo Admin
+Method: POST | Endpoint: /Secure-Hospital-RestAPI/public/api/staff/register
+JSON: {
+    "status": "SUCCESS",
+    "response_time_ms": 230,
+    "record_count": 0,
+    "ip": "::1"
+}
+--------------------------------------------------
+
+--------------------------------------------------
+[2026-03-25 15:13:23] STAFF_VIEW_ALL by Apollo Admin
+Method: GET | Endpoint: /Secure-Hospital-RestAPI/public/api/staff
+JSON: {
+    "status": "SUCCESS",
+    "response_time_ms": 49,
+    "record_count": 7,
+    "ip": "::1"
+}
+--------------------------------------------------
+
+--------------------------------------------------
+[2026-03-25 15:17:45] APPOINTMENT_VIEW_ALL by Apollo Admin
+Method: GET | Endpoint: /Secure-Hospital-RestAPI/public/api/appointments
+JSON: {
+    "status": "SUCCESS",
+    "response_time_ms": 56,
+    "record_count": 11,
+    "ip": "::1"
+}
+--------------------------------------------------
+
+--------------------------------------------------
+[2026-03-25 15:17:56] STAFF_VIEW_ALL by Unknown
+Method: GET | Endpoint: /Secure-Hospital-RestAPI/public/api/staff
+JSON: {
+    "status": "SUCCESS",
+    "response_time_ms": 48,
+    "record_count": 7,
+    "ip": "::1"
+}
+--------------------------------------------------
+
+--------------------------------------------------
+[2026-03-25 16:01:11] STAFF_UPDATE by Unknown
+Method: PUT | Endpoint: /Secure-Hospital-RestAPI/public/api/staff/12
+JSON: {
+    "status": "SUCCESS",
+    "response_time_ms": 85,
+    "record_count": 0,
+    "ip": "::1"
+}
+--------------------------------------------------
+
+--------------------------------------------------
+[2026-03-25 16:01:11] STAFF_VIEW_ALL by Unknown
+Method: GET | Endpoint: /Secure-Hospital-RestAPI/public/api/staff
+JSON: {
+    "status": "SUCCESS",
+    "response_time_ms": 54,
+    "record_count": 7,
+    "ip": "::1"
+}
+--------------------------------------------------
+
+--------------------------------------------------
+[2026-03-25 16:32:56] APPOINTMENT_VIEW_ALL by Apollo Admin
+Method: GET | Endpoint: /Secure-Hospital-RestAPI/public/api/appointments
+JSON: {
+    "status": "SUCCESS",
+    "response_time_ms": 140,
+    "record_count": 11,
+    "ip": "::1"
+}
+--------------------------------------------------
+
+--------------------------------------------------
+[2026-03-25 16:32:56] PRESCRIPTION_VIEW_ALL by Apollo Admin
+Method: GET | Endpoint: /Secure-Hospital-RestAPI/public/api/prescriptions
+JSON: {
+    "status": "SUCCESS",
+    "response_time_ms": 109,
+    "record_count": 1,
+    "ip": "::1"
+}
+--------------------------------------------------
+
+--------------------------------------------------
+[2026-03-25 16:32:58] STAFF_VIEW_ALL by Apollo Admin
+Method: GET | Endpoint: /Secure-Hospital-RestAPI/public/api/staff
+JSON: {
+    "status": "SUCCESS",
+    "response_time_ms": 56,
+    "record_count": 7,
+    "ip": "::1"
+}
+--------------------------------------------------
+
+--------------------------------------------------
+[2026-03-25 23:18:18] APPOINTMENT_VIEW_ALL by Apollo Admin
+Method: GET | Endpoint: /Secure-Hospital-RestAPI/public/api/appointments
+JSON: {
+    "status": "SUCCESS",
+    "response_time_ms": 59,
+    "record_count": 11,
+    "ip": "::1"
+}
+--------------------------------------------------
+
+--------------------------------------------------
+[2026-03-25 23:18:18] PRESCRIPTION_VIEW_ALL by Apollo Admin
+Method: GET | Endpoint: /Secure-Hospital-RestAPI/public/api/prescriptions
+JSON: {
+    "status": "SUCCESS",
+    "response_time_ms": 132,
+    "record_count": 1,
+    "ip": "::1"
+}
+--------------------------------------------------
+
+--------------------------------------------------
+[2026-03-25 23:18:20] STAFF_VIEW_ALL by Apollo Admin
+Method: GET | Endpoint: /Secure-Hospital-RestAPI/public/api/staff
+JSON: {
+    "status": "SUCCESS",
+    "response_time_ms": 57,
+    "record_count": 7,
+    "ip": "::1"
+}
+--------------------------------------------------
+

@@ -126,6 +126,20 @@ class Staff
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
+    /**
+     * Find staff by phone number excluding a specific ID (Duplicate check for updates)
+     */
+    public function findByPhoneExcludingId($phone, $id)
+    {
+        $query = "SELECT id FROM " . $this->table . " 
+                  WHERE phone_number = :phone AND id != :id AND deleted_at IS NULL LIMIT 1";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':phone', $phone);
+        $stmt->bindParam(':id', $id);
+        $stmt->execute();
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
     public function countByTenant($tenantId)
     {
         $query = "SELECT COUNT(*) as total FROM " . $this->table . " WHERE tenant_id = :tenant_id AND deleted_at IS NULL";

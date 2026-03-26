@@ -109,7 +109,8 @@ class StaffController
             return;
         }
 
-        if ($this->staffModel->findByPhone($data['phone_number'])) {
+        $phoneNumber = trim($data['phone_number'] ?? '');
+        if ($this->staffModel->findByPhone($phoneNumber)) {
             ResponseHelper::send(false, "Phone number already exists in this hospital.", [], 409);
             return;
         }
@@ -243,6 +244,22 @@ class StaffController
         if ($isAdmin) {
             $status = $data['status'] ?? $staff['status'];
             $isActive = $data['is_active'] ?? $staff['is_active'];
+        }
+
+        // 6. Phone Number & Email Uniqueness Check (for updates)
+        $newPhone = isset($data['phone_number']) ? trim($data['phone_number']) : $staff['phone_number'];
+        if ($newPhone !== $staff['phone_number']) {
+            if ($this->staffModel->findByPhoneExcludingId($newPhone, $id)) {
+                ResponseHelper::send(false, "Phone number already exists for another staff member.", [], 409);
+                return;
+            }
+        }
+
+        if ($finalEmail !== $linkedUser['email']) {
+            if ($this->userModel->findUserByEmailExcludingId($finalEmail, $staff['user_id'])) {
+                ResponseHelper::send(false, "Email address already exists for another user.", [], 409);
+                return;
+            }
         }
 
         $updateData = [
